@@ -1,5 +1,7 @@
+import { GenericEntity } from '../IGenericEntity';
+import { Role } from './IRole';
 
-interface User extends GenericEntity {
+export interface User extends GenericEntity {
   name: string;
   password: string;
   email: string;
@@ -8,7 +10,8 @@ interface User extends GenericEntity {
   wasActivated: boolean
   // passwordRecoveryCodes?: PasswordRecoveryCode[];
 }
-interface UserUpdate extends GenericEntity {
+
+export interface UserUpdate extends GenericEntity {
   name: string;
   password: string;
   email: string;

@@ -1,6 +1,5 @@
 "use client";
 import * as React from "react";
-import { BrowserRouter as Router} from "react-router-dom";
 import { extendTheme } from "@mui/material/styles";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import { AppProvider } from "@toolpad/core/AppProvider";
@@ -11,6 +10,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import CategoryIcon from "@mui/icons-material/Category";
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 const NAVIGATION = [
   {
@@ -104,26 +104,33 @@ const demoTheme = extendTheme({
 });
 
 export default function LayoutGlobal({ children }: { children: React.ReactNode }) {
+  // Usamos usePathname de Next.js para obtener la ruta actual
+  const pathname = usePathname();
+  
+  // Solo renderizamos el componente en el cliente
+  const [isMounted, setIsMounted] = React.useState(false);
+  
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
+  // Si no está montado (renderizado en el servidor), mostramos un placeholder
+  if (!isMounted) {
+    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+  }
+  
   return (
-    <Router>
-      <AppProvider navigation={NAVIGATION} theme={demoTheme}>
-        <DashboardLayout
-          branding={{ title: "Xotica", logo: <Image width="48" height="48" alt='Logo' src="/img/logo.png" /> }}
-          defaultSidebarCollapsed={true}
+    <AppProvider navigation={NAVIGATION} theme={demoTheme}>
+      <DashboardLayout
+        branding={{ title: "Xotica", logo: <Image width="48" height="48" alt='Logo' src="/img/logo.png" /> }}
+        defaultSidebarCollapsed={true}
+      >
+        <PageContainer
+          className="bg-[#F8F9FD]"
         >
-          <PageContainer
-            className="bg-[#F8F9FD]"
-          >
-            {/* <Routes>
-              <Route path="/home" element={<Home />} />
-              <Route path="/auth/users_profiles" element={<UsersProfiles />} />
-              <Route path="/stock/products" element={<Products />} />
-              <Route path="*" element={<h2>Página no encontrada</h2>} />
-            </Routes> */}
-            {/* {children} */}
-          </PageContainer>
-        </DashboardLayout>
-      </AppProvider>
-    </Router>
+          {children}
+        </PageContainer>
+      </DashboardLayout>
+    </AppProvider>
   );
 }

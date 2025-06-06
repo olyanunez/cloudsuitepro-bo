@@ -1,4 +1,6 @@
-interface GenericEntity {
+import { User } from './User/IUser';
+
+export interface GenericEntity {
   id: number;
   enabled: boolean;
   createdAt: Date;
@@ -9,7 +11,7 @@ interface GenericEntity {
   updatedBy?: User;
 }
 
-interface GenericDtoEntity {
+export interface GenericDtoEntity {
   id: number;
   enabled?: boolean;
   createdAt?: Date;
