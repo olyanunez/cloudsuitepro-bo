@@ -1,26 +1,62 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #900C3F;
+  --primary-light: #C70039;
+  --primary-dark: #581845;
+  --secondary: #C70039;
+  --success: #2E7D32;
+  --success-light: #4CAF50;
+  --success-dark: #1B5E20;
+  --error: #FF5733;
+  --error-light: #FFC300;
+  --error-dark: #C70039;
+  --warning: #FFC300;
+  --warning-light: #FFE082;
+  --warning-dark: #FF8F00;
+  --info: #581845;
+  --info-light: #900C3F;
+  --info-dark: #3B0B2E;
+  --background: #FFF5F7;
+  --foreground: #1A1A1A;
+  --text-dark: #1A1A1A;
+  --text-light: #555555;
+  --border: #F8D7DA;
+  --border-hover: #E5BABE;
+  --card-bg: #ffffff;
+  --sidebar-bg: #FFF5F7;
 }
 
-@theme inline {
+/* Variables para temas */
+:root {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --primary: #5c7cfa;
+    --primary-light: #4c84ff;
+    --primary-dark: #4263eb;
+    --secondary: #74c0fc;
+    --success: #40c057;
+    --success-light: #37b24d;
+    --danger: #ff6b6b;
+    --danger-light: #fa5252;
+    --background: #212529;
+    --foreground: #f8f9fa;
+    --text-dark: #e9ecef;
+    --text-light: #ced4da;
+    --border: #343a40;
+    --card-bg: #343a40;
+    --sidebar-bg: #2b3035;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }

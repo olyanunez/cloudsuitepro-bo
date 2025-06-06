@@ -14,7 +14,11 @@ import TableRow from '@mui/material/TableRow';
 import TablePagination from '@mui/material/TablePagination';
 import Chip from '@mui/material/Chip';
 import Avatar from '@mui/material/Avatar';
+import CircularProgress from '@mui/material/CircularProgress';
+import Button from '@mui/material/Button';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { User } from '../../interfaces/User/IUser';
+import { UserService } from '../../services/userService';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -55,27 +59,35 @@ const UsersProfiles = () => {
     const [users, setUsers] = React.useState<User[]>([]);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState<string | null>(null);
 
+    // Usamos un estado para controlar si estamos en el cliente
+    const [isMounted, setIsMounted] = React.useState(false);
+    
+    // Función para cargar usuarios desde el servicio
+    const loadUsers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await UserService.getUsers();
+        setUsers(data);
+      } catch (err) {
+        console.error('Error al cargar usuarios:', err);
+        setError('No se pudieron cargar los usuarios. Por favor, intenta de nuevo más tarde.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
     React.useEffect(() => {
-      // Generar usuarios solo en el lado del cliente
-      const generatedUsers = Array.from({ length: 50 }, (_, index) => ({
-        id: index + 1,
-        name: `User${index + 1}`,
-        password: `password${index + 1}`,
-        email: `user${index + 1}@example.com`,
-        roleId: index % 5 === 0 ? 1 : 2, // Alterna roles entre 1 y 2
-        // role: index % 5 === 0 ? { id: 1, name: "Admin" } : { id: 2, name: "User" },
-        wasActivated: Math.random() > 0.3, // 70% de los usuarios están activados
-        enabled: Math.random() > 0.2, // 80% de los usuarios están habilitados
-        createdAt: new Date(),
-        modifiedAt: new Date(),
-        createdById: index > 0 ? 1 : undefined, // Asigna el primer usuario como creador de los demás
-        createdBy: index > 0 ? { id: 1, name: "SuperAdmin", password: "admin123", email: "admin@example.com", wasActivated: true, enabled: true, createdAt: new Date(), modifiedAt: new Date() } : undefined,
-        updatedById: index > 0 ? 1 : undefined,
-        updatedBy: index > 0 ? { id: 1, name: "SuperAdmin", password: "admin123", email: "admin@example.com", wasActivated: true, enabled: true, createdAt: new Date(), modifiedAt: new Date() } : undefined,
-      }));
-      setUsers(generatedUsers);
-    }, []);
+      setIsMounted(true);
+      
+      // Solo cargamos los datos cuando el componente está montado en el cliente
+      if (isMounted) {
+        loadUsers();
+      }
+    }, [isMounted]);
 
     const handleChangePage = (event: unknown, newPage: number) => {
       setPage(newPage);
@@ -92,10 +104,21 @@ const UsersProfiles = () => {
 
     return (
         <>
-            <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4, fontWeight: 'bold', color: '#333' }}>
-                Usuarios y Perfiles
-            </Typography>
-            <Paper elevation={3} sx={{ borderRadius: '10px', overflow: 'hidden' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: '#333', mb: 0 }}>
+                    Usuarios y Perfiles
+                </Typography>
+                <Button 
+                    variant="outlined" 
+                    color="primary" 
+                    startIcon={<RefreshIcon />}
+                    onClick={loadUsers}
+                    disabled={loading}
+                >
+                    {loading ? 'Cargando...' : 'Actualizar'}
+                </Button>
+            </Box>
+            <Paper elevation={3} sx={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(144, 12, 63, 0.15)' }}>
                 <Box sx={{ display: 'flex', height: 'auto', minHeight: '500px' }}>
                     <Tabs
                         orientation="vertical"
@@ -107,17 +130,21 @@ const UsersProfiles = () => {
                             borderRight: 1,
                             borderColor: 'divider',
                             minWidth: '200px',
+                            backgroundColor: 'rgba(144, 12, 63, 0.05)',
                             '& .MuiTab-root': {
                                 alignItems: 'flex-start',
                                 textAlign: 'left',
                                 pl: 3,
-                                py: 2
+                                py: 2,
                             },
                             '& .Mui-selected': {
-                                color: 'primary.main',
+                                color: '#900C3F !important',
                                 fontWeight: 'bold',
-                                backgroundColor: 'rgba(25, 118, 210, 0.08)'
-                            }
+                            },
+                            '& .MuiTabs-indicator': {
+                                backgroundColor: '#C70039',
+                                width: '4px',
+                            },
                         }}
                     >
                         <Tab 
@@ -132,70 +159,91 @@ const UsersProfiles = () => {
                         />
                     </Tabs>
                     <TabPanel value={value} index={0}>
-                        <Paper elevation={0} sx={{ width: '100%' }}>
-                            <TableContainer>
-                                <Table sx={{ minWidth: 650 }} aria-label="tabla de usuarios">
-                                    <TableHead>
-                                        <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                                            <TableCell>ID</TableCell>
-                                            <TableCell>Usuario</TableCell>
-                                            <TableCell>Email</TableCell>
-                                            <TableCell>Rol</TableCell>
-                                            <TableCell>Estado</TableCell>
-                                            <TableCell>Creado</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {users
-                                            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                            .map((user) => (
-                                                <TableRow
-                                                    key={user.id}
-                                                    sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}
-                                                >
-                                                    <TableCell>{user.id}</TableCell>
-                                                    <TableCell>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                            <Avatar sx={{ width: 32, height: 32, bgcolor: user.roleId === 1 ? 'primary.main' : 'secondary.main' }}>
-                                                                {user.name.charAt(0)}
-                                                            </Avatar>
-                                                            {user.name}
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell>{user.email}</TableCell>
-                                                    <TableCell>
-                                                        <Chip 
-                                                            label={user.roleId === 1 ? "Admin" : "Usuario"}
-                                                            color={user.roleId === 1 ? "primary" : "default"}
-                                                            size="small"
-                                                            variant="outlined"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Chip 
-                                                            label={user.enabled ? "Activo" : "Inactivo"}
-                                                            color={user.enabled ? "success" : "error"}
-                                                            size="small"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {user.createdAt.toLocaleDateString()}
-                                                    </TableCell>
+                        <Paper elevation={1} sx={{ borderRadius: '8px', overflow: 'hidden' }}>
+                            {loading ? (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 4, minHeight: '300px' }}>
+                                    <CircularProgress />
+                                    <Typography variant="body1" sx={{ ml: 2 }}>Cargando usuarios...</Typography>
+                                </Box>
+                            ) : error ? (
+                                <Box sx={{ p: 4, textAlign: 'center', color: 'error.main', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Typography variant="body1">{error}</Typography>
+                                </Box>
+                            ) : users.length === 0 ? (
+                                <Box sx={{ p: 4, textAlign: 'center', minHeight: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Typography variant="body1">No hay usuarios disponibles.</Typography>
+                                </Box>
+                            ) : (
+                                <>
+                                    <TableContainer>
+                                        <Table sx={{ minWidth: 650 }} aria-label="tabla de usuarios">
+                                            <TableHead>
+                                                <TableRow sx={{ backgroundColor: 'rgba(144, 12, 63, 0.1)' }}>
+                                                    <TableCell>ID</TableCell>
+                                                    <TableCell>Nombre</TableCell>
+                                                    <TableCell>Email</TableCell>
+                                                    <TableCell>Rol</TableCell>
+                                                    <TableCell>Estado</TableCell>
+                                                    <TableCell>Fecha Creación</TableCell>
                                                 </TableRow>
-                                            ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                            <TablePagination
-                                rowsPerPageOptions={[5, 10, 25]}
-                                component="div"
-                                count={users.length}
-                                rowsPerPage={rowsPerPage}
-                                page={page}
-                                onPageChange={handleChangePage}
-                                onRowsPerPageChange={handleChangeRowsPerPage}
-                                labelRowsPerPage="Filas por página:"
-                            />
+                                            </TableHead>
+                                            <TableBody>
+                                                {users
+                                                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                                    .map((user) => (
+                                                        <TableRow
+                                                            key={user.id}
+                                                            sx={{ '&:hover': { backgroundColor: 'rgba(144, 12, 63, 0.05)' } }}
+                                                        >
+                                                            <TableCell>{user.id}</TableCell>
+                                                            <TableCell>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    <Avatar sx={{ width: 32, height: 32, bgcolor: user.roleId === 1 ? 'primary.main' : 'secondary.main' }}>
+                                                                        {user.name.charAt(0)}
+                                                                    </Avatar>
+                                                                    {user.name}
+                                                                </Box>
+                                                            </TableCell>
+                                                            <TableCell>{user.email}</TableCell>
+                                                            <TableCell>
+                                                                <Chip 
+                                                                    label={user.roleId === 1 ? "Admin" : "Usuario"}
+                                                                    color={user.roleId === 1 ? "primary" : "default"}
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                />
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <Chip 
+                                                                    label={user.enabled ? "Activo" : "Inactivo"}
+                                                                    color={user.enabled ? "success" : "error"}
+                                                                    size="small"
+                                                                />
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {isMounted && typeof user.createdAt === 'string' 
+                                                                    ? new Date(user.createdAt).toLocaleDateString() 
+                                                                    : typeof user.createdAt === 'object' 
+                                                                        ? user.createdAt.toLocaleDateString() 
+                                                                        : '01/01/2023'}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                    <TablePagination
+                                        rowsPerPageOptions={[5, 10, 25]}
+                                        component="div"
+                                        count={users.length}
+                                        rowsPerPage={rowsPerPage}
+                                        page={page}
+                                        onPageChange={handleChangePage}
+                                        onRowsPerPageChange={handleChangeRowsPerPage}
+                                        labelRowsPerPage="Filas por página:"
+                                    />
+                                </>
+                            )}
                         </Paper>
                     </TabPanel>
                     <TabPanel value={value} index={1}>

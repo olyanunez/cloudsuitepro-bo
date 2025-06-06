@@ -1,7 +1,13 @@
 import { GenericEntity } from '../IGenericEntity';
+
+// Extendemos la interfaz GenericEntity para permitir fechas como string o Date
+export interface FlexibleDateEntity extends Omit<GenericEntity, 'createdAt' | 'modifiedAt'> {
+  createdAt: Date | string;
+  modifiedAt: Date | string;
+}
 import { Role } from './IRole';
 
-export interface User extends GenericEntity {
+export interface User extends FlexibleDateEntity {
   name: string;
   password: string;
   email: string;

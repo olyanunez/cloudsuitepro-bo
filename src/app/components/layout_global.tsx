@@ -52,30 +52,48 @@ const demoTheme = extendTheme({
     light:  {
       palette: {
         primary: {
-          main: "#1E40AF", // Azul oscuro
+          main: "#900C3F", // Nuevo color base burdeos
+          dark: "#581845",
+          light: "#C70039",
+          contrastText: "#ffffff",
+        },
+        secondary: {
+          main: "#C70039",
+          dark: "#900C3F",
+          light: "#FF5733",
+          contrastText: "#ffffff",
         },
         background: {
-          default: "#F8F9FD", // Color de fondo general
-          paper: "#FFFFFF", // Fondo del sidebar y navbar
+          default: "#FFF5F7", // Color de fondo general actualizado para burdeos
+          paper: "#ffffff", // Fondo de tarjetas y elementos
         },
         text: {
-          primary: "#1E293B", // Texto principal
-          secondary: "#64748B", // Texto secundario
+          primary: "#2d3436",
+          secondary: "#636e72",
         },
       },
     },
     dark: {
       palette: {
         primary: {
-          main: "#2563EB", // Azul más claro en modo oscuro
+          main: "#900C3F", // Mismo color base en modo oscuro
+          dark: "#581845",
+          light: "#C70039",
+          contrastText: "#ffffff",
+        },
+        secondary: {
+          main: "#C70039",
+          dark: "#900C3F",
+          light: "#FF5733",
+          contrastText: "#ffffff",
         },
         background: {
-          default: "#1E293B", // Color de fondo oscuro
-          paper: "#111827", // Sidebar y navbar oscuros
+          default: "#2C0A1A", // Color de fondo oscuro con tinte burdeos
+          paper: "#3B0B2E", // Fondo del sidebar y navbar
         },
         text: {
-          primary: "#F8FAFC",
-          secondary: "#CBD5E1",
+          primary: "#F9FAFB",
+          secondary: "#D1D5DB",
         },
       },
     },
@@ -107,27 +125,54 @@ export default function LayoutGlobal({ children }: { children: React.ReactNode }
   // Usamos usePathname de Next.js para obtener la ruta actual
   const pathname = usePathname();
   
-  // Solo renderizamos el componente en el cliente
+  // Solo renderizamos el componente completo en el cliente
   const [isMounted, setIsMounted] = React.useState(false);
   
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
   
-  // Si no está montado (renderizado en el servidor), mostramos un placeholder
+  // Renderizamos un esqueleto básico en el servidor para evitar errores de hidratación
   if (!isMounted) {
-    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+    return (
+      <div className="min-h-screen bg-[#FFF5F7] flex items-center justify-center">
+        <div className="text-[#900C3F] font-medium">Cargando...</div>
+      </div>
+    );
   }
   
+  // Solo renderizamos los componentes de MUI en el cliente
   return (
     <AppProvider navigation={NAVIGATION} theme={demoTheme}>
       <DashboardLayout
-        branding={{ title: "Xotica", logo: <Image width="48" height="48" alt='Logo' src="/img/logo.png" /> }}
+        branding={{ 
+          title: "Xotica", 
+          logo: <Image width="48" height="48" alt='Logo' src="/img/logo.png" priority /> 
+        }}
         defaultSidebarCollapsed={true}
+        sx={{
+          '& .MuiDrawer-paper': {
+            backgroundColor: '#900C3F',
+            color: '#ffffff',
+            '& .MuiListItemButton-root': {
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              },
+            },
+            '& .Mui-selected': {
+              backgroundColor: 'rgba(255, 255, 255, 0.12) !important',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.16) !important',
+              },
+            },
+          },
+          '& .MuiAppBar-root': {
+            backgroundColor: '#900C3F',
+            color: '#ffffff',
+          },
+        }}
       >
-        <PageContainer
-          className="bg-[#F8F9FD]"
-        >
+        <PageContainer className="bg-[#FFF5F7]">
           {children}
         </PageContainer>
       </DashboardLayout>
