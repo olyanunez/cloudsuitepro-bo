@@ -31,12 +31,9 @@ export default function Navbar() {
       <header className="sticky top-0 z-40 w-full border-b bg-white dark:bg-gray-950 dark:border-gray-800">
         <div className="container flex h-16 items-center justify-between py-4">
           <div className="flex items-center gap-2">
-            {/* @ts-expect-error - asChild prop is supported by SheetTrigger */}
-            <SheetTrigger asChild onClick={() => setOpen(true)}>
-              <Button variant="ghost" size="icon">
-                <MenuIcon />
-                <span className="sr-only">Toggle Menu</span>
-              </Button>
+            <SheetTrigger onClick={() => setOpen(true)} className="inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+              <MenuIcon className="h-5 w-5" />
+              <span className="sr-only">Toggle Menu</span>
             </SheetTrigger>
             <Link href="/" className="flex items-center space-x-2">
               <span className="font-bold text-xl text-primary-600 dark:text-primary-400">Xotica</span>
