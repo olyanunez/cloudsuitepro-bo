@@ -119,8 +119,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              style={{backgroundColor: '#fcd34d', color: '#171717'}}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium hover:bg-primary-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-primary hover:bg-primary-600 text-gray-900 dark:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Cargando...' : 'Iniciar Sesión'}
             </button>
