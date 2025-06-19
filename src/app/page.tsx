@@ -15,7 +15,7 @@ export default function Home() {
       
       if (isLoggedIn) {
         // Si está autenticado, redirigir al dashboard
-        router.push('/');
+        router.push('/dashboard');
       } else {
         // Si no está autenticado, redirigir al login
         router.push('/login');
