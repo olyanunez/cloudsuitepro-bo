@@ -16,6 +16,8 @@ import { Icon, MenuIcon, NotificationIcon, UserIcon, LogoutIcon } from './Icons'
 // Definición de los elementos del menú
 const menuItems = [
   { name: 'Dashboard', href: '/dashboard', icon: 'grid' },
+  { name: 'Usuarios', href: '/users', icon: 'user-cog' },
+  { name: 'Roles', href: '/roles', icon: 'shield' },
   { name: 'Productos', href: '/products', icon: 'box' },
   { name: 'Órdenes', href: '/orders', icon: 'shopping-bag' },
   { name: 'Clientes', href: '/customers', icon: 'users' },

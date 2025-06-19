@@ -8,8 +8,19 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to login page
-    router.push('/login');
+    // Asegurarse de que estamos en el cliente antes de acceder a localStorage
+    if (typeof window !== 'undefined') {
+      // Verificar si el usuario está autenticado
+      const isLoggedIn = localStorage.getItem('isLoggedIn');
+      
+      if (isLoggedIn) {
+        // Si está autenticado, redirigir al dashboard
+        router.push('/');
+      } else {
+        // Si no está autenticado, redirigir al login
+        router.push('/login');
+      }
+    }
   }, [router]);
 
   // This will be shown briefly before redirecting
@@ -27,7 +38,7 @@ export default function Home() {
           />
         </div>
         <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent"></div>
-        <p className="mt-4 text-gray-700 dark:text-gray-300">Redirigiendo al inicio de sesión...</p>
+        <p className="mt-4 text-gray-700 dark:text-gray-300">Redirigiendo...</p>
       </div>
     </div>
   );

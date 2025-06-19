@@ -13,14 +13,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Verificar si el usuario está autenticado
-    const isLoggedIn = localStorage.getItem('isLoggedIn')
-    
-    if (!isLoggedIn) {
-      // Redirigir al login si no está autenticado
-      router.push('/login')
-    } else {
-      setIsLoading(false)
+    // Asegurarse de que estamos en el cliente antes de acceder a localStorage
+    if (typeof window !== 'undefined') {
+      // Verificar si el usuario está autenticado
+      const isLoggedIn = localStorage.getItem('isLoggedIn')
+      
+      if (!isLoggedIn) {
+        // Redirigir al login si no está autenticado
+        router.push('/login')
+      } else {
+        setIsLoading(false)
+      }
     }
   }, [router])
 

@@ -78,6 +78,28 @@ export const SettingsIcon: React.FC<IconWithClassProps> = ({ className }) => (
   </svg>
 )
 
+export const UserCogIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="18" cy="15" r="3"></circle>
+    <circle cx="9" cy="7" r="4"></circle>
+    <path d="M10 15H6a4 4 0 0 0-4 4v2"></path>
+    <path d="m21.7 16.4-.9-.3"></path>
+    <path d="m15.2 13.9-.9-.3"></path>
+    <path d="m16.6 18.7.3-.9"></path>
+    <path d="m19.1 12.2.3-.9"></path>
+    <path d="m19.6 18.7-.4-1"></path>
+    <path d="m16.8 12.3-.4-1"></path>
+    <path d="m14.3 16.6 1-.4"></path>
+    <path d="m20.7 13.8 1-.4"></path>
+  </svg>
+)
+
+export const ShieldIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+  </svg>
+)
+
 interface IconProps {
   name: string;
   className?: string;
@@ -95,6 +117,8 @@ export const Icon: React.FC<IconProps> = ({ name, className }) => {
     'shopping-bag': getIconWithClass(ShoppingBagIcon as React.FC<IconWithClassProps>),
     'users': getIconWithClass(UsersIcon as React.FC<IconWithClassProps>),
     'settings': getIconWithClass(SettingsIcon as React.FC<IconWithClassProps>),
+    'user-cog': getIconWithClass(UserCogIcon as React.FC<IconWithClassProps>),
+    'shield': getIconWithClass(ShieldIcon as React.FC<IconWithClassProps>),
   }
 
   return <>{icons[name] || null}</>
