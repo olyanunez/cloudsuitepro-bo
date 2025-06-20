@@ -22,4 +22,5 @@ export interface UserUpdateInput {
   password?: string;
   roleId?: string;
   avatar?: string;
+  isActive?: boolean;
 }

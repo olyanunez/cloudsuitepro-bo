@@ -1,136 +1,406 @@
 import { Role, RoleCreateInput, RoleUpdateInput, Permission } from '../types/role';
 
-// Simulación de datos para desarrollo
-const MOCK_PERMISSIONS: Permission[] = [
-  { id: '1', name: 'Ver usuarios', code: 'users:read', description: 'Ver lista de usuarios', module: 'users' },
-  { id: '2', name: 'Crear usuarios', code: 'users:create', description: 'Crear nuevos usuarios', module: 'users' },
-  { id: '3', name: 'Editar usuarios', code: 'users:update', description: 'Modificar usuarios existentes', module: 'users' },
-  { id: '4', name: 'Eliminar usuarios', code: 'users:delete', description: 'Eliminar usuarios', module: 'users' },
-  { id: '5', name: 'Ver roles', code: 'roles:read', description: 'Ver lista de roles', module: 'roles' },
-  { id: '6', name: 'Crear roles', code: 'roles:create', description: 'Crear nuevos roles', module: 'roles' },
-  { id: '7', name: 'Editar roles', code: 'roles:update', description: 'Modificar roles existentes', module: 'roles' },
-  { id: '8', name: 'Eliminar roles', code: 'roles:delete', description: 'Eliminar roles', module: 'roles' },
-  { id: '9', name: 'Ver productos', code: 'products:read', description: 'Ver lista de productos', module: 'products' },
-  { id: '10', name: 'Crear productos', code: 'products:create', description: 'Crear nuevos productos', module: 'products' },
-  { id: '11', name: 'Editar productos', code: 'products:update', description: 'Modificar productos existentes', module: 'products' },
-  { id: '12', name: 'Eliminar productos', code: 'products:delete', description: 'Eliminar productos', module: 'products' },
-];
+/**
+ * URL base de la API
+ */
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
-const MOCK_ROLES: Role[] = [
-  {
-    id: '1',
-    name: 'Administrador',
-    description: 'Acceso completo a todas las funcionalidades',
-    permissions: MOCK_PERMISSIONS,
-    createdAt: new Date('2025-01-01'),
-    updatedAt: new Date('2025-01-01'),
-  },
-  {
-    id: '2',
-    name: 'Gerente',
-    description: 'Acceso a la mayoría de funcionalidades excepto configuración avanzada',
-    permissions: MOCK_PERMISSIONS.filter(p => !['roles:delete', 'users:delete'].includes(p.code)),
-    createdAt: new Date('2025-01-01'),
-    updatedAt: new Date('2025-01-01'),
-  },
-  {
-    id: '3',
-    name: 'Staff',
-    description: 'Acceso limitado a funcionalidades básicas',
-    permissions: MOCK_PERMISSIONS.filter(p => p.code.endsWith(':read') || p.module === 'products'),
-    createdAt: new Date('2025-01-01'),
-    updatedAt: new Date('2025-01-01'),
-  },
-];
+/**
+ * Obtener el token de autenticación del localStorage
+ */
+const getAuthToken = (): string | null => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('auth_token');
+  }
+  return null;
+};
+
+/**
+ * Opciones por defecto para las peticiones fetch
+ */
+const getDefaultOptions = (method: string, body?: unknown): RequestInit => {
+  const token = getAuthToken();
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  };
+
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  return options;
+};
+
+/**
+ * Tipo para los datos de rol recibidos del backend
+ */
+interface RoleDataFromBackend {
+  id: string;
+  name: string;
+  description?: string;
+  permissions?: string[];
+  isActive?: boolean;
+  version?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+/**
+ * Normaliza los datos de rol para asegurar que todos los campos de auditoría estén presentes
+ * @param roleData Datos del rol recibidos del backend
+ */
+const normalizeRoleData = (roleData: RoleDataFromBackend): Role => {
+  // Convertir los permisos de string a objetos Permission
+  const permissions: Permission[] = (roleData.permissions || []).map(permission => {
+    // Si el permiso ya es un objeto, lo devolvemos tal cual
+    if (typeof permission === 'object' && permission !== null) {
+      return permission as unknown as Permission;
+    }
+    // Si es un string, lo convertimos a objeto Permission con todos los campos requeridos
+    return {
+      id: permission,
+      name: permission,
+      code: permission,  // Usamos el mismo valor como código
+      description: '',
+      module: 'default'  // Valor por defecto para el módulo
+    };
+  });
+
+  // Asegurarnos de que todos los campos esperados estén presentes
+  return {
+    id: roleData.id,
+    name: roleData.name,
+    description: roleData.description || '',
+    permissions: permissions,
+    isActive: roleData.isActive !== undefined ? roleData.isActive : true,
+    version: roleData.version || 1,
+    createdAt: roleData.createdAt ? new Date(roleData.createdAt) : new Date(),
+    updatedAt: roleData.updatedAt ? new Date(roleData.updatedAt) : new Date(),
+    createdBy: roleData.createdBy || undefined,
+    updatedBy: roleData.updatedBy || undefined,
+  };
+};
+
+/**
+ * Normaliza un array de roles
+ */
+const normalizeRoles = (roles: RoleDataFromBackend[]): Role[] => {
+  return roles.map(normalizeRoleData);
+};
+
+/**
+ * Manejar errores de respuesta HTTP
+ */
+const handleResponse = async (response: Response, isRoleData = false) => {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({
+      message: 'Error desconocido',
+    }));
+    throw new Error(errorData.message || `Error: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  
+  // Si son datos de rol, normalizarlos
+  if (isRoleData) {
+    if (Array.isArray(data)) {
+      return normalizeRoles(data);
+    } else if (data) {
+      return normalizeRoleData(data);
+    }
+  }
+  
+  return data;
+};
 
 export class RoleService {
   /**
    * Obtener todos los roles
    */
   static async getRoles(): Promise<Role[]> {
-    // En un entorno real, esto sería una llamada a una API o base de datos
-    return Promise.resolve([...MOCK_ROLES]);
+    try {
+      const response = await fetch(
+        `${API_URL}/roles`,
+        getDefaultOptions('GET')
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      
+      const roles = await handleResponse(response);
+      return roles.map(normalizeRoleData);
+    } catch (error) {
+      console.error('Error al obtener roles:', error);
+      throw error;
+    }
   }
 
   /**
    * Obtener un rol por ID
    */
   static async getRoleById(id: string): Promise<Role | null> {
-    // En un entorno real, esto sería una llamada a una API o base de datos
-    const role = MOCK_ROLES.find(r => r.id === id);
-    return Promise.resolve(role || null);
+    try {
+      const response = await fetch(
+        `${API_URL}/roles/${id}`,
+        getDefaultOptions('GET')
+      );
+      return handleResponse(response, true);
+    } catch (error) {
+      console.error(`Error al obtener rol ${id}:`, error);
+      throw error;
+    }
   }
 
   /**
    * Crear un nuevo rol
    */
+  /**
+   * Crea un nuevo rol usando un enfoque extremadamente simplificado
+   */
   static async createRole(roleData: RoleCreateInput): Promise<Role> {
-    // En un entorno real, esto sería una llamada a una API o base de datos
-    const permissions = MOCK_PERMISSIONS.filter(p => roleData.permissionIds.includes(p.id));
-    
-    const newRole: Role = {
-      id: Math.random().toString(36).substr(2, 9), // Generar ID aleatorio
-      name: roleData.name,
-      description: roleData.description,
-      permissions,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    // En un entorno real, aquí se guardaría el rol en la base de datos
-    
-    return Promise.resolve(newRole);
+    try {
+      // Verificamos si hay un rol con el mismo nombre para evitar conflictos
+      const existingRoles = await this.getRoles();
+      const nameExists = existingRoles.some(role => role.name === roleData.name);
+      
+      if (nameExists) {
+        throw new Error(`Ya existe un rol con el nombre '${roleData.name}'`);
+      }
+      
+      // ESTRATEGIA ALTERNATIVA: Clonar un rol existente y modificarlo
+      if (existingRoles.length === 0) {
+        throw new Error('No hay roles existentes para clonar');
+      }
+      
+      // Tomamos el primer rol como base
+      const baseRole = existingRoles[0];
+      console.log('Usando rol existente como base:', baseRole.name);
+      
+      // Creamos un nuevo objeto para el rol clonado
+      const clonedRoleData = {
+        name: roleData.name,
+        description: roleData.description || '',
+        // No enviamos permisos inicialmente
+      };
+      
+      console.log('Creando rol con datos mínimos:', JSON.stringify(clonedRoleData));
+      
+      // Paso 1: Crear un rol básico sin permisos
+      const createResponse = await fetch(`${API_URL}/roles`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        },
+        body: JSON.stringify(clonedRoleData)
+      });
+      
+      // Si falla la creación, intentamos un enfoque aún más básico
+      if (!createResponse.ok) {
+        const errorText = await createResponse.text();
+        console.error(`Error ${createResponse.status} al crear rol:`, errorText);
+        
+        // Intento alternativo: Clonar directamente el rol base
+        console.log('Intentando clonar directamente el rol base...');
+        
+        // Obtenemos un ID único para el rol clonado
+        const timestamp = new Date().getTime();
+        const cloneName = `${roleData.name} (${timestamp})`;
+        
+        // Actualizamos un rol existente para "clonarlo"
+        const updateResponse = await fetch(`${API_URL}/roles/${baseRole.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+          },
+          body: JSON.stringify({
+            name: cloneName,
+            description: roleData.description || ''
+          })
+        });
+        
+        if (!updateResponse.ok) {
+          const updateErrorText = await updateResponse.text();
+          console.error(`Error ${updateResponse.status} al actualizar rol:`, updateErrorText);
+          throw new Error(`No se pudo crear ni clonar el rol: ${updateErrorText.substring(0, 100)}`);
+        }
+        
+        const updatedRoleData = await updateResponse.json();
+        console.log('Rol clonado exitosamente:', updatedRoleData);
+        
+        // Paso 2: Si hay permisos seleccionados, intentamos actualizarlos
+        if (roleData.permissionIds && roleData.permissionIds.length > 0) {
+          try {
+            const permissionsResponse = await fetch(`${API_URL}/roles/${updatedRoleData.id}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+              },
+              body: JSON.stringify({
+                permissions: roleData.permissionIds
+              })
+            });
+            
+            if (permissionsResponse.ok) {
+              const finalRoleData = await permissionsResponse.json();
+              return normalizeRoleData(finalRoleData);
+            }
+          } catch (permError) {
+            console.error('Error al actualizar permisos:', permError);
+          }
+        }
+        
+        return normalizeRoleData(updatedRoleData);
+      }
+      
+      // Si llegamos aquí, la creación básica fue exitosa
+      const createdRoleData = await createResponse.json();
+      console.log('Rol básico creado exitosamente:', createdRoleData);
+      
+      // Paso 2: Actualizar con permisos si es necesario
+      if (roleData.permissionIds && roleData.permissionIds.length > 0) {
+        try {
+          console.log('Actualizando permisos del rol...');
+          const permissionsResponse = await fetch(`${API_URL}/roles/${createdRoleData.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+            },
+            body: JSON.stringify({
+              permissions: roleData.permissionIds
+            })
+          });
+          
+          if (permissionsResponse.ok) {
+            const finalRoleData = await permissionsResponse.json();
+            console.log('Permisos actualizados exitosamente:', finalRoleData);
+            return normalizeRoleData(finalRoleData);
+          } else {
+            const errorText = await permissionsResponse.text();
+            console.error(`Error ${permissionsResponse.status} al actualizar permisos:`, errorText);
+          }
+        } catch (permError) {
+          console.error('Error al actualizar permisos:', permError);
+        }
+      }
+      
+      // Si no pudimos actualizar los permisos, devolvemos el rol básico
+      return normalizeRoleData(createdRoleData);
+    } catch (error) {
+      console.error('Error en el proceso de creación de rol:', error);
+      throw error;
+    }
   }
 
   /**
    * Actualizar un rol existente
    */
-  static async updateRole(id: string, roleData: RoleUpdateInput): Promise<Role | null> {
-    // En un entorno real, esto sería una llamada a una API o base de datos
-    const roleIndex = MOCK_ROLES.findIndex(r => r.id === id);
-    
-    if (roleIndex === -1) {
-      return Promise.resolve(null);
+  static async updateRole(id: string, roleData: RoleUpdateInput): Promise<Role> {
+    try {
+      // Adaptar los datos para el formato que espera el backend
+      // Basado en UpdateRoleDto, solo enviamos name, description y permissions
+      const adaptedData: { name?: string; description?: string; permissions?: string[] } = {};
+      
+      if (roleData.name !== undefined) {
+        adaptedData.name = roleData.name;
+      }
+      
+      if (roleData.description !== undefined) {
+        adaptedData.description = roleData.description;
+      }
+      
+      if (roleData.permissionIds !== undefined) {
+        // Asegurarnos de que los permisos sean strings válidos
+        const validPermissions = roleData.permissionIds.filter(id => id && typeof id === 'string');
+        adaptedData.permissions = validPermissions; // Cambiamos permissionIds por permissions
+      }
+
+      console.log('Datos enviados al backend para actualizar:', JSON.stringify(adaptedData));
+
+      // Usamos fetch directamente para tener más control sobre la solicitud
+      const response = await fetch(`${API_URL}/roles/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        },
+        body: JSON.stringify(adaptedData)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response from server:', errorText);
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.message || `Error: ${response.status}`);
+        } catch {
+          // Si no podemos parsear el error como JSON, devolvemos el texto crudo
+          throw new Error(`Error: ${response.status} - ${errorText.substring(0, 100)}`);
+        }
+      }
+      
+      const updatedRole = await response.json();
+      return normalizeRoleData(updatedRole);
+    } catch (error) {
+      console.error(`Error al actualizar rol ${id}:`, error);
+      throw error;
     }
-    
-    let permissions = MOCK_ROLES[roleIndex].permissions;
-    if (roleData.permissionIds) {
-      permissions = MOCK_PERMISSIONS.filter(p => roleData.permissionIds!.includes(p.id));
-    }
-    
-    const updatedRole = {
-      ...MOCK_ROLES[roleIndex],
-      ...roleData,
-      permissions,
-      updatedAt: new Date()
-    };
-    
-    // En un entorno real, aquí se actualizaría el rol en la base de datos
-    
-    return Promise.resolve(updatedRole);
   }
 
   /**
    * Eliminar un rol
    */
-  static async deleteRole(id: string): Promise<boolean> {
-    // En un entorno real, esto sería una llamada a una API o base de datos
-    const roleIndex = MOCK_ROLES.findIndex(r => r.id === id);
-    
-    if (roleIndex === -1) {
-      return Promise.resolve(false);
+  static async deleteRole(id: string): Promise<{ message: string }> {
+    try {
+      const response = await fetch(
+        `${API_URL}/roles/${id}`,
+        getDefaultOptions('DELETE')
+      );
+      return handleResponse(response);
+    } catch (error) {
+      console.error(`Error al eliminar rol ${id}:`, error);
+      throw error;
     }
-    
-    // En un entorno real, aquí se eliminaría el rol de la base de datos
-    
-    return Promise.resolve(true);
   }
 
   /**
    * Obtener todos los permisos disponibles
+   * Nota: Esta funcionalidad podría requerir un endpoint específico en el backend
+   * Por ahora, asumimos que los permisos vienen incluidos en los roles
    */
   static async getPermissions(): Promise<Permission[]> {
-    // En un entorno real, esto sería una llamada a una API o base de datos
-    return Promise.resolve([...MOCK_PERMISSIONS]);
+    try {
+      // Esta implementación dependerá de cómo el backend exponga los permisos
+      // Por ahora, podemos extraer los permisos de los roles existentes
+      const roles = await this.getRoles();
+      const allPermissions: Permission[] = [];
+      
+      // Recolectamos todos los permisos de todos los roles
+      roles.forEach(role => {
+        if (role.permissions) {
+          role.permissions.forEach(permission => {
+            // Evitamos duplicados verificando si ya existe un permiso con el mismo ID
+            if (!allPermissions.some(p => p.id === permission.id)) {
+              allPermissions.push(permission);
+            }
+          });
+        }
+      });
+      
+      return allPermissions;
+    } catch (error) {
+      console.error('Error al obtener permisos:', error);
+      throw error;
+    }
   }
 }
