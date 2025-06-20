@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { AuthService } from '@/lib/services/authService';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('password');
+  const [email, setEmail] = useState('supervisor@example.com');
+  const [password, setPassword] = useState('supervisor123');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -24,21 +25,19 @@ export default function LoginPage() {
     }
 
     try {
-      // Here you would typically make an API call to authenticate
-      // For now, we'll just simulate a successful login
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Llamar al servicio de autenticación para iniciar sesión
+      await AuthService.login({
+        email,
+        password
+      });
       
-      // For demo purposes only - in a real app, you'd validate credentials with your backend
-      if (email === 'admin@example.com' && password === 'password') {
-        // Store authentication token or user info in localStorage/cookies
-        localStorage.setItem('isLoggedIn', 'true');
-        router.push('/dashboard'); // Redirect to dashboard after login
-      } else {
-        setError('Credenciales inválidas');
-      }
-    } catch (err) {
-      setError('Error al iniciar sesión. Por favor intente nuevamente.');
-      console.error('Login error:', err);
+      // Redirigir al dashboard después del inicio de sesión exitoso
+      router.push('/dashboard');
+    } catch (error: unknown) {
+      // Mostrar mensaje de error
+      const errorMessage = error instanceof Error ? error.message : 'Error al iniciar sesión. Por favor intente nuevamente.';
+      setError(errorMessage);
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }

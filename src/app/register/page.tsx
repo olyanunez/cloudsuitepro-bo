@@ -37,7 +37,7 @@ export default function RegisterPage() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // For demo purposes only - in a real app, you'd send this data to your backend
-      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('auth_token', 'true');
       router.push('/dashboard'); // Redirect to dashboard after registration
     } catch (err) {
       setError('Error al registrar. Por favor intente nuevamente.');

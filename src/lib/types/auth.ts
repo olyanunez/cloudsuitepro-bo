@@ -1,0 +1,20 @@
+/**
+ * DTO para el login de usuario
+ */
+export interface LoginDto {
+  email: string;
+  password: string;
+}
+
+/**
+ * Respuesta del servicio de autenticación
+ */
+export interface AuthResponse {
+  access_token: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+  };
+}

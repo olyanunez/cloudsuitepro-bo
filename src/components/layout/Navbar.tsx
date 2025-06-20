@@ -96,7 +96,7 @@ export default function Navbar() {
           </nav>
           <div className="absolute bottom-4 w-full pr-8">
             <Button variant="outline" className="w-full" onClick={() => {
-              localStorage.removeItem('isLoggedIn');
+              localStorage.removeItem('auth_token');
               window.location.href = '/login';
               setOpen(false);
             }}>

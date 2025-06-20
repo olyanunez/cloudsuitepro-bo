@@ -1,10 +1,9 @@
-export interface Role {
-  id: string;
+import { BaseEntity } from './base';
+
+export interface Role extends BaseEntity {
   name: string;
   description: string;
   permissions: Permission[];
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface Permission {

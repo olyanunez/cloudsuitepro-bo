@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     // Asegurarse de que estamos en el cliente antes de acceder a localStorage
     if (typeof window !== 'undefined') {
       // Verificar si el usuario está autenticado
-      const isLoggedIn = localStorage.getItem('isLoggedIn')
+      const isLoggedIn = localStorage.getItem('auth_token')
       
       if (!isLoggedIn) {
         // Redirigir al login si no está autenticado

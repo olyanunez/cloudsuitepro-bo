@@ -1,12 +1,10 @@
-export interface User {
-  id: string;
+import { BaseEntity } from './base';
+
+export interface User extends BaseEntity {
   name: string;
   email: string;
   avatar?: string;
   roleId: string;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
   lastLogin?: Date;
 }
 
@@ -24,5 +22,4 @@ export interface UserUpdateInput {
   password?: string;
   roleId?: string;
   avatar?: string;
-  isActive?: boolean;
 }

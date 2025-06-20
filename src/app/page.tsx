@@ -11,8 +11,9 @@ export default function Home() {
     // Asegurarse de que estamos en el cliente antes de acceder a localStorage
     if (typeof window !== 'undefined') {
       // Verificar si el usuario está autenticado
-      const isLoggedIn = localStorage.getItem('isLoggedIn');
-      
+      const isLoggedIn = localStorage.getItem('auth_token');
+
+      // const isLoggedIn = localStorage.getItem('auth_token');
       if (isLoggedIn) {
         // Si está autenticado, redirigir al dashboard
         router.push('/dashboard');
