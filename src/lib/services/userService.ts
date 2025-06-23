@@ -29,6 +29,7 @@ interface UserDataFromBackend {
   updatedBy?: number | null;
   lastLogin?: string;
   permissionsCount?: number;
+  tenantId?: string; // ID de la empresa a la que pertenece el usuario
 }
 
 /**
@@ -61,6 +62,7 @@ const normalizeUserData = (userData: UserDataFromBackend): User => {
     updatedBy: userData.updatedBy || undefined,
     lastLogin: userData.lastLogin ? new Date(userData.lastLogin) : undefined,
     permissionsCount: userData.permissionsCount || 0,
+    tenantId: userData.tenantId,
   };
 };
 
@@ -71,10 +73,14 @@ const normalizeUserData = (userData: UserDataFromBackend): User => {
 export class UserService {
   /**
    * Obtener todos los usuarios
+   * Si se proporciona un tenantId, filtra los usuarios por esa empresa
    */
-  static async getUsers(): Promise<User[]> {
+  static async getUsers(tenantId?: string): Promise<User[]> {
     try {
-      const data = await apiGet<UserDataFromBackend[]>('/users');
+      // Si el tenantId se proporciona explícitamente, lo usamos
+      // Si no, el apiGet incluirá automáticamente el tenantId del localStorage en los headers
+      const endpoint = tenantId ? `/users?tenantId=${tenantId}` : '/users';
+      const data = await apiGet<UserDataFromBackend[]>(endpoint);
       return data.map(normalizeUserData);
     } catch (error) {
       console.error('Error al obtener usuarios:', error);
@@ -97,9 +103,18 @@ export class UserService {
 
   /**
    * Crear un nuevo usuario
+   * Si no se proporciona un tenantId en userData, se usará el del localStorage
    */
   static async createUser(userData: UserCreateInput): Promise<User> {
     try {
+      // Si el usuario no tiene tenantId, usamos el del localStorage
+      if (!userData.tenantId) {
+        const tenantId = localStorage.getItem('tenant_id');
+        if (tenantId) {
+          userData = { ...userData, tenantId };
+        }
+      }
+      
       const data = await apiPost<UserDataFromBackend>('/users', userData);
       return normalizeUserData(data);
     } catch (error) {

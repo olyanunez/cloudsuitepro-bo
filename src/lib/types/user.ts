@@ -11,6 +11,7 @@ export interface User extends BaseEntity {
   lastLogin?: Date;
   permissionsCount?: number; // Campo específico del frontend
   isActive?: boolean;
+  tenantId?: string; // ID de la empresa a la que pertenece el usuario
 }
 
 export interface UserCreateInput {
@@ -21,6 +22,7 @@ export interface UserCreateInput {
   roleId?: number;
   avatar?: string;
   isActive?: boolean;
+  tenantId?: string; // ID de la empresa a la que pertenece el usuario
 }
 
 export interface UserUpdateInput {
@@ -31,4 +33,5 @@ export interface UserUpdateInput {
   roleId?: number;
   avatar?: string;
   isActive?: boolean;
+  tenantId?: string; // ID de la empresa a la que pertenece el usuario
 }

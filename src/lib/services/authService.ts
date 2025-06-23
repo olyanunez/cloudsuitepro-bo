@@ -1,3 +1,5 @@
+"use client";
+
 import { AuthResponse, LoginDto } from '../types/auth';
 import { apiGet } from './apiService';
 
@@ -49,6 +51,11 @@ export class AuthService {
         localStorage.setItem('auth_token', data.access_token);
       }
       
+      // Guardar el tenantId si está disponible
+      if (data && data.user && data.user.tenantId) {
+        localStorage.setItem('tenant_id', data.user.tenantId);
+      }
+      
       return data;
     } catch (error) {
       console.error('Error en login:', error);
@@ -61,6 +68,7 @@ export class AuthService {
    */
   static logout(): void {
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('tenant_id');
   }
 
   /**

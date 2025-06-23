@@ -11,8 +11,9 @@ import {
   SheetClose
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
-import { Icon, MenuIcon, NotificationIcon, UserIcon, LogoutIcon } from './Icons'
+import { Icon, MenuIcon, NotificationIcon, UserIcon, LogoutIcon, BuildingIcon } from './Icons'
 import { AuthService } from '@/lib/services/authService'
+import { useTenant } from '@/lib/contexts/TenantContext'
 
 // Definición de los elementos del menú
 const menuItems = [
@@ -28,6 +29,7 @@ const menuItems = [
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
+  const { tenantId, tenantName } = useTenant()
 
   return (
     <>
@@ -60,7 +62,13 @@ export default function Navbar() {
             ))}
           </nav>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            {tenantId && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <BuildingIcon className="h-4 w-4" />
+                <span>{tenantName || `Empresa ${tenantId}`}</span>
+              </div>
+            )}
             <Button variant="ghost" size="icon">
               <NotificationIcon />
               <span className="sr-only">Notifications</span>

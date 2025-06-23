@@ -16,5 +16,6 @@ export interface AuthResponse {
     email: string;
     name: string;
     role: string;
+    tenantId?: string; // ID de la empresa a la que pertenece el usuario
   };
 }
