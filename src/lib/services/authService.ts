@@ -1,4 +1,5 @@
 import { AuthResponse, LoginDto } from '../types/auth';
+import { apiGet } from './apiService';
 
 /**
  * Interfaz para el perfil del usuario
@@ -9,10 +10,7 @@ interface UserProfile {
   role: string;
 }
 
-/**
- * URL base de la API
- */
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Ya no necesitamos definir API_URL aquí, se obtiene del apiService
 
 /**
  * Servicio de autenticación
@@ -26,6 +24,9 @@ export class AuthService {
    */
   static async login(loginDto: LoginDto): Promise<AuthResponse> {
     try {
+      // Nota: No podemos usar apiPost aquí porque el token aún no existe
+      // y apiService siempre intenta incluir el token si está disponible
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -35,14 +36,18 @@ export class AuthService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al iniciar sesión');
+        const errorData = await response.json().catch(() => ({
+          message: 'Error desconocido',
+        }));
+        throw new Error(errorData.message || `Error: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log(data);
+      
       // Guardar el token en localStorage para futuras peticiones
-      localStorage.setItem('auth_token', data.access_token);
+      if (data && data.access_token) {
+        localStorage.setItem('auth_token', data.access_token);
+      }
       
       return data;
     } catch (error) {
@@ -84,22 +89,12 @@ export class AuthService {
   static async getProfile(): Promise<UserProfile> {
     try {
       const token = this.getToken();
-      
       if (!token) {
         throw new Error('No hay token de autenticación');
       }
 
-      const response = await fetch(`${API_URL}/auth/validate`, {
-        headers: {
-          'Authorization': `${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al obtener el perfil');
-      }
-
-      return await response.json();
+      // Usamos apiGet que ya incluye el token en el header
+      return await apiGet<UserProfile>('/auth/validate');
     } catch (error) {
       console.error('Error al obtener perfil:', error);
       throw error;

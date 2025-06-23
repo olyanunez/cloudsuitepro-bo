@@ -1,39 +1,7 @@
 import { User, UserCreateInput, UserUpdateInput } from '../types/user';
+import { apiGet, apiPost, apiPatch, apiDelete } from './apiService';
 
-/**
- * URL base de la API
- */
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
-/**
- * Obtener el token de autenticación del localStorage
- */
-const getAuthToken = (): string | null => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('auth_token');
-  }
-  return null;
-};
-
-/**
- * Opciones por defecto para las peticiones fetch
- */
-const getDefaultOptions = (method: string, body?: unknown): RequestInit => {
-  const token = getAuthToken();
-  const options: RequestInit = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `${token}` } : {}),
-    },
-  };
-
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
-
-  return options;
-};
+// Ya no necesitamos definir estas funciones aquí, se obtienen del apiService
 
 /**
  * Manejar errores de respuesta HTTP
@@ -96,37 +64,9 @@ const normalizeUserData = (userData: UserDataFromBackend): User => {
   };
 };
 
-/**
- * Normaliza un array de usuarios
- */
-const normalizeUsers = (users: UserDataFromBackend[]): User[] => {
-  return users.map(normalizeUserData);
-};
+// Ya no necesitamos esta función porque normalizamos directamente en cada método
 
-/**
- * Manejar errores de respuesta HTTP
- */
-const handleResponse = async (response: Response, isUserData = false) => {
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({
-      message: 'Error desconocido',
-    }));
-    throw new Error(errorData.message || `Error: ${response.status}`);
-  }
-  
-  const data = await response.json();
-  
-  // Si son datos de usuario, normalizarlos
-  if (isUserData) {
-    if (Array.isArray(data)) {
-      return normalizeUsers(data);
-    } else if (data) {
-      return normalizeUserData(data);
-    }
-  }
-  
-  return data;
-};
+// La función handleResponse ha sido eliminada ya que ahora usamos el servicio de API centralizado
 
 export class UserService {
   /**
@@ -134,8 +74,8 @@ export class UserService {
    */
   static async getUsers(): Promise<User[]> {
     try {
-      const response = await fetch(`${API_URL}/users`, getDefaultOptions('GET'));
-      return handleResponse(response, true);
+      const data = await apiGet<UserDataFromBackend[]>('/users');
+      return data.map(normalizeUserData);
     } catch (error) {
       console.error('Error al obtener usuarios:', error);
       throw error;
@@ -147,11 +87,8 @@ export class UserService {
    */
   static async getUserById(id: number): Promise<User | null> {
     try {
-      const response = await fetch(
-        `${API_URL}/users/${id}`,
-        getDefaultOptions('GET')
-      );
-      return handleResponse(response, true);
+      const data = await apiGet<UserDataFromBackend>(`/users/${id}`);
+      return normalizeUserData(data);
     } catch (error) {
       console.error(`Error al obtener usuario ${id}:`, error);
       throw error;
@@ -163,11 +100,8 @@ export class UserService {
    */
   static async createUser(userData: UserCreateInput): Promise<User> {
     try {
-      const response = await fetch(
-        `${API_URL}/users`,
-        getDefaultOptions('POST', userData)
-      );
-      return handleResponse(response, true);
+      const data = await apiPost<UserDataFromBackend>('/users', userData);
+      return normalizeUserData(data);
     } catch (error) {
       console.error('Error al crear usuario:', error);
       throw error;
@@ -179,11 +113,8 @@ export class UserService {
    */
   static async updateUser(id: number, userData: UserUpdateInput): Promise<User> {
     try {
-      const response = await fetch(
-        `${API_URL}/users/${id}`,
-        getDefaultOptions('PATCH', userData)
-      );
-      return handleResponse(response, true);
+      const data = await apiPatch<UserDataFromBackend>(`/users/${id}`, userData);
+      return normalizeUserData(data);
     } catch (error) {
       console.error(`Error al actualizar usuario ${id}:`, error);
       throw error;
@@ -193,13 +124,9 @@ export class UserService {
   /**
    * Eliminar un usuario
    */
-  static async deleteUser(id: number): Promise<{ message: string }> {
+  static async deleteUser(id: number): Promise<void> {
     try {
-      const response = await fetch(
-        `${API_URL}/users/${id}`,
-        getDefaultOptions('DELETE')
-      );
-      return handleResponse(response);
+      await apiDelete(`/users/${id}`);
     } catch (error) {
       console.error(`Error al eliminar usuario ${id}:`, error);
       throw error;

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Icon, MenuIcon, NotificationIcon, UserIcon, LogoutIcon } from './Icons'
+import { AuthService } from '@/lib/services/authService'
 
 // Definición de los elementos del menú
 const menuItems = [
@@ -96,7 +97,7 @@ export default function Navbar() {
           </nav>
           <div className="absolute bottom-4 w-full pr-8">
             <Button variant="outline" className="w-full" onClick={() => {
-              localStorage.removeItem('auth_token');
+              AuthService.logout();
               window.location.href = '/login';
               setOpen(false);
             }}>
