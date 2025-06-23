@@ -6,7 +6,7 @@
  * y el tenantId para soporte multi-empresa
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 /**
  * Obtiene el token de autenticación del localStorage

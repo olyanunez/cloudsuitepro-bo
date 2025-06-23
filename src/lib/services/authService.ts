@@ -12,7 +12,46 @@ interface UserProfile {
   role: string;
 }
 
-// Ya no necesitamos definir API_URL aquí, se obtiene del apiService
+interface LoginResponse {
+  access_token: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    roleId: number;
+    role: {
+      id: number;
+      name: string;
+    };
+    permissions: any[];
+    tenantId: number;
+  };
+}
+
+interface RegisterData {
+  tenant: {
+    name: string;
+    email: string;
+    taxId: string;
+    address?: string;
+    phone?: string;
+    description?: string;
+  };
+  admin: {
+    name: string;
+    email: string;
+    password: string;
+  };
+}
+
+interface RegisterResponse extends LoginResponse {
+  tenant: {
+    id: number;
+    name: string;
+    email: string;
+    taxId: string;
+  };
+}
 
 /**
  * Servicio de autenticación
@@ -53,12 +92,52 @@ export class AuthService {
       
       // Guardar el tenantId si está disponible
       if (data && data.user && data.user.tenantId) {
-        localStorage.setItem('tenant_id', data.user.tenantId);
+        localStorage.setItem('tenant_id', data.user.tenantId.toString());
+        localStorage.setItem('tenant_name', data.user.tenant?.name || '');
       }
       
       return data;
     } catch (error) {
       console.error('Error en login:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Registrar empresa y usuario administrador
+   * @param registerData Datos de registro
+   * @returns Respuesta con token y datos del usuario
+   */
+  static async register(registerData: RegisterData): Promise<RegisterResponse> {
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(registerData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al registrar la empresa');
+      }
+
+      const data = await response.json();
+
+      // Guardar el token en localStorage
+      localStorage.setItem('auth_token', data.access_token);
+      
+      // Guardar el tenantId en localStorage
+      if (data.user && data.user.tenantId) {
+        localStorage.setItem('tenant_id', data.user.tenantId.toString());
+        localStorage.setItem('tenant_name', data.tenant?.name || '');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error en registro:', error);
       throw error;
     }
   }
