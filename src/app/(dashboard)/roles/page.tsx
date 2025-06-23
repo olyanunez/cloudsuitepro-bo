@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Role, Permission } from '@/lib/types/role';
+import { Role } from '@/lib/types/role';
 import { RoleService } from '@/lib/services/roleService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -76,8 +76,19 @@ export default function RolesPage() {
     }
   };
 
-  const getPermissionsCount = (permissions: Permission[]): number => {
-    return permissions.length;
+  const getPermissionsCount = (role: Role): number => {
+    // Si el rol tiene el campo permissionsCount, usarlo directamente
+    if (role.permissionsCount !== undefined) {
+      return role.permissionsCount;
+    }
+    // Si tiene screensWithPermissions, calcular el total sumando los permisos de cada pantalla
+    if (role.screensWithPermissions && role.screensWithPermissions.length > 0) {
+      return role.screensWithPermissions.reduce((total, screen) => {
+        return total + (screen.permissions?.length || 0);
+      }, 0);
+    }
+    // Si no hay información de permisos, devolver 0
+    return 0;
   };
   
   // Filter and sort roles
@@ -236,7 +247,7 @@ export default function RolesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
-                      {getPermissionsCount(role.permissions)} permisos
+                      {getPermissionsCount(role)} permisos
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">

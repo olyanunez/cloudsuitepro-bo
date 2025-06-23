@@ -2,26 +2,46 @@ import { BaseEntity } from './base';
 
 export interface Role extends BaseEntity {
   name: string;
-  description: string;
-  permissions: Permission[];
+  code: string; // Campo obligatorio en el backend
+  description?: string; // Opcional en el backend
+  isActive?: boolean;
+  // Campos específicos del frontend
+  screensWithPermissions?: ScreenWithPermissions[];
+  permissionsCount?: number;
 }
 
 export interface Permission {
-  id: string;
+  id: number;
   name: string;
   code: string;
   description: string;
   module: string;
 }
 
+export interface Screen {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+}
+
+export interface ScreenWithPermissions {
+  screen: Screen;
+  permissions: Permission[];
+}
+
 export interface RoleCreateInput {
   name: string;
-  description: string;
-  permissionIds: string[];
+  code: string; // Campo obligatorio en el backend
+  description?: string;
+  isActive?: boolean;
+  permissionIds: number[];
 }
 
 export interface RoleUpdateInput {
   name?: string;
+  code?: string;
   description?: string;
-  permissionIds?: string[];
+  isActive?: boolean;
+  permissionIds?: number[];
 }

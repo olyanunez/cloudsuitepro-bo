@@ -24,7 +24,7 @@ const getDefaultOptions = (method: string, body?: unknown): RequestInit => {
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(token ? { Authorization: `${token}` } : {}),
     },
   };
 
@@ -39,16 +39,17 @@ const getDefaultOptions = (method: string, body?: unknown): RequestInit => {
  * Tipo para los datos de rol recibidos del backend
  */
 interface RoleDataFromBackend {
-  id: string;
+  id: number;
   name: string;
+  code: string; // Campo obligatorio en el backend
   description?: string;
-  permissions?: string[];
+  permissions?: number[]; // IDs de permisos como números
   isActive?: boolean;
   version?: number;
   createdAt?: string;
   updatedAt?: string;
-  createdBy?: string;
-  updatedBy?: string;
+  createdBy?: number;
+  updatedBy?: number;
 }
 
 /**
@@ -56,17 +57,17 @@ interface RoleDataFromBackend {
  * @param roleData Datos del rol recibidos del backend
  */
 const normalizeRoleData = (roleData: RoleDataFromBackend): Role => {
-  // Convertir los permisos de string a objetos Permission
-  const permissions: Permission[] = (roleData.permissions || []).map(permission => {
+  // Convertir los permisos de número a objetos Permission
+  const permissions: Permission[] = (roleData.permissions || []).map(permissionId => {
     // Si el permiso ya es un objeto, lo devolvemos tal cual
-    if (typeof permission === 'object' && permission !== null) {
-      return permission as unknown as Permission;
+    if (typeof permissionId === 'object' && permissionId !== null) {
+      return permissionId as unknown as Permission;
     }
-    // Si es un string, lo convertimos a objeto Permission con todos los campos requeridos
+    // Si es un número, lo convertimos a objeto Permission con todos los campos requeridos
     return {
-      id: permission,
-      name: permission,
-      code: permission,  // Usamos el mismo valor como código
+      id: permissionId,
+      name: `Permission ${permissionId}`,
+      code: `PERM_${permissionId}`,  // Generamos un código basado en el ID
       description: '',
       module: 'default'  // Valor por defecto para el módulo
     };
@@ -76,14 +77,18 @@ const normalizeRoleData = (roleData: RoleDataFromBackend): Role => {
   return {
     id: roleData.id,
     name: roleData.name,
+    code: roleData.code, // Campo obligatorio
     description: roleData.description || '',
-    permissions: permissions,
     isActive: roleData.isActive !== undefined ? roleData.isActive : true,
-    version: roleData.version || 1,
-    createdAt: roleData.createdAt ? new Date(roleData.createdAt) : new Date(),
-    updatedAt: roleData.updatedAt ? new Date(roleData.updatedAt) : new Date(),
-    createdBy: roleData.createdBy || undefined,
-    updatedBy: roleData.updatedBy || undefined,
+    // Campos específicos del frontend
+    screensWithPermissions: undefined,
+    permissionsCount: permissions.length,
+    // Campos de auditoría
+    version: roleData.version,
+    createdAt: roleData.createdAt ? new Date(roleData.createdAt) : undefined,
+    updatedAt: roleData.updatedAt ? new Date(roleData.updatedAt) : undefined,
+    createdBy: roleData.createdBy,
+    updatedBy: roleData.updatedBy,
   };
 };
 
@@ -127,7 +132,14 @@ export class RoleService {
     try {
       const response = await fetch(
         `${API_URL}/roles`,
-        getDefaultOptions('GET')
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `${localStorage.getItem('auth_token') || ''}`
+          },
+        }
+       
       );
       
       if (!response.ok) {
@@ -145,7 +157,7 @@ export class RoleService {
   /**
    * Obtener un rol por ID
    */
-  static async getRoleById(id: string): Promise<Role | null> {
+  static async getRoleById(id: number): Promise<Role | null> {
     try {
       const response = await fetch(
         `${API_URL}/roles/${id}`,
@@ -197,7 +209,7 @@ export class RoleService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+          'Authorization': `${localStorage.getItem('auth_token') || ''}`
         },
         body: JSON.stringify(clonedRoleData)
       });
@@ -219,7 +231,7 @@ export class RoleService {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+            'Authorization': `${localStorage.getItem('auth_token') || ''}`
           },
           body: JSON.stringify({
             name: cloneName,
@@ -243,7 +255,7 @@ export class RoleService {
               method: 'PATCH',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+                'Authorization': `${localStorage.getItem('auth_token') || ''}`
               },
               body: JSON.stringify({
                 permissions: roleData.permissionIds
@@ -274,7 +286,7 @@ export class RoleService {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+              'Authorization': `${localStorage.getItem('auth_token') || ''}`
             },
             body: JSON.stringify({
               permissions: roleData.permissionIds
@@ -305,7 +317,7 @@ export class RoleService {
   /**
    * Actualizar un rol existente
    */
-  static async updateRole(id: string, roleData: RoleUpdateInput): Promise<Role> {
+  static async updateRole(id: number, roleData: RoleUpdateInput): Promise<Role> {
     try {
       // Adaptar los datos para el formato que espera el backend
       // Basado en UpdateRoleDto, solo enviamos name, description y permissions
@@ -320,9 +332,10 @@ export class RoleService {
       }
       
       if (roleData.permissionIds !== undefined) {
-        // Asegurarnos de que los permisos sean strings válidos
-        const validPermissions = roleData.permissionIds.filter(id => id && typeof id === 'string');
-        adaptedData.permissions = validPermissions; // Cambiamos permissionIds por permissions
+        // Asegurarnos de que los permisos sean números válidos
+        const validPermissions = roleData.permissionIds.filter(id => id && typeof id === 'number');
+        // Convertir a string para compatibilidad con la API actual
+        adaptedData.permissions = validPermissions.map(id => String(id));
       }
 
       console.log('Datos enviados al backend para actualizar:', JSON.stringify(adaptedData));
@@ -332,7 +345,7 @@ export class RoleService {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+          'Authorization': `${localStorage.getItem('auth_token') || ''}`
         },
         body: JSON.stringify(adaptedData)
       });
@@ -360,7 +373,7 @@ export class RoleService {
   /**
    * Eliminar un rol
    */
-  static async deleteRole(id: string): Promise<{ message: string }> {
+  static async deleteRole(id: number): Promise<{ message: string }> {
     try {
       const response = await fetch(
         `${API_URL}/roles/${id}`,
@@ -387,12 +400,14 @@ export class RoleService {
       
       // Recolectamos todos los permisos de todos los roles
       roles.forEach(role => {
-        if (role.permissions) {
-          role.permissions.forEach(permission => {
-            // Evitamos duplicados verificando si ya existe un permiso con el mismo ID
-            if (!allPermissions.some(p => p.id === permission.id)) {
-              allPermissions.push(permission);
-            }
+        if (role.screensWithPermissions) {
+          role.screensWithPermissions.forEach(screenWithPerm => {
+            screenWithPerm.permissions.forEach(permission => {
+              // Evitamos duplicados verificando si ya existe un permiso con el mismo ID
+              if (!allPermissions.some(p => p.id === permission.id)) {
+                allPermissions.push(permission);
+              }
+            });
           });
         }
       });

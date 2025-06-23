@@ -12,7 +12,7 @@ interface UserProfile {
 /**
  * URL base de la API
  */
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 /**
  * Servicio de autenticación
@@ -89,9 +89,9 @@ export class AuthService {
         throw new Error('No hay token de autenticación');
       }
 
-      const response = await fetch(`${API_URL}/auth/profile`, {
+      const response = await fetch(`${API_URL}/auth/validate`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `${token}`,
         },
       });
 

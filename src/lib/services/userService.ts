@@ -3,7 +3,7 @@ import { User, UserCreateInput, UserUpdateInput } from '../types/user';
 /**
  * URL base de la API
  */
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 /**
  * Obtener el token de autenticación del localStorage
@@ -24,7 +24,7 @@ const getDefaultOptions = (method: string, body?: unknown): RequestInit => {
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(token ? { Authorization: `${token}` } : {}),
     },
   };
 
@@ -42,18 +42,25 @@ const getDefaultOptions = (method: string, body?: unknown): RequestInit => {
  * Tipo para los datos de usuario recibidos del backend
  */
 interface UserDataFromBackend {
-  id: string;
+  id: number;
   name?: string;
-  email?: string;
-  roleId?: string;
+  lastName?: string; // Campo del backend
+  email: string;
+  roleId?: number;
+  role?: {
+    id: number;
+    name: string;
+    code: string;
+  };
   avatar?: string;
   isActive?: boolean;
   version?: number;
   createdAt?: string;
   updatedAt?: string;
-  createdBy?: string | null;
-  updatedBy?: string | null;
+  createdBy?: number | null;
+  updatedBy?: number | null;
   lastLogin?: string;
+  permissionsCount?: number;
 }
 
 /**
@@ -64,17 +71,28 @@ const normalizeUserData = (userData: UserDataFromBackend): User => {
   // Asegurarnos de que todos los campos esperados estén presentes
   return {
     id: userData.id,
-    name: userData.name || '',
-    email: userData.email || '',
-    roleId: userData.roleId || '',
+    name: userData.name,
+    lastName: userData.lastName,
+    email: userData.email,
+    roleId: userData.roleId,
+    role: userData.role ? {
+      id: userData.roleId || 0,
+      name: userData.role.name,
+      code: userData.role.code,
+      description: '',
+      version: userData.version,
+      createdAt: userData.createdAt ? new Date(userData.createdAt) : undefined,
+      updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : undefined
+    } : undefined,
     avatar: userData.avatar,
     isActive: userData.isActive !== undefined ? userData.isActive : true,
-    version: userData.version || 1,
-    createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
-    updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : new Date(),
+    version: userData.version,
+    createdAt: userData.createdAt ? new Date(userData.createdAt) : undefined,
+    updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : undefined,
     createdBy: userData.createdBy || undefined,
     updatedBy: userData.updatedBy || undefined,
     lastLogin: userData.lastLogin ? new Date(userData.lastLogin) : undefined,
+    permissionsCount: userData.permissionsCount || 0,
   };
 };
 
@@ -127,7 +145,7 @@ export class UserService {
   /**
    * Obtener un usuario por ID
    */
-  static async getUserById(id: string): Promise<User | null> {
+  static async getUserById(id: number): Promise<User | null> {
     try {
       const response = await fetch(
         `${API_URL}/users/${id}`,
@@ -159,7 +177,7 @@ export class UserService {
   /**
    * Actualizar un usuario existente
    */
-  static async updateUser(id: string, userData: UserUpdateInput): Promise<User> {
+  static async updateUser(id: number, userData: UserUpdateInput): Promise<User> {
     try {
       const response = await fetch(
         `${API_URL}/users/${id}`,
@@ -175,7 +193,7 @@ export class UserService {
   /**
    * Eliminar un usuario
    */
-  static async deleteUser(id: string): Promise<{ message: string }> {
+  static async deleteUser(id: number): Promise<{ message: string }> {
     try {
       const response = await fetch(
         `${API_URL}/users/${id}`,
@@ -193,7 +211,7 @@ export class UserService {
    * Nota: Esta funcionalidad requiere implementación específica en el backend
    * Por ahora, usamos el método de actualización general
    */
-  static async toggleUserStatus(id: string): Promise<User> {
+  static async toggleUserStatus(id: number): Promise<User> {
     try {
       // Primero obtenemos el usuario actual para conocer su estado
       const currentUser = await this.getUserById(id);

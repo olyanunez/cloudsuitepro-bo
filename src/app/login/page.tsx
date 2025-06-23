@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { AuthService } from '@/lib/services/authService';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('supervisor@example.com');
-  const [password, setPassword] = useState('supervisor123');
+  const [email, setEmail] = useState('admin@xotica.com');
+  const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();

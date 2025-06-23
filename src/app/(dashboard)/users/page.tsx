@@ -64,8 +64,13 @@ export default function UsersPage() {
     loadData();
   }, []);
 
-  const getRoleName = (roleId: string): string => {
-    const role = roles.find(r => r.id === roleId);
+  const getRoleName = (user: User): string => {
+    // Si el usuario tiene el objeto role, usar el nombre directamente
+    if (user.role && user.role.name) {
+      return user.role.name;
+    }
+    // Si no, buscar el rol en la lista local de roles
+    const role = roles.find(r => r.id === user.roleId);
     return role?.name || 'Desconocido';
   };
 
@@ -245,6 +250,9 @@ export default function UsersPage() {
                   Rol
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Permisos
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Estado
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -284,7 +292,12 @@ export default function UsersPage() {
                     {user.email}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                    {getRoleName(user.roleId)}
+                    {getRoleName(user)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                      {user.permissionsCount || 0} permisos
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
