@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Permission, RoleCreateInput } from '@/lib/types/role';
+
+// Extendemos el tipo Permission para incluir permissionId que puede venir en algunas respuestas
+type ExtendedPermission = Permission & { permissionId?: number };
 import { RoleService } from '@/lib/services/roleService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -10,16 +13,18 @@ import { useRouter } from 'next/navigation';
 
 export default function CreateRolePage() {
   const router = useRouter();
-  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [permissions, setPermissions] = useState<ExtendedPermission[]>([]);
   const [screensWithPermissions, setScreensWithPermissions] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [expandedScreens, setExpandedScreens] = useState<Record<number, boolean>>({});
-  const [formData, setFormData] = useState<RoleCreateInput>({
+  // Modificamos la estructura para guardar pares screenId-permissionId
+  const [formData, setFormData] = useState<RoleCreateInput & { screenPermissionPairs: {screenId: number, permissionId: number}[] }>({
     name: '',
     code: '',
     description: '',
-    screenPermissionIds: []
+    screenPermissionIds: [],
+    screenPermissionPairs: []
   });
   const [errors, setErrors] = useState<{
     name?: string;
@@ -119,15 +124,32 @@ export default function CreateRolePage() {
     }));
   };
 
-  const handlePermissionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePermissionChange = (e: React.ChangeEvent<HTMLInputElement>, screenId: number) => {
     const { value, checked } = e.target;
+    const permissionId = Number(value);
     
     setFormData(prev => {
-      const updatedScreenPermissionIds = checked 
-        ? [...prev.screenPermissionIds, Number(value)]
-        : prev.screenPermissionIds.filter(id => id !== Number(value));
+      // Actualizar los pares screenId-permissionId
+      let updatedPairs = [...prev.screenPermissionPairs];
       
-      return { ...prev, screenPermissionIds: updatedScreenPermissionIds };
+      if (checked) {
+        // Agregar el par si no existe
+        if (!updatedPairs.some(p => p.screenId === screenId && p.permissionId === permissionId)) {
+          updatedPairs.push({ screenId, permissionId });
+        }
+      } else {
+        // Eliminar el par si existe
+        updatedPairs = updatedPairs.filter(p => !(p.screenId === screenId && p.permissionId === permissionId));
+      }
+      
+      // Actualizar screenPermissionIds para compatibilidad con la API
+      const updatedIds = updatedPairs.map(p => p.permissionId);
+      
+      return { 
+        ...prev, 
+        screenPermissionPairs: updatedPairs,
+        screenPermissionIds: [...new Set(updatedIds)] // Eliminar duplicados
+      };
     });
     
     // Clear error when user selects permissions
@@ -137,27 +159,32 @@ export default function CreateRolePage() {
   };
   
   // Función para seleccionar/deseleccionar todos los permisos de una pantalla
-  const handleSelectAllScreenPermissions = (screenId: number, permissions: Permission[], checked: boolean) => {
-    const permissionIds = permissions.map(p => p.id);
+  const handleSelectAllScreenPermissions = (screenId: number, permissions: ExtendedPermission[], checked: boolean) => {
+    const permissionIds = permissions.map(p => p.id || p.permissionId).filter(Boolean) as number[];
     
     setFormData(prev => {
-      let updatedScreenPermissionIds = [...prev.screenPermissionIds];
+      let updatedPairs = [...prev.screenPermissionPairs];
       
       if (checked) {
-        // Agregar todos los permisos que no estén ya seleccionados
-        permissionIds.forEach(id => {
-          if (!updatedScreenPermissionIds.includes(id)) {
-            updatedScreenPermissionIds.push(id);
+        // Agregar todos los permisos de esta pantalla
+        permissionIds.forEach(permId => {
+          if (!updatedPairs.some(p => p.screenId === screenId && p.permissionId === permId)) {
+            updatedPairs.push({ screenId, permissionId: permId });
           }
         });
       } else {
         // Quitar todos los permisos de esta pantalla
-        updatedScreenPermissionIds = updatedScreenPermissionIds.filter(
-          id => !permissionIds.includes(id)
-        );
+        updatedPairs = updatedPairs.filter(p => p.screenId !== screenId);
       }
       
-      return { ...prev, screenPermissionIds: updatedScreenPermissionIds };
+      // Actualizar screenPermissionIds para compatibilidad con la API
+      const updatedIds = updatedPairs.map(p => p.permissionId);
+      
+      return { 
+        ...prev, 
+        screenPermissionPairs: updatedPairs,
+        screenPermissionIds: [...new Set(updatedIds)] // Eliminar duplicados
+      };
     });
     
     // Clear error when user selects permissions
@@ -332,9 +359,9 @@ export default function CreateRolePage() {
                     const isExpanded = expandedScreens[screenId] || false;
                     
                     // Calcular si todos los permisos de esta pantalla están seleccionados
-                    const permissionIds = permissions.map(p => p.id || p.permissionId);
+                    const permissionIds = permissions.map(p => p.id || p.permissionId).filter(Boolean) as number[];
                     const allSelected = permissionIds.length > 0 && permissionIds.every(id => 
-                      formData.screenPermissionIds.includes(Number(id))
+                      formData.screenPermissionPairs.some(p => p.screenId === screenId && p.permissionId === Number(id))
                     );
                     
                     return (
@@ -388,13 +415,13 @@ export default function CreateRolePage() {
                                   >
                                     <input
                                       type="checkbox"
-                                      id={`permission-${permId}`}
+                                      id={`permission-${screenId}-${permId}`}
                                       value={permId}
-                                      checked={formData.screenPermissionIds.includes(Number(permId))}
-                                      onChange={handlePermissionChange}
+                                      checked={formData.screenPermissionPairs.some(p => p.screenId === screenId && p.permissionId === Number(permId))}
+                                      onChange={(e) => handlePermissionChange(e, screenId)}
                                       className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                                     />
-                                    <label htmlFor={`permission-${permId}`} className="ml-2 block">
+                                    <label htmlFor={`permission-${screenId}-${permId}`} className="ml-2 block">
                                       <span className="font-medium">{permName}</span>
                                       <p className="text-xs text-gray-500 dark:text-gray-400">{permDescription}</p>
                                     </label>
@@ -420,13 +447,13 @@ export default function CreateRolePage() {
                           >
                             <input
                               type="checkbox"
-                              id={`permission-${permission.id}`}
+                              id={`permission-module-${permission.id}`}
                               value={permission.id}
                               checked={formData.screenPermissionIds.includes(permission.id)}
-                              onChange={handlePermissionChange}
+                              onChange={(e) => handlePermissionChange(e, 0)} // Usamos 0 como screenId para permisos por módulo
                               className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                             />
-                            <label htmlFor={`permission-${permission.id}`} className="ml-2 block">
+                            <label htmlFor={`permission-module-${permission.id}`} className="ml-2 block">
                               <span className="font-medium">{permission.name}</span>
                               <p className="text-xs text-gray-500 dark:text-gray-400">{permission.description}</p>
                             </label>

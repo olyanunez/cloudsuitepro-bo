@@ -142,7 +142,7 @@ export class RoleService {
   }
 
   /**
-   * Crear un nuevo rol
+   * Crear un nuevo rol con sus permisos en un solo request
    */
   static async createRole(roleData: RoleCreateInput): Promise<Role> {
     try {
@@ -159,46 +159,31 @@ export class RoleService {
         throw new Error(`Ya existe un rol con el código '${roleData.code}'`);
       }
       
-      // Creamos un nuevo objeto para el rol
-      const newRoleData = {
-        name: roleData.name,
-        code: roleData.code,
-        description: roleData.description || '',
-        isActive: true
+      // Creamos el objeto completo para enviar al backend
+      const completeRoleData = {
+        role: {
+          name: roleData.name,
+          code: roleData.code,
+          description: roleData.description || '',
+          isActive: true
+        },
+        screenPermissionIds: roleData.screenPermissionIds || []
       };
       
-      console.log('Datos para crear rol:', newRoleData);
+      console.log('Datos completos para crear rol:', completeRoleData);
       
-      // Crear el rol en el backend
+      // Crear el rol con sus permisos en un solo request
       try {
-        // Primero creamos el rol
-        const createdRole = await apiPost<RoleDataFromBackend>('/roles', newRoleData);
-        console.log('Rol creado exitosamente:', createdRole);
+        const response = await apiPost<RoleDataFromBackend>('/roles/with-permissions', completeRoleData);
+        console.log('Rol creado exitosamente con permisos:', response);
         
-        // Si hay permisos seleccionados, asignamos los screenPermissionIds
-        if (roleData.screenPermissionIds && roleData.screenPermissionIds.length > 0) {
-          try {
-            // Crear las asignaciones de role-screen-permission
-            const roleScreenPermissions = roleData.screenPermissionIds.map(screenPermissionId => ({
-              roleId: createdRole.id,
-              screenPermissionId: screenPermissionId,
-              isActive: true
-            }));
-            
-            // Llamar al endpoint para crear las asignaciones
-            await apiPost('/role-screen-permissions/batch', { roleScreenPermissions });
-            
-            // Obtener el rol actualizado con todos sus permisos
-            const finalRoleData = await apiGet<RoleDataFromBackend>(`/roles/${createdRole.id}`);
-            return normalizeRoleData(finalRoleData);
-          } catch (permError) {
-            console.error('Error al asignar permisos al rol:', permError);
-          }
+        if (response) {
+          return normalizeRoleData(response);
+        } else {
+          throw new Error('Respuesta inválida del servidor al crear rol');
         }
-        
-        return normalizeRoleData(createdRole);
       } catch (error) {
-        console.error('Error al crear rol:', error);
+        console.error('Error al crear rol con permisos:', error);
         throw error;
       }
     } catch (error) {
