@@ -1,4 +1,5 @@
-import { Role, RoleCreateInput, RoleUpdateInput, Permission, Screen } from '../types/role';
+import { Role, RoleCreateInput, RoleUpdateInput, Permission, Screen, ScreenWithPermissions } from '../types/role';
+import { apiGet, apiPost, apiPatch, apiDelete } from './apiService';
 
 // Definimos interfaces para la estructura que devuelve la API
 interface ApiScreenPermissionRelation {
@@ -25,9 +26,40 @@ interface ApiScreenWithPermissions {
   code: string;
   permissions: Permission[];
 }
-import { apiGet, apiPost, apiPatch, apiDelete } from './apiService';
 
-// Ya no necesitamos la URL base de la API, ya que usamos el servicio centralizado apiService
+// Tipo para los datos de relación rol-permiso-pantalla
+interface RoleScreenPermissionData {
+  id: number;
+  roleId: number;
+  screenPermissionId: number;
+  isActive: boolean;
+  version?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: number | null;
+  updatedBy?: number | null;
+  screenPermission?: {
+    id: number;
+    screenId: number;
+    permissionId: number;
+    isActive: boolean;
+    screen?: {
+      id: number;
+      name: string;
+      code: string;
+      description?: string;
+      isActive?: boolean;
+    };
+    permission?: {
+      id: number;
+      name: string;
+      code: string;
+      description?: string;
+      module?: string;
+      isActive?: boolean;
+    };
+  };
+}
 
 /**
  * Tipo para los datos de rol recibidos del backend
@@ -37,13 +69,14 @@ interface RoleDataFromBackend {
   name: string;
   code: string; // Campo obligatorio en el backend
   description?: string;
-  permissions?: number[]; // IDs de permisos como números
+  permissions?: number[] | Permission[]; // IDs de permisos como números o objetos Permission
+  roleScreenPermissions?: RoleScreenPermissionData[];
   isActive?: boolean;
   version?: number;
   createdAt?: string;
   updatedAt?: string;
-  createdBy?: number;
-  updatedBy?: number;
+  createdBy?: number | null;
+  updatedBy?: number | null;
 }
 
 /**
@@ -51,22 +84,98 @@ interface RoleDataFromBackend {
  * @param roleData Datos del rol recibidos del backend
  */
 const normalizeRoleData = (roleData: RoleDataFromBackend): Role => {
-  // Convertir los permisos de número a objetos Permission
-  const permissions: Permission[] = (roleData.permissions || []).map(permissionId => {
-    // Si el permiso ya es un objeto, lo devolvemos tal cual
-    if (typeof permissionId === 'object' && permissionId !== null) {
-      return permissionId as unknown as Permission;
-    }
-    // Si es un número, lo convertimos a objeto Permission con todos los campos requeridos
-    return {
-      id: permissionId,
-      name: `Permission ${permissionId}`,
-      code: `PERM_${permissionId}`,  // Generamos un código basado en el ID
-      description: '',
-      module: 'default'  // Valor por defecto para el módulo
-    };
-  });
-
+  console.log('Normalizando datos de rol:', roleData);
+  console.log('roleScreenPermissions:', roleData.roleScreenPermissions);
+  
+  // Mapa para almacenar pantallas y sus permisos
+  const screenMap = new Map<number, ScreenWithPermissions>();
+  const permissionsSet = new Set<number>(); // Para contar permisos únicos
+  
+  // Procesar roleScreenPermissions si existe
+  if (roleData.roleScreenPermissions && roleData.roleScreenPermissions.length > 0) {
+    console.log(`Procesando ${roleData.roleScreenPermissions.length} roleScreenPermissions`);
+    
+    roleData.roleScreenPermissions.forEach(rsp => {
+      console.log('Procesando rsp:', rsp);
+      if (!rsp.screenPermission) {
+        console.log('No hay screenPermission en este rsp');
+        return;
+      }
+      
+      const screenId = rsp.screenPermission.screenId;
+      const permissionId = rsp.screenPermission.permissionId;
+      console.log(`screenId: ${screenId}, permissionId: ${permissionId}`);
+      console.log('screenPermission:', rsp.screenPermission);
+      
+      // Obtener o crear la entrada de pantalla
+      if (!screenMap.has(screenId)) {
+        // Usar los datos completos de la pantalla que ahora vienen del backend
+        console.log('Datos de pantalla en screenPermission:', rsp.screenPermission.screen);
+        
+        const screenData = rsp.screenPermission.screen || {
+          id: screenId,
+          name: `Screen ${screenId}`,
+          code: `SCREEN_${screenId}`,
+          description: ''
+        };
+        
+        console.log('screenData procesado:', screenData);
+        
+        screenMap.set(screenId, {
+          screen: {
+            id: screenData.id,
+            name: screenData.name,
+            code: screenData.code,
+            description: screenData.description || ''
+          },
+          permissions: []
+        });
+        
+        console.log('Pantalla añadida al mapa:', screenMap.get(screenId));
+      }
+      
+      // Añadir el permiso a la pantalla
+      const screenWithPerms = screenMap.get(screenId)!;
+      
+      // Verificar si el permiso ya existe en la pantalla
+      const permissionExists = screenWithPerms.permissions.some(p => p.id === permissionId);
+      console.log(`Permiso ${permissionId} ya existe en pantalla ${screenId}:`, permissionExists);
+      
+      if (!permissionExists) {
+        // Usar los datos completos del permiso que ahora vienen del backend
+        console.log('Datos de permiso en screenPermission:', rsp.screenPermission.permission);
+        
+        const permissionData = rsp.screenPermission.permission || {
+          id: permissionId,
+          name: `Permission ${permissionId}`,
+          code: `PERM_${permissionId}`,
+          description: '',
+          module: 'default'
+        };
+        
+        console.log('permissionData procesado:', permissionData);
+        
+        // Añadir el permiso a la pantalla
+        screenWithPerms.permissions.push({
+          id: permissionData.id,
+          name: permissionData.name,
+          code: permissionData.code,
+          description: permissionData.description || '',
+          module: permissionData.module || 'default'
+        });
+        
+        console.log('Permiso añadido a la pantalla:', screenWithPerms.permissions[screenWithPerms.permissions.length - 1]);
+        
+        // Añadir el permiso al conjunto de permisos únicos
+        permissionsSet.add(permissionId);
+        console.log('Total permisos únicos:', permissionsSet.size);
+      }
+    });
+  }
+  
+  // Convertir el mapa a un array
+  const screensWithPermissions = Array.from(screenMap.values());
+  
   // Asegurarnos de que todos los campos esperados estén presentes
   return {
     id: roleData.id,
@@ -75,14 +184,14 @@ const normalizeRoleData = (roleData: RoleDataFromBackend): Role => {
     description: roleData.description || '',
     isActive: roleData.isActive !== undefined ? roleData.isActive : true,
     // Campos específicos del frontend
-    screensWithPermissions: undefined,
-    permissionsCount: permissions.length,
+    screensWithPermissions: screensWithPermissions,
+    permissionsCount: permissionsSet.size,
     // Campos de auditoría
     version: roleData.version,
     createdAt: roleData.createdAt ? new Date(roleData.createdAt) : undefined,
     updatedAt: roleData.updatedAt ? new Date(roleData.updatedAt) : undefined,
-    createdBy: roleData.createdBy,
-    updatedBy: roleData.updatedBy,
+    createdBy: roleData.createdBy !== null ? roleData.createdBy : undefined,
+    updatedBy: roleData.updatedBy !== null ? roleData.updatedBy : undefined,
   };
 };
 
@@ -267,10 +376,30 @@ export class RoleService {
   static async getPermissions(): Promise<Permission[]> {
     try {
       try {
-        // Intentamos primero obtener los permisos desde un endpoint específico
-        // si existe en el backend
-        const permissions = await apiGet<Permission[]>('/permissions');
-        return permissions;
+        // Definimos una interfaz para la estructura de los datos de screen-permissions
+        interface ScreenPermissionResponse {
+          id: number;
+          screenId: number;
+          permissionId: number;
+          permission: Permission;
+          screen: Screen;
+          isActive: boolean;
+        }
+        
+        // Intentamos primero obtener los permisos desde el endpoint de screen-permissions
+        // que existe en el backend
+        const screenPermissions = await apiGet<ScreenPermissionResponse[]>('/screen-permissions');
+        
+        // Extraer los permisos únicos de las relaciones de pantalla-permiso
+        const uniquePermissions = new Map<number, Permission>();
+        
+        screenPermissions.forEach(sp => {
+          if (sp.permission && !uniquePermissions.has(sp.permission.id)) {
+            uniquePermissions.set(sp.permission.id, sp.permission);
+          }
+        });
+        
+        return Array.from(uniquePermissions.values());
       } catch {
         console.log('No se encontró un endpoint específico para permisos, extrayendo de roles...');
         

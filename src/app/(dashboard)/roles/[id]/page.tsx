@@ -12,12 +12,13 @@ export default function RoleDetailPage() {
   const params = useParams();
   const [role, setRole] = useState<Role | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const roleId = params.id as string;
+  const roleId = parseInt(params.id as string, 10);
 
   useEffect(() => {
     async function loadRole() {
       try {
         const roleData = await RoleService.getRoleById(roleId);
+        console.log('Role data:', JSON.stringify(roleData, null, 2));
         setRole(roleData);
       } catch (error) {
         console.error('Error loading role data:', error);
@@ -56,14 +57,20 @@ export default function RoleDetailPage() {
     );
   }
 
-  // Agrupar permisos por módulo
-  const groupedPermissions: Record<string, Permission[]> = {};
-  role.permissions.forEach(permission => {
-    if (!groupedPermissions[permission.module]) {
-      groupedPermissions[permission.module] = [];
-    }
-    groupedPermissions[permission.module].push(permission);
-  });
+  // Extraer permisos de screensWithPermissions
+  const permissions: Permission[] = [];
+  
+  // Si el rol tiene screensWithPermissions, extraer los permisos
+  if (role.screensWithPermissions && role.screensWithPermissions.length > 0) {
+    role.screensWithPermissions.forEach(screenWithPerm => {
+      screenWithPerm.permissions.forEach(permission => {
+        // Evitar duplicados
+        if (!permissions.some(p => p.id === permission.id)) {
+          permissions.push(permission);
+        }
+      });
+    });
+  }
 
   return (
     <div className="container mx-auto py-8">
@@ -100,11 +107,11 @@ export default function RoleDetailPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Fecha de Creación</p>
-                <p>{new Date(role.createdAt).toLocaleDateString()}</p>
+                <p>{role.createdAt ? new Date(role.createdAt).toLocaleDateString() : 'N/A'}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Última Actualización</p>
-                <p>{new Date(role.updatedAt).toLocaleDateString()}</p>
+                <p>{role.updatedAt ? new Date(role.updatedAt).toLocaleDateString() : 'N/A'}</p>
               </div>
             </div>
           </div>
@@ -112,27 +119,37 @@ export default function RoleDetailPage() {
 
         <div className="md:col-span-2">
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Permisos ({role.permissions.length})</h2>
+            <h2 className="text-xl font-semibold mb-4">Permisos por Pantalla</h2>
             
-            {Object.keys(groupedPermissions).length === 0 ? (
+            {!role.screensWithPermissions || role.screensWithPermissions.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">Este rol no tiene permisos asignados.</p>
             ) : (
               <div className="space-y-6">
-                {Object.entries(groupedPermissions).map(([module, permissions]) => (
-                  <div key={module} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0 last:pb-0">
-                    <h3 className="font-medium text-lg mb-2 capitalize">{module}</h3>
+                {role.screensWithPermissions && role.screensWithPermissions.map((screenWithPerms) => (
+                  <div key={screenWithPerms.screen.id} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0 last:pb-0">
+                    <h3 className="font-medium text-lg mb-2 capitalize">{screenWithPerms.screen.name || `Pantalla ${screenWithPerms.screen.id}`}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{screenWithPerms.screen.description || `Código: ${screenWithPerms.screen.code}`}</p>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {permissions.map(permission => (
-                        <div 
-                          key={permission.id} 
-                          className="flex items-center p-2 rounded-md bg-gray-50 dark:bg-gray-700"
-                        >
-                          <div>
-                            <p className="font-medium">{permission.name}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{permission.description}</p>
+                      {screenWithPerms.permissions && screenWithPerms.permissions.length > 0 ? (
+                        screenWithPerms.permissions.map((permission) => (
+                          <div 
+                            key={`${screenWithPerms.screen.id}-${permission.id}`} 
+                            className="flex items-center p-3 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
+                          >
+                            <div className="w-full">
+                              <div className="flex justify-between items-center mb-1">
+                                <p className="font-medium text-blue-600 dark:text-blue-400">{permission.name}</p>
+                                <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-2 py-1 rounded">{permission.code}</span>
+                              </div>
+                              <p className="text-sm text-gray-600 dark:text-gray-300">{permission.description || `Permiso ID: ${permission.id}`}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 bg-gray-100 dark:bg-gray-800 inline-block px-2 py-1 rounded">Módulo: {permission.module || 'General'}</p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p className="text-gray-500 dark:text-gray-400 col-span-2">No hay permisos asignados a esta pantalla.</p>
+                      )}
                     </div>
                   </div>
                 ))}
