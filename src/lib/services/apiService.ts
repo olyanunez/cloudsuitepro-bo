@@ -6,7 +6,7 @@
  * y el tenantId para soporte multi-empresa
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 /**
  * Obtiene el token de autenticación del localStorage
@@ -67,16 +67,21 @@ export const getDefaultOptions = (method: string, body?: unknown): RequestInit =
  * @returns Promise con la respuesta
  */
 export const apiGet = async <T>(endpoint: string): Promise<T> => {
-  const response = await fetch(`${API_URL}${endpoint}`, getDefaultOptions('GET'));
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({
-      message: 'Error desconocido',
-    }));
-    throw new Error(errorData.message || `Error: ${response.status}`);
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, getDefaultOptions('GET'));
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        message: 'Error desconocido',
+      }));
+      throw new Error(errorData.message || `Error: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error en apiGet para ${endpoint}:`, error);
+    throw error;
   }
-  
-  return await response.json();
 };
 
 /**

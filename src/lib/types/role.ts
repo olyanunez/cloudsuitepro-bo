@@ -35,7 +35,8 @@ export interface RoleCreateInput {
   code: string; // Campo obligatorio en el backend
   description?: string;
   isActive?: boolean;
-  permissionIds: number[];
+  // Cambiado para adaptarse al nuevo backend que usa screenPermissionIds
+  screenPermissionIds: number[];
 }
 
 export interface RoleUpdateInput {
@@ -43,5 +44,5 @@ export interface RoleUpdateInput {
   code?: string;
   description?: string;
   isActive?: boolean;
-  permissionIds?: number[];
+  screenPermissionIds?: number[];
 }
