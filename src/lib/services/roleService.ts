@@ -327,31 +327,35 @@ export class RoleService {
         isActive: roleData.isActive
       });
       
-      // Si hay permisos seleccionados, actualizamos las asignaciones de permisos
-      if (roleData.screenPermissionIds && roleData.screenPermissionIds.length > 0) {
+      // Solo actualizamos los permisos si se proporcionaron explícitamente
+      if (roleData.screenPermissionIds !== undefined) {
         try {
+          console.log('Actualizando permisos del rol:', roleData.screenPermissionIds);
+          
           // Primero eliminamos todas las asignaciones existentes para este rol
           await apiDelete(`/role-screen-permissions/role/${id}`);
           
-          // Luego creamos las nuevas asignaciones
-          const roleScreenPermissions = roleData.screenPermissionIds.map((screenPermissionId: number) => ({
-            roleId: id,
-            screenPermissionId: screenPermissionId,
-            isActive: true
-          }));
-          
-          // Llamar al endpoint para crear las asignaciones
-          await apiPost('/role-screen-permissions/batch', { roleScreenPermissions });
-          
-          // Obtener el rol actualizado con todos sus permisos
-          const finalRoleData = await apiGet<RoleDataFromBackend>(`/roles/${id}`);
-          return normalizeRoleData(finalRoleData);
+          // Solo creamos nuevas asignaciones si hay permisos seleccionados
+          if (roleData.screenPermissionIds && roleData.screenPermissionIds.length > 0) {
+            // Luego creamos las nuevas asignaciones
+            const roleScreenPermissions = roleData.screenPermissionIds.map((screenPermissionId: number) => ({
+              roleId: id,
+              screenPermissionId: screenPermissionId,
+              isActive: true
+            }));
+            
+            // Llamar al endpoint para crear las asignaciones
+            await apiPost('/role-screen-permissions/batch', { roleScreenPermissions });
+          }
         } catch (permError) {
           console.error('Error al actualizar permisos del rol:', permError);
+          throw permError;
         }
       }
       
-      return normalizeRoleData(updatedRoleData);
+      // Obtener el rol actualizado con todos sus permisos
+      const finalRoleData = await apiGet<RoleDataFromBackend>(`/roles/${id}`);
+      return normalizeRoleData(finalRoleData);
     } catch (error) {
       console.error(`Error al actualizar rol ${id}:`, error);
       throw error;

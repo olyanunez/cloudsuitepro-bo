@@ -120,7 +120,6 @@ export default function RoleDetailPage() {
         <div className="md:col-span-2">
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Permisos por Pantalla</h2>
-            
             {!role.screensWithPermissions || role.screensWithPermissions.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">Este rol no tiene permisos asignados.</p>
             ) : (
@@ -129,12 +128,11 @@ export default function RoleDetailPage() {
                   <div key={screenWithPerms.screen.id} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0 last:pb-0">
                     <h3 className="font-medium text-lg mb-2 capitalize">{screenWithPerms.screen.name || `Pantalla ${screenWithPerms.screen.id}`}</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{screenWithPerms.screen.description || `Código: ${screenWithPerms.screen.code}`}</p>
-                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {screenWithPerms.permissions && screenWithPerms.permissions.length > 0 ? (
                         screenWithPerms.permissions.map((permission) => (
-                          <div 
-                            key={`${screenWithPerms.screen.id}-${permission.id}`} 
+                          <div
+                            key={`${screenWithPerms.screen.id}-${permission.id}`}
                             className="flex items-center p-3 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
                           >
                             <div className="w-full">
