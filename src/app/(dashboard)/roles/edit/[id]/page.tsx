@@ -1,106 +1,124 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Role, RoleUpdateInput, ScreenWithPermissions } from '@/lib/types/role';
+import { Permission, RoleUpdateInput } from '@/lib/types/role';
 import { RoleService } from '@/lib/services/roleService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
+import { ArrowLeftIcon, SaveIcon, ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+
+// Extendemos el tipo Permission para incluir screenPermissionId
+type ExtendedPermission = Permission & { screenPermissionId?: number };
 
 export default function EditRolePage() {
   const params = useParams();
   const router = useRouter();
   const roleId = params.id as string;
   
-  const [role, setRole] = useState<Role | null>(null);
-  const [allScreensWithPermissions, setAllScreensWithPermissions] = useState<ScreenWithPermissions[]>([]);
+  const [role, setRole] = useState<(RoleUpdateInput & { createdAt?: string | Date, updatedAt?: string | Date }) | null>(null);
+  const [screensWithPermissions, setScreensWithPermissions] = useState<{id: number, name: string, code: string, permissions: ExtendedPermission[]}[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
-  const [formData, setFormData] = useState<RoleUpdateInput & { permissionIds: string[]; permissionPairs: {screenId: number, permissionId: string}[] }>({
+  const [expandedScreens, setExpandedScreens] = useState<Record<number, boolean>>({});
+  
+  const [formData, setFormData] = useState<RoleUpdateInput & { 
+    screenPermissionPairs: {screenId: number, permissionId: number, screenPermissionId: number}[] 
+  }>({
     name: '',
+    code: '',
     description: '',
-    permissionIds: [],
     screenPermissionIds: [],
-    permissionPairs: []
+    screenPermissionPairs: []
   });
+  
   const [errors, setErrors] = useState<{
     name?: string;
+    code?: string;
     description?: string;
-    permissionIds?: string;
     screenPermissionIds?: string;
   }>({});
 
   useEffect(() => {
     async function loadData() {
       try {
-        const roleData = await RoleService.getRoleById(parseInt(roleId, 10));
-        const allScreensWithPerms = await RoleService.getScreensWithPermissions();
+        setLoading(true);
         
+        // Cargar el rol actual
+        const roleData = await RoleService.getRoleById(parseInt(roleId, 10));
         if (!roleData) {
           router.push('/roles');
           return;
         }
         
-        console.log('Role data:', roleData);
-        console.log('All screens with permissions:', allScreensWithPerms);
-        
         setRole(roleData);
         
-        // Convertir la estructura de ApiScreenWithPermissions a ScreenWithPermissions
-        const formattedScreens: ScreenWithPermissions[] = allScreensWithPerms.map(apiScreen => ({
-          screen: {
-            id: apiScreen.id,
-            name: apiScreen.name,
-            code: apiScreen.code,
-            description: ''
-          },
-          permissions: apiScreen.permissions
-        }));
+        // Cargar todas las pantallas con sus permisos
+        const screensData = await RoleService.getScreensWithPermissions();
+        console.log('Datos de pantallas con permisos:', screensData);
         
-        setAllScreensWithPermissions(formattedScreens);
+        // Procesar y agrupar los datos
+        const screenMap = new Map();
         
-        // Extraer todos los IDs de permisos asignados al rol
-        const assignedPermissionIds: string[] = [];
-        const assignedScreenPermissionIds: number[] = [];
-        
-        if (roleData.screensWithPermissions && roleData.screensWithPermissions.length > 0) {
-          roleData.screensWithPermissions.forEach(screenWithPerm => {
-            screenWithPerm.permissions.forEach(permission => {
-              assignedPermissionIds.push(permission.id.toString());
-              // Aquí deberíamos obtener los screenPermissionIds reales, pero como no los tenemos
-              // usamos un valor temporal
-              // assignedScreenPermissionIds.push(screenPermission.id);
+        screensData.forEach((item) => {
+          const screenId = item.id;
+          const screenName = item.name;
+          const screenCode = item.code;
+          const permissions = item.permissions || [];
+          
+          if (screenId) {
+            screenMap.set(screenId, {
+              id: screenId,
+              name: screenName,
+              code: screenCode,
+              permissions: [...permissions]
             });
-          });
-        }
+          }
+        });
         
-        // Crear pares de screenId-permissionId para un mejor control
-        const permissionPairs: {screenId: number, permissionId: string}[] = [];
+        // Convertir el mapa a un array
+        const uniqueScreensData = Array.from(screenMap.values());
+        setScreensWithPermissions(uniqueScreensData);
+        
+        // Inicializar el estado de expansión de pantallas
+        const initialExpandedState: Record<number, boolean> = {};
+        uniqueScreensData.forEach(screen => {
+          initialExpandedState[screen.id] = false;
+        });
+        setExpandedScreens(initialExpandedState);
+        
+        // Extraer los permisos asignados al rol
+        const screenPermissionPairs: {screenId: number, permissionId: number, screenPermissionId: number}[] = [];
         
         if (roleData.screensWithPermissions && roleData.screensWithPermissions.length > 0) {
           roleData.screensWithPermissions.forEach(screenWithPerm => {
             const screenId = screenWithPerm.screen.id;
             screenWithPerm.permissions.forEach(permission => {
-              permissionPairs.push({
+              screenPermissionPairs.push({
                 screenId,
-                permissionId: permission.id.toString()
+                permissionId: parseInt(permission.id.toString(), 10),
+                screenPermissionId: permission.screenPermissionId || 0
               });
             });
           });
         }
         
-        // Initialize form data
+        // Extraer los IDs de screenPermission para la API y filtrar valores inválidos (0 o undefined)
+        const screenPermissionIds = screenPermissionPairs
+          .map(p => p.screenPermissionId)
+          .filter(id => id !== 0 && id !== undefined);
+        
+        // Inicializar formData con los datos del rol
         setFormData({
           name: roleData.name,
           code: roleData.code,
           description: roleData.description,
-          permissionIds: assignedPermissionIds,
-          screenPermissionIds: assignedScreenPermissionIds,
-          permissionPairs: permissionPairs
+          screenPermissionIds,
+          screenPermissionPairs
         });
       } catch (error) {
         console.error('Error loading role data:', error);
+        alert('Ocurrió un error al cargar los datos del rol.');
       } finally {
         setLoading(false);
       }
@@ -114,66 +132,127 @@ export default function EditRolePage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
     // Clear error when user types
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
   };
 
+  const toggleScreenExpansion = (screenId: number) => {
+    setExpandedScreens(prev => ({
+      ...prev,
+      [screenId]: !prev[screenId]
+    }));
+  };
+
   const handlePermissionChange = (e: React.ChangeEvent<HTMLInputElement>, screenId: number) => {
     const { value, checked } = e.target;
-    const permissionId = value;
+    // El valor ahora contiene screenPermissionId-permissionId
+    const [screenPermissionId, permissionId] = value.split('-').map(Number);
+    
+    console.log(`Cambiando permiso: screenId=${screenId}, permissionId=${permissionId}, screenPermissionId=${screenPermissionId}, checked=${checked}`);
     
     setFormData(prev => {
-      // Actualizar los pares screenId-permissionId
-      let updatedPairs = [...prev.permissionPairs];
+      // Actualizar los pares screenId-permissionId-screenPermissionId
+      let updatedPairs = [...prev.screenPermissionPairs];
       
       if (checked) {
         // Agregar el par si no existe
         if (!updatedPairs.some(p => p.screenId === screenId && p.permissionId === permissionId)) {
-          updatedPairs.push({ screenId, permissionId });
+          updatedPairs.push({ screenId, permissionId, screenPermissionId });
         }
       } else {
-        // Eliminar el par si existe
+        // Eliminar el par si existe usando screenId y permissionId en lugar de screenPermissionId
+        // para manejar correctamente los casos donde screenPermissionId es 0
         updatedPairs = updatedPairs.filter(p => !(p.screenId === screenId && p.permissionId === permissionId));
       }
       
-      // Actualizar permissionIds para compatibilidad con la UI
-      const updatedPermissionIds = updatedPairs.map(p => p.permissionId);
+      // Extraer los IDs de screenPermission para la API y filtrar valores inválidos (0 o undefined)
+      const updatedScreenPermissionIds = updatedPairs
+        .map(p => p.screenPermissionId)
+        .filter(id => id !== 0 && id !== undefined);
+      
+      console.log('Pares actualizados:', updatedPairs);
+      console.log('IDs de screenPermission filtrados:', updatedScreenPermissionIds);
       
       return { 
         ...prev, 
-        permissionIds: updatedPermissionIds,
-        permissionPairs: updatedPairs
-        // En un caso real, aquí actualizaríamos screenPermissionIds
+        screenPermissionPairs: updatedPairs,
+        screenPermissionIds: updatedScreenPermissionIds
       };
     });
     
     // Clear error when user selects permissions
-    if (errors.permissionIds) {
-      setErrors(prev => ({ ...prev, permissionIds: undefined }));
+    if (errors.screenPermissionIds) {
+      setErrors(prev => ({ ...prev, screenPermissionIds: undefined }));
+    }
+  };
+
+  // Función para seleccionar/deseleccionar todos los permisos de una pantalla
+  const handleSelectAllScreenPermissions = (screenId: number, permissions: ExtendedPermission[], checked: boolean) => {
+    setFormData(prev => {
+      let updatedPairs = [...prev.screenPermissionPairs];
+      
+      if (checked) {
+        // Agregar todos los permisos de la pantalla que no estén ya seleccionados
+        permissions.forEach(permission => {
+          const permissionId = permission.id;
+          const screenPermissionId = permission.screenPermissionId || 0;
+          
+          if (!updatedPairs.some(p => p.screenPermissionId === screenPermissionId)) {
+            updatedPairs.push({
+              screenId,
+              permissionId,
+              screenPermissionId
+            });
+          }
+        });
+      } else {
+        // Eliminar todos los permisos de esta pantalla
+        updatedPairs = updatedPairs.filter(p => p.screenId !== screenId);
+      }
+      
+      // Actualizar screenPermissionIds y filtrar valores inválidos (0 o undefined)
+      const updatedScreenPermissionIds = updatedPairs
+        .map(p => p.screenPermissionId)
+        .filter(id => id !== 0 && id !== undefined);
+      
+      return {
+        ...prev,
+        screenPermissionPairs: updatedPairs,
+        screenPermissionIds: updatedScreenPermissionIds
+      };
+    });
+    
+    // Clear error
+    if (errors.screenPermissionIds) {
+      setErrors(prev => ({ ...prev, screenPermissionIds: undefined }));
     }
   };
 
   const validateForm = (): boolean => {
     const newErrors: {
       name?: string;
+      code?: string;
       description?: string;
-      permissionIds?: string;
+      screenPermissionIds?: string;
     } = {};
     
     if (!formData.name || !formData.name.trim()) {
-      newErrors.name = 'El nombre del rol es requerido';
+      newErrors.name = 'El nombre del rol es obligatorio';
+    }
+    
+    if (!formData.code || !formData.code.trim()) {
+      newErrors.code = 'El código del rol es obligatorio';
     }
     
     if (!formData.description || !formData.description.trim()) {
-      newErrors.description = 'La descripción es requerida';
+      newErrors.description = 'La descripción del rol es obligatoria';
     }
     
-    if (!formData.permissionIds || formData.permissionIds.length === 0) {
-      newErrors.permissionIds = 'Debe seleccionar al menos un permiso';
-      newErrors.screenPermissionIds = 'Debe seleccionar al menos un permiso';
-    }
+    // Eliminamos la validación que requiere al menos un permiso
+    // Un rol puede existir sin permisos asignados
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -189,32 +268,20 @@ export default function EditRolePage() {
     try {
       setSaving(true);
       
-      // Convertir los IDs de string a number para screenPermissionIds
-      const screenPermissionIds: number[] = [];
+      // Filtrar una vez más los screenPermissionIds para asegurar que no haya valores inválidos
+      const validScreenPermissionIds = (formData.screenPermissionIds || []).filter(id => id !== 0 && id !== undefined);
       
-      // Extraer los IDs de permisos únicos de los pares
-      if (formData.permissionPairs && formData.permissionPairs.length > 0) {
-        formData.permissionIds.forEach(id => {
-          const numId = parseInt(id, 10);
-          if (!isNaN(numId) && !screenPermissionIds.includes(numId)) {
-            screenPermissionIds.push(numId);
-          }
-        });
-      }
+      console.log('Enviando datos del rol:', formData);
+      console.log('screenPermissionIds originales:', formData.screenPermissionIds);
+      console.log('screenPermissionIds filtrados a enviar:', validScreenPermissionIds);
       
-      console.log('Permisos seleccionados para enviar:', screenPermissionIds);
-      
-      // Datos completos del rol incluyendo permisos
-      const updateData: RoleUpdateInput = {
-        name: formData.name,
-        code: formData.code,
-        description: formData.description,
-        screenPermissionIds: screenPermissionIds
+      // Usar el nuevo método updateRoleWithPermissions con los IDs filtrados
+      const dataToSend = {
+        ...formData,
+        screenPermissionIds: validScreenPermissionIds
       };
       
-      console.log('Enviando datos completos al backend:', updateData);
-      
-      await RoleService.updateRole(parseInt(roleId, 10), updateData);
+      await RoleService.updateRoleWithPermissions(parseInt(roleId, 10), dataToSend);
       router.push(`/roles/${roleId}`);
     } catch (error) {
       console.error('Error updating role:', error);
@@ -225,12 +292,14 @@ export default function EditRolePage() {
   };
 
   // Ordenar pantallas alfabéticamente por nombre
-  const sortedScreens = [...allScreensWithPermissions].sort((a, b) => {
-    return (a.screen.name || '').localeCompare(b.screen.name || '');
+  const sortedScreens = [...screensWithPermissions].sort((a, b) => {
+    return (a.name || '').localeCompare(b.name || '');
   });
   
   // Calcular el total de permisos seleccionados
-  const selectedPermissionsCount = formData.permissionIds?.length || 0;
+  // Usar screenPermissionPairs para contar los permisos seleccionados, ya que screenPermissionIds
+  // puede tener menos elementos debido al filtrado de valores 0
+  const selectedPermissionsCount = formData.screenPermissionPairs?.length || 0;
 
   if (loading) {
     return (
@@ -293,6 +362,23 @@ export default function EditRolePage() {
                   {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                 </div>
                 <div>
+                  <label htmlFor="code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Código <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="code"
+                    name="code"
+                    value={formData.code}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-md ${
+                      errors.code ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                    placeholder="Código del rol"
+                  />
+                  {errors.code && <p className="mt-1 text-sm text-red-500">{errors.code}</p>}
+                </div>
+                <div>
                   <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Descripción <span className="text-red-500">*</span>
                   </label>
@@ -311,11 +397,11 @@ export default function EditRolePage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Fecha de Creación</p>
-                  <p>{role.createdAt ? new Date(role.createdAt).toLocaleDateString() : 'N/A'}</p>
+                  <p>{role?.createdAt ? new Date(role.createdAt).toLocaleDateString() : 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Última Actualización</p>
-                  <p>{role.updatedAt ? new Date(role.updatedAt).toLocaleDateString() : 'N/A'}</p>
+                  <p>{role?.updatedAt ? new Date(role.updatedAt).toLocaleDateString() : 'N/A'}</p>
                 </div>
               </div>
             </div>
@@ -330,51 +416,102 @@ export default function EditRolePage() {
                 </div>
               </div>
               
-              {errors.permissionIds && (
+              {errors.screenPermissionIds && (
                 <div className="mb-4 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                  <p className="text-sm text-red-600 dark:text-red-400">{errors.permissionIds}</p>
+                  <p className="text-sm text-red-600 dark:text-red-400">{errors.screenPermissionIds}</p>
                 </div>
               )}
               
               <div className="space-y-6">
-                {sortedScreens.map((screenWithPerms) => (
-                  <div key={screenWithPerms.screen.id} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0 last:pb-0">
-                    <h3 className="font-medium text-lg mb-2 capitalize">{screenWithPerms.screen.name || `Pantalla ${screenWithPerms.screen.id}`}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{screenWithPerms.screen.description || `Código: ${screenWithPerms.screen.code}`}</p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {screenWithPerms.permissions && screenWithPerms.permissions.length > 0 ? (
-                        screenWithPerms.permissions.map((permission) => (
-                          <div 
-                            key={`${screenWithPerms.screen.id}-${permission.id}`} 
-                            className="flex items-center p-3 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
-                          >
-                            <input
-                              type="checkbox"
-                              id={`permission-${screenWithPerms.screen.id}-${permission.id}`}
-                              value={permission.id.toString()}
-                              checked={formData.permissionPairs?.some(p => p.screenId === screenWithPerms.screen.id && p.permissionId === permission.id.toString()) || false}
-                              onChange={(e) => handlePermissionChange(e, screenWithPerms.screen.id)}
-                              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                            />
-                            <label htmlFor={`permission-${screenWithPerms.screen.id}-${permission.id}`} className="ml-2 block w-full">
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="font-medium text-blue-600 dark:text-blue-400">{permission.name}</span>
-                                <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-2 py-1 rounded">{permission.code}</span>
-                              </div>
-                              <p className="text-sm text-gray-600 dark:text-gray-300">{permission.description || `Permiso ID: ${permission.id}`}</p>
-                              {permission.module && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 bg-gray-100 dark:bg-gray-800 inline-block px-2 py-1 rounded">Módulo: {permission.module}</p>
-                              )}
-                            </label>
+                {sortedScreens.map((screen) => {
+                  const screenId = screen.id;
+                  const screenName = screen.name || `Pantalla sin nombre`;
+                  const screenCode = screen.code || '';
+                  const permissions = screen.permissions || [];
+                  
+                  const isExpanded = expandedScreens[screenId] || false;
+                  
+                  // Calcular si todos los permisos de esta pantalla están seleccionados
+                  const allSelected = permissions.length > 0 && permissions.every((permission: ExtendedPermission) => 
+                    formData.screenPermissionPairs.some(p => p.screenId === screenId && p.permissionId === Number(permission.id))
+                  );
+                  
+                  return (
+                    <div key={screenId} className="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden mb-3">
+                      <div 
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 cursor-pointer"
+                        onClick={() => toggleScreenExpansion(screenId)}
+                      >
+                        <div className="flex items-center">
+                          {isExpanded ? 
+                            <ChevronDownIcon className="h-4 w-4 mr-2" /> : 
+                            <ChevronRightIcon className="h-4 w-4 mr-2" />
+                          }
+                          <h3 className="font-medium">{screenName}</h3>
+                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                            {screenCode}
+                          </span>
+                          <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded-full">
+                            {permissions.length} permisos
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`screen-${screenId}`}
+                            checked={allSelected}
+                            onChange={(e) => handleSelectAllScreenPermissions(screenId, permissions, e.target.checked)}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mr-2"
+                            onClick={(e) => e.stopPropagation()} // Evitar que se expanda/colapse al hacer clic en el checkbox
+                          />
+                          <label htmlFor={`screen-${screenId}`} className="text-sm" onClick={(e) => e.stopPropagation()}>
+                            Seleccionar todos
+                          </label>
+                        </div>
+                      </div>
+                      
+                      {isExpanded && (
+                        <div className="p-3 bg-white dark:bg-gray-900">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            {permissions.map((permission: ExtendedPermission) => {
+                              // Extraer los datos del permiso
+                              const permId = permission.id;
+                              const permName = permission.name || `Permiso sin nombre`;
+                              const permDescription = permission.description || '';
+                              const screenPermissionId = permission.screenPermissionId || 0;
+                              
+                              // Verificar si este permiso está seleccionado
+                              const isChecked = formData.screenPermissionPairs.some(
+                                p => p.screenId === screenId && p.permissionId === Number(permId)
+                              );
+                              
+                              return (
+                                <div 
+                                  key={`${screenId}-${permId}`} 
+                                  className="flex items-center p-2 rounded-md bg-gray-50 dark:bg-gray-700"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    id={`permission-${screenId}-${permId}`}
+                                    value={`${screenPermissionId}-${permId}`}
+                                    checked={isChecked}
+                                    onChange={(e) => handlePermissionChange(e, screenId)}
+                                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                                  />
+                                  <label htmlFor={`permission-${screenId}-${permId}`} className="ml-2 block">
+                                    <span className="font-medium">{permName}</span>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{permDescription}</p>
+                                  </label>
+                                </div>
+                              );
+                            })}
                           </div>
-                        ))
-                      ) : (
-                        <p className="text-gray-500 dark:text-gray-400 col-span-2">No hay permisos disponibles para esta pantalla.</p>
+                        </div>
                       )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

@@ -24,7 +24,7 @@ interface ApiScreenWithPermissions {
   id: number;
   name: string;
   code: string;
-  permissions: Permission[];
+  permissions: (Permission & { screenPermissionId?: number })[];
 }
 
 // Tipo para los datos de relación rol-permiso-pantalla
@@ -302,9 +302,9 @@ export class RoleService {
   }
 
   /**
-   * Actualizar un rol existente
+   * Actualizar un rol existente con permisos
    */
-  static async updateRole(id: number, roleData: RoleUpdateInput): Promise<Role> {
+  static async updateRoleWithPermissions(id: number, roleData: RoleUpdateInput): Promise<Role> {
     try {
       // Verificamos si hay un rol con el mismo nombre o código para evitar conflictos
       const existingRoles = await this.getRoles();
@@ -319,47 +319,43 @@ export class RoleService {
         throw new Error(`Ya existe un rol con el código '${roleData.code}'`);
       }
       
-      // Actualizamos los datos básicos del rol
-      const updatedRoleData = await apiPatch<RoleDataFromBackend>(`/roles/${id}`, {
-        name: roleData.name,
-        code: roleData.code,
-        description: roleData.description,
-        isActive: roleData.isActive
-      });
-      
-      // Solo actualizamos los permisos si se proporcionaron explícitamente
-      if (roleData.screenPermissionIds !== undefined) {
-        try {
-          console.log('Actualizando permisos del rol:', roleData.screenPermissionIds);
-          
-          // Primero eliminamos todas las asignaciones existentes para este rol
-          await apiDelete(`/role-screen-permissions/role/${id}`);
-          
-          // Solo creamos nuevas asignaciones si hay permisos seleccionados
-          if (roleData.screenPermissionIds && roleData.screenPermissionIds.length > 0) {
-            // Luego creamos las nuevas asignaciones
-            const roleScreenPermissions = roleData.screenPermissionIds.map((screenPermissionId: number) => ({
-              roleId: id,
-              screenPermissionId: screenPermissionId,
-              isActive: true
-            }));
-            
-            // Llamar al endpoint para crear las asignaciones
-            await apiPost('/role-screen-permissions/batch', { roleScreenPermissions });
-          }
-        } catch (permError) {
-          console.error('Error al actualizar permisos del rol:', permError);
-          throw permError;
+      try {
+        console.log('Actualizando rol con permisos:', roleData);
+        
+        // Usar el nuevo endpoint para actualizar rol con permisos en una sola llamada
+        const response = await apiPatch<RoleDataFromBackend>(`/roles/with-permissions/${id}`, {
+          role: {
+            name: roleData.name,
+            code: roleData.code,
+            description: roleData.description,
+            isActive: roleData.isActive
+          },
+          screenPermissionIds: roleData.screenPermissionIds || []
+        });
+        
+        console.log('Rol actualizado exitosamente con permisos:', response);
+        
+        if (response) {
+          return normalizeRoleData(response);
+        } else {
+          throw new Error('Respuesta inválida del servidor al actualizar rol');
         }
+      } catch (error) {
+        console.error('Error al actualizar rol con permisos:', error);
+        throw error;
       }
-      
-      // Obtener el rol actualizado con todos sus permisos
-      const finalRoleData = await apiGet<RoleDataFromBackend>(`/roles/${id}`);
-      return normalizeRoleData(finalRoleData);
     } catch (error) {
-      console.error(`Error al actualizar rol ${id}:`, error);
+      console.error(`Error en el proceso de actualización de rol ${id}:`, error);
       throw error;
     }
+  }
+  
+  /**
+   * Actualizar un rol existente
+   */
+  static async updateRole(id: number, roleData: RoleUpdateInput): Promise<Role> {
+    // Usar el nuevo método updateRoleWithPermissions para mantener compatibilidad
+    return this.updateRoleWithPermissions(id, roleData);
   }
 
   /**
@@ -454,7 +450,7 @@ export class RoleService {
         const screenMap = new Map<number, ApiScreenWithPermissions>();
         
         response.forEach(relation => {
-          const { screen, permission } = relation;
+          const { screen, permission, id: screenPermissionId } = relation;
           
           if (!screenMap.has(screen.id)) {
             screenMap.set(screen.id, {
@@ -468,7 +464,11 @@ export class RoleService {
           const screenWithPermissions = screenMap.get(screen.id)!;
           // Evitar duplicados de permisos
           if (!screenWithPermissions.permissions.some(p => p.id === permission.id)) {
-            screenWithPermissions.permissions.push(permission);
+            // Incluir el screenPermissionId en el objeto de permiso
+            screenWithPermissions.permissions.push({
+              ...permission,
+              screenPermissionId: screenPermissionId
+            });
           }
         });
         

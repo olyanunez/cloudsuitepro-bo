@@ -16,6 +16,7 @@ export interface Permission {
   code: string;
   description: string;
   module: string;
+  screenPermissionId?: number; // ID de la relación entre pantalla y permiso
 }
 
 export interface Screen {
