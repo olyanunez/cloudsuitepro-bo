@@ -8,6 +8,11 @@ export interface Role extends BaseEntity {
   // Campos específicos del frontend
   screensWithPermissions?: ScreenWithPermissions[];
   permissionsCount?: number;
+  // Campos que vienen del backend
+  _count?: {
+    users?: number;
+    roleScreenPermissions?: number;
+  };
 }
 
 export interface Permission {
@@ -46,4 +51,6 @@ export interface RoleUpdateInput {
   description?: string;
   isActive?: boolean;
   screenPermissionIds?: number[];
+  // Agregamos el campo para los pares screenId-permissionId
+  screenPermissionPairs?: { screenId: number; permissionId: number }[];
 }

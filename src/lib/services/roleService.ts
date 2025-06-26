@@ -77,6 +77,11 @@ interface RoleDataFromBackend {
   updatedAt?: string;
   createdBy?: number | null;
   updatedBy?: number | null;
+  // Conteo de relaciones desde el backend
+  _count?: {
+    users?: number;
+    roleScreenPermissions?: number;
+  };
 }
 
 /**
@@ -186,6 +191,8 @@ const normalizeRoleData = (roleData: RoleDataFromBackend): Role => {
     // Campos específicos del frontend
     screensWithPermissions: screensWithPermissions,
     permissionsCount: permissionsSet.size,
+    // Preservar la información de conteo del backend
+    _count: roleData._count,
     // Campos de auditoría
     version: roleData.version,
     createdAt: roleData.createdAt ? new Date(roleData.createdAt) : undefined,
@@ -205,7 +212,9 @@ export class RoleService {
    */
   static async getRoles(): Promise<Role[]> {
     try {
-      const data = await apiGet<RoleDataFromBackend[]>('/roles');
+      // Solicitar explícitamente que se incluyan los permisos
+      const data = await apiGet<RoleDataFromBackend[]>('/roles?includePermissions=true');
+      console.log('Datos de roles recibidos del backend:', data);
       return data.map(normalizeRoleData);
     } catch (error) {
       console.error('Error al obtener roles:', error);
@@ -361,7 +370,7 @@ export class RoleService {
   /**
    * Eliminar un rol
    */
-  static async deleteRole(id: number): Promise<{ message: string }> {
+  static async deleteRole(id: string | number): Promise<{ message: string }> {
     try {
       return await apiDelete<{ message: string }>(`/roles/${id}`);
     } catch (error) {

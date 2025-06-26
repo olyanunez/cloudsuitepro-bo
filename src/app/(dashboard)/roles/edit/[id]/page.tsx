@@ -268,17 +268,27 @@ export default function EditRolePage() {
     try {
       setSaving(true);
       
-      // Filtrar una vez más los screenPermissionIds para asegurar que no haya valores inválidos
-      const validScreenPermissionIds = (formData.screenPermissionIds || []).filter(id => id !== 0 && id !== undefined);
+      // Preparar los datos para enviar al backend
+      // Necesitamos enviar todos los permisos seleccionados, incluso si no tienen un screenPermissionId válido
+      // Para ello, enviaremos un array con los pares screenId-permissionId
+      const screenPermissionPairs = formData.screenPermissionPairs || [];
+      
+      // Creamos un array con todos los pares screenId-permissionId seleccionados
+      const allSelectedPermissions = screenPermissionPairs.map(pair => ({
+        screenId: pair.screenId,
+        permissionId: pair.permissionId
+      }));
       
       console.log('Enviando datos del rol:', formData);
-      console.log('screenPermissionIds originales:', formData.screenPermissionIds);
-      console.log('screenPermissionIds filtrados a enviar:', validScreenPermissionIds);
+      console.log('Todos los permisos seleccionados:', allSelectedPermissions);
       
-      // Usar el nuevo método updateRoleWithPermissions con los IDs filtrados
+      // Preparar los datos para enviar al backend
       const dataToSend = {
-        ...formData,
-        screenPermissionIds: validScreenPermissionIds
+        name: formData.name,
+        code: formData.code,
+        description: formData.description,
+        // Enviamos todos los permisos seleccionados como pares screenId-permissionId
+        screenPermissionPairs: allSelectedPermissions
       };
       
       await RoleService.updateRoleWithPermissions(parseInt(roleId, 10), dataToSend);

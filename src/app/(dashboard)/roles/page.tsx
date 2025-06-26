@@ -44,6 +44,15 @@ export default function RolesPage() {
     async function loadData() {
       try {
         const rolesData = await RoleService.getRoles();
+        console.log('Roles recibidos del backend:', rolesData);
+        
+        // Verificar la estructura de los datos recibidos
+        if (rolesData && rolesData.length > 0) {
+          console.log('Estructura del primer rol:', JSON.stringify(rolesData[0], null, 2));
+          console.log('_count disponible:', rolesData[0]._count);
+          console.log('Permisos calculados para el primer rol:', getPermissionsCount(rolesData[0]));
+        }
+        
         setRoles(rolesData);
       } catch (error) {
         console.error('Error loading roles data:', error);
@@ -55,8 +64,8 @@ export default function RolesPage() {
     loadData();
   }, []);
 
-  const confirmDelete = (roleId: string) => {
-    setRoleToDelete(roleId);
+  const confirmDelete = (roleId: string | number) => {
+    setRoleToDelete(String(roleId));
     setIsDeleteDialogOpen(true);
   };
 
@@ -64,9 +73,12 @@ export default function RolesPage() {
     if (!roleToDelete) return;
     
     try {
-      const success = await RoleService.deleteRole(roleToDelete);
-      if (success) {
-        setRoles(roles.filter(role => role.id !== roleToDelete));
+      const response = await RoleService.deleteRole(roleToDelete);
+      if (response && response.message) {
+        // Convertir roleToDelete a número para comparar con role.id que es número
+        const roleToDeleteNum = parseInt(roleToDelete, 10);
+        setRoles(roles.filter(role => role.id !== roleToDeleteNum));
+        console.log('Rol eliminado exitosamente:', response.message);
       }
     } catch (error) {
       console.error('Error deleting role:', error);
@@ -77,17 +89,31 @@ export default function RolesPage() {
   };
 
   const getPermissionsCount = (role: Role): number => {
+    console.log('Calculando permisos para rol:', role.name);
+  
+    // Si el rol tiene el campo _count.roleScreenPermissions, usarlo directamente
+    if (role._count && typeof role._count.roleScreenPermissions === 'number') {
+      console.log('Usando _count.roleScreenPermissions:', role._count.roleScreenPermissions);
+      return role._count.roleScreenPermissions;
+    }
+  
     // Si el rol tiene el campo permissionsCount, usarlo directamente
-    if (role.permissionsCount !== undefined) {
+    if (typeof role.permissionsCount === 'number') {
+      console.log('Usando permissionsCount:', role.permissionsCount);
       return role.permissionsCount;
     }
+  
     // Si tiene screensWithPermissions, calcular el total sumando los permisos de cada pantalla
     if (role.screensWithPermissions && role.screensWithPermissions.length > 0) {
-      return role.screensWithPermissions.reduce((total, screen) => {
+      const count = role.screensWithPermissions.reduce((total, screen) => {
         return total + (screen.permissions?.length || 0);
       }, 0);
+      console.log('Calculado desde screensWithPermissions:', count);
+      return count;
     }
+  
     // Si no hay información de permisos, devolver 0
+    console.log('No se encontró información de permisos, devolviendo 0');
     return 0;
   };
   
@@ -95,20 +121,25 @@ export default function RolesPage() {
   const filteredRoles = useMemo(() => {
     return roles
       .filter(role => {
-        const matchesSearch = role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           role.description.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesSearch;
+        const searchTermLower = searchTerm.toLowerCase();
+        return (
+          role.name.toLowerCase().includes(searchTermLower) ||
+          (role.description && role.description.toLowerCase().includes(searchTermLower))
+        );
       })
       .sort((a, b) => {
+        // Usar tipos específicos en lugar de any
         let fieldA: string | Date;
         let fieldB: string | Date;
         
         if (sortField === 'createdAt') {
-          fieldA = new Date(a.createdAt);
-          fieldB = new Date(b.createdAt);
+          // Asegurarse de que createdAt sea un valor válido para crear una fecha
+          fieldA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+          fieldB = b.createdAt ? new Date(b.createdAt) : new Date(0);
         } else {
-          fieldA = a[sortField].toLowerCase();
-          fieldB = b[sortField].toLowerCase();
+          // Asegurarse de que los campos sean strings
+          fieldA = (a[sortField] as string)?.toLowerCase() || '';
+          fieldB = (b[sortField] as string)?.toLowerCase() || '';
         }
         
         if (fieldA < fieldB) return sortDirection === 'asc' ? -1 : 1;
@@ -251,7 +282,7 @@ export default function RolesPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                    {new Date(role.createdAt).toLocaleDateString()}
+                    {role.createdAt ? new Date(role.createdAt).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-2">
