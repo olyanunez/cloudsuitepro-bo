@@ -35,7 +35,9 @@ export default function UserDetailPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const userData = await UserService.getUserById(userId);
+        // Convertir el userId a número ya que el servicio espera un number
+        const userIdNum = parseInt(userId, 10);
+        const userData = await UserService.getUserById(userIdNum);
         
         if (!userData) {
           return;
@@ -43,9 +45,11 @@ export default function UserDetailPage() {
         
         setUser(userData);
         
-        // Cargar información del rol
-        const roleData = await RoleService.getRoleById(userData.roleId);
-        setRole(roleData);
+        // Cargar información del rol si existe roleId
+        if (userData.roleId) {
+          const roleData = await RoleService.getRoleById(userData.roleId);
+          setRole(roleData);
+        }
       } catch (error) {
         console.error('Error loading user data:', error);
       } finally {
@@ -60,10 +64,11 @@ export default function UserDetailPage() {
 
   const handleDelete = async () => {
     try {
-      const success = await UserService.deleteUser(userId);
-      if (success) {
-        router.push('/users');
-      }
+      // Convertir el userId a número ya que el servicio espera un number
+      const userIdNum = parseInt(userId, 10);
+      await UserService.deleteUser(userIdNum);
+      // El método deleteUser no devuelve un valor, así que siempre redirigimos
+      router.push('/users');
     } catch (error) {
       console.error('Error deleting user:', error);
       alert('Ocurrió un error al eliminar el usuario. Por favor intente nuevamente.');
@@ -74,7 +79,9 @@ export default function UserDetailPage() {
 
   const handleToggleStatus = async () => {
     try {
-      const updatedUser = await UserService.toggleUserStatus(userId);
+      // Convertir el userId a número ya que el servicio espera un number
+      const userIdNum = parseInt(userId, 10);
+      const updatedUser = await UserService.toggleUserStatus(userIdNum);
       if (updatedUser) {
         setUser(updatedUser);
       }
@@ -226,14 +233,22 @@ export default function UserDetailPage() {
                 <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{role.description}</p>
                 
                 <div className="mt-4">
-                  <p className="text-sm font-medium mb-2">Permisos ({role.permissions.length})</p>
+                  <p className="text-sm font-medium mb-2">Permisos ({role._count?.roleScreenPermissions || role.permissionsCount || 0})</p>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {role.permissions.map(permission => (
-                      <div key={permission.id} className="bg-gray-50 dark:bg-gray-700 p-2 rounded-md">
-                        <p className="text-sm font-medium">{permission.name}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{permission.description}</p>
+                    {role.screensWithPermissions?.map(screen => (
+                      <div key={screen.screen.id} className="mb-3">
+                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">{screen.screen.name}</p>
+                        {screen.permissions.map(permission => (
+                          <div key={permission.id} className="bg-gray-50 dark:bg-gray-700 p-2 rounded-md mb-1">
+                            <p className="text-sm font-medium">{permission.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{permission.description}</p>
+                          </div>
+                        ))}
                       </div>
                     ))}
+                    {(!role.screensWithPermissions || role.screensWithPermissions.length === 0) && (
+                      <p className="text-sm text-gray-500">No hay permisos disponibles</p>
+                    )}
                   </div>
                 </div>
               </div>
