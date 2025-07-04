@@ -21,6 +21,7 @@ const menuItems = [
   { name: 'Usuarios', href: '/users', icon: 'user-cog' },
   { name: 'Roles', href: '/roles', icon: 'shield' },
   { name: 'Productos', href: '/products', icon: 'box' },
+  { name: 'Inventario', href: '/inventory', icon: 'archive' },
   { name: 'Órdenes', href: '/orders', icon: 'shopping-bag' },
   { name: 'Clientes', href: '/customers', icon: 'users' },
   { name: 'Configuración', href: '/settings', icon: 'settings' },
