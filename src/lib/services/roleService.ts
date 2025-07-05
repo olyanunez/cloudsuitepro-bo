@@ -331,6 +331,11 @@ export class RoleService {
       try {
         console.log('Actualizando rol con permisos:', roleData);
         
+        // Extraer los IDs de screenPermission para la API
+        const screenPermissionIds = roleData.screenPermissionIds || [];
+        
+        console.log('Enviando screenPermissionIds:', screenPermissionIds);
+        
         // Usar el nuevo endpoint para actualizar rol con permisos en una sola llamada
         const response = await apiPatch<RoleDataFromBackend>(`/roles/with-permissions/${id}`, {
           role: {
@@ -339,7 +344,8 @@ export class RoleService {
             description: roleData.description,
             isActive: roleData.isActive
           },
-          screenPermissionIds: roleData.screenPermissionIds || []
+          // Enviamos solo los IDs de screenPermission para el backend
+          screenPermissionIds: screenPermissionIds
         });
         
         console.log('Rol actualizado exitosamente con permisos:', response);

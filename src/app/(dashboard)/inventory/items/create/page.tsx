@@ -30,7 +30,7 @@ export default function CreateInventoryItemPage() {
     warehouseId: 0,
     quantity: 0,
     minStock: 0,
-    maxStock: undefined
+    maxStock: 0
   });
   
   const [errors, setErrors] = useState<{
@@ -107,7 +107,9 @@ export default function CreateInventoryItemPage() {
       newErrors.minStock = 'El stock mínimo debe ser un número mayor o igual a cero';
     }
     
-    if (formData.maxStock !== undefined && formData.maxStock !== null && formData.maxStock < formData.minStock) {
+    if (formData.maxStock === undefined || formData.maxStock === null || formData.maxStock < 0) {
+      newErrors.maxStock = 'El stock máximo debe ser un número mayor o igual a cero';
+    } else if (formData.maxStock < formData.minStock) {
       newErrors.maxStock = 'El stock máximo debe ser mayor o igual al stock mínimo';
     }
     
@@ -238,7 +240,7 @@ export default function CreateInventoryItemPage() {
             </div>
             
             <div>
-              <Label htmlFor="maxStock">Stock Máximo</Label>
+              <Label htmlFor="maxStock">Stock Máximo <span className="text-red-500">*</span></Label>
               <Input 
                 id="maxStock" 
                 name="maxStock" 
@@ -247,7 +249,6 @@ export default function CreateInventoryItemPage() {
                 onChange={handleInputChange} 
                 className="mt-1" 
                 min="0"
-                placeholder="Opcional"
               />
               {errors.maxStock && <p className="text-red-500 text-xs mt-1">{errors.maxStock}</p>}
             </div>
@@ -266,7 +267,7 @@ export default function CreateInventoryItemPage() {
               ) : (
                 <>
                   <SaveIcon className="mr-2 h-4 w-4" />
-                  Crear Item
+                  Guardar
                 </>
               )}
             </Button>
