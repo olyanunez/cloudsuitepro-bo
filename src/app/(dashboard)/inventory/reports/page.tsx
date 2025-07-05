@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, Table, Select, Tabs, Statistic, Row, Col, Alert } from 'antd';
 import { WarningOutlined, DollarOutlined, InboxOutlined } from '@ant-design/icons';
 import { StockValuationReport, LowStockReport, Warehouse } from '@/types/inventory';
-import { InventoryService, WarehouseService } from '@/lib/services/inventory-service';
+import { InventoryService, WarehouseService } from '@/lib/services/inventoryService';
 
 const { Option } = Select;
 const { TabPane } = Tabs;

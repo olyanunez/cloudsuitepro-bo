@@ -67,7 +67,7 @@ export class AuthService {
     try {
       // Nota: No podemos usar apiPost aquí porque el token aún no existe
       // y apiService siempre intenta incluir el token si está disponible
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -110,7 +110,7 @@ export class AuthService {
    */
   static async register(registerData: RegisterData): Promise<RegisterResponse> {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
