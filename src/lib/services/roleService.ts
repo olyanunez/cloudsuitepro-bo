@@ -235,7 +235,7 @@ export class RoleService {
   static async getRoles(): Promise<Role[]> {
     try {
       // Solicitar explícitamente que se incluyan los permisos
-      const data = await apiGet<RoleDataFromBackend[]>('/roles?includePermissions=true');
+      const data = await apiGet<RoleDataFromBackend[]>('/roles');
       console.log('Datos de roles recibidos del backend:', data);
       return data.map(normalizeRoleData);
     } catch (error) {
@@ -457,13 +457,7 @@ export class RoleService {
     } catch (error) {
       console.error('Error al obtener permisos:', error);
       // Retornar datos de ejemplo en caso de error
-      return [
-        { id: 1, name: 'Crear', code: 'CREATE', description: 'Permiso para crear registros', module: 'general' },
-        { id: 2, name: 'Leer', code: 'READ', description: 'Permiso para leer registros', module: 'general' },
-        { id: 3, name: 'Actualizar', code: 'UPDATE', description: 'Permiso para actualizar registros', module: 'general' },
-        { id: 4, name: 'Eliminar', code: 'DELETE', description: 'Permiso para eliminar registros', module: 'general' },
-        { id: 5, name: 'Administrar Usuarios', code: 'MANAGE_USERS', description: 'Permiso para administrar usuarios', module: 'usuarios' }
-      ];
+      return [];
     }
   }
 
@@ -549,40 +543,7 @@ export class RoleService {
       }
     } catch (error) {
       console.error('Error al obtener pantallas con permisos:', error);
-      // Datos de ejemplo para pantallas y permisos
-      const mockPermissions = [
-        { id: 1, name: 'Crear', code: 'CREATE', description: 'Permiso para crear registros', module: 'general' },
-        { id: 2, name: 'Leer', code: 'READ', description: 'Permiso para leer registros', module: 'general' },
-        { id: 3, name: 'Actualizar', code: 'UPDATE', description: 'Permiso para actualizar registros', module: 'general' },
-        { id: 4, name: 'Eliminar', code: 'DELETE', description: 'Permiso para eliminar registros', module: 'general' },
-        { id: 5, name: 'Administrar Usuarios', code: 'MANAGE_USERS', description: 'Permiso para administrar usuarios', module: 'usuarios' }
-      ];
-
       return [
-        {
-          id: 1,
-          name: 'Dashboard',
-          code: 'DASHBOARD',
-          permissions: [mockPermissions[1]]
-        },
-        {
-          id: 2,
-          name: 'Usuarios',
-          code: 'USERS',
-          permissions: [mockPermissions[0], mockPermissions[1], mockPermissions[2], mockPermissions[3]]
-        },
-        {
-          id: 3,
-          name: 'Roles',
-          code: 'ROLES',
-          permissions: [mockPermissions[0], mockPermissions[1], mockPermissions[2], mockPermissions[3]]
-        },
-        {
-          id: 4,
-          name: 'Configuración',
-          code: 'SETTINGS',
-          permissions: [mockPermissions[1], mockPermissions[2]]
-        }
       ];
     }
   }

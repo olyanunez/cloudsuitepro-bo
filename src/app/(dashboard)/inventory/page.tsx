@@ -29,13 +29,7 @@ export default function InventoryDashboard() {
       path: '/inventory/categories',
       color: '#1890ff',
     },
-    {
-      title: 'Productos',
-      icon: <ShoppingOutlined style={{ fontSize: 24 }} />,
-      description: 'Administrar catálogo de productos',
-      path: '/inventory/products',
-      color: '#52c41a',
-    },
+ 
     {
       title: 'Almacenes',
       icon: <BankOutlined style={{ fontSize: 24 }} />,

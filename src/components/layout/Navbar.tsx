@@ -4,9 +4,9 @@ import * as React from 'react'
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  Sheet, 
-  SheetContent, 
+import {
+  Sheet,
+  SheetContent,
   SheetTrigger,
   SheetClose
 } from '@/components/ui/sheet'
@@ -20,7 +20,6 @@ const menuItems = [
   { name: 'Dashboard', href: '/dashboard', icon: 'grid' },
   { name: 'Usuarios', href: '/users', icon: 'user-cog' },
   { name: 'Roles', href: '/roles', icon: 'shield' },
-  { name: 'Productos', href: '/products', icon: 'box' },
   {
     name: 'Inventario',
     href: '/inventory',
@@ -70,18 +69,17 @@ export default function Navbar() {
               <span className="font-bold text-xl text-primary-600 dark:text-primary-400">Xotica</span>
             </Link>
           </div>
-          
+
           {/* Navegación de escritorio */}
           <nav className="hidden md:flex gap-6">
             {menuItems.map((item) => (
               <div key={item.href} className="relative group">
                 <Link
                   href={item.href}
-                  className={`text-sm font-medium transition-colors hover:text-primary-600 ${
-                    pathname === item.href || pathname.startsWith(item.href + '/')
+                  className={`text-sm font-medium transition-colors hover:text-primary-600 ${pathname === item.href || pathname.startsWith(item.href + '/')
                       ? "text-primary-600 dark:text-primary-400"
                       : "text-gray-500 dark:text-gray-400"
-                  } flex items-center gap-1`}
+                    } flex items-center gap-1`}
                 >
                   {item.name}
                   {item.submenu && (
@@ -107,7 +105,7 @@ export default function Navbar() {
               </div>
             ))}
           </nav>
-          
+
           <div className="flex items-center gap-4">
             {tenantId && (
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
@@ -126,7 +124,7 @@ export default function Navbar() {
           </div>
         </div>
       </header>
-      
+
       {/* Drawer para móvil */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-[240px] sm:w-[300px]">
@@ -134,35 +132,34 @@ export default function Navbar() {
             {menuItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
               const isSubmenuOpen = !!openSubmenus[item.href];
-              
+
               return (
                 <div key={item.href} className="flex flex-col">
                   <div className="flex items-center justify-between">
                     {item.submenu ? (
                       <button
                         onClick={() => {
-                          const newOpenSubmenus = {...openSubmenus};
+                          const newOpenSubmenus = { ...openSubmenus };
                           newOpenSubmenus[item.href] = !isSubmenuOpen;
                           setOpenSubmenus(newOpenSubmenus);
                         }}
-                        className={`flex items-center gap-2 px-2 py-1 rounded-md w-full text-left ${
-                          isActive
+                        className={`flex items-center gap-2 px-2 py-1 rounded-md w-full text-left ${isActive
                             ? "bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100"
                             : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
-                        }`}
+                          }`}
                       >
                         <Icon name={item.icon} />
                         <span>{item.name}</span>
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          width="16" 
-                          height="16" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                           className={`ml-auto h-4 w-4 transition-transform ${isSubmenuOpen ? 'rotate-180' : ''}`}
                         >
                           <polyline points="6 9 12 15 18 9"></polyline>
@@ -172,11 +169,10 @@ export default function Navbar() {
                       <SheetClose asChild>
                         <Link
                           href={item.href}
-                          className={`flex items-center gap-2 px-2 py-1 rounded-md w-full ${
-                            isActive
+                          className={`flex items-center gap-2 px-2 py-1 rounded-md w-full ${isActive
                               ? "bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100"
                               : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
-                          }`}
+                            }`}
                         >
                           <Icon name={item.icon} />
                           <span>{item.name}</span>
@@ -184,18 +180,17 @@ export default function Navbar() {
                       </SheetClose>
                     )}
                   </div>
-                  
+
                   {item.submenu && isSubmenuOpen && (
                     <div className="ml-6 mt-1 flex flex-col gap-1 border-l border-gray-200 dark:border-gray-700 pl-2">
                       {item.submenu.map((subItem) => (
                         <SheetClose asChild key={subItem.href}>
                           <Link
                             href={subItem.href}
-                            className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm ${
-                              pathname === subItem.href
+                            className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm ${pathname === subItem.href
                                 ? "bg-primary-50 text-primary-900 dark:bg-primary-900/20 dark:text-primary-100"
                                 : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
-                            }`}
+                              }`}
                           >
                             <Icon name={subItem.icon} className="h-4 w-4" />
                             <span>{subItem.name}</span>
