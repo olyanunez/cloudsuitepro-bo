@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MovementType, Product, Warehouse } from '@/types/inventory';
+import { MovementType, Product, Warehouse } from '@/lib/types/inventory';
 import { InventoryService, ProductService, WarehouseService } from '@/lib/services/inventoryService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,15 +18,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'react-hot-toast';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import Link from 'next/link';
-import { CreateInventoryMovementDto } from '@/types/inventory';
+import { CreateInventoryMovementDto } from '@/lib/types/inventory';
 
 export default function CreateMovementPage() {
   const router = useRouter();
-  
+
   // Data state
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  
+
   // Form state
   const [movementType, setMovementType] = useState<string>('');
   const [productId, setProductId] = useState<string>('');
@@ -35,7 +35,7 @@ export default function CreateMovementPage() {
   const [quantity, setQuantity] = useState<string>('');
   const [reference, setReference] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
-  
+
   // UI state
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -56,7 +56,7 @@ export default function CreateMovementPage() {
           ProductService.getProducts(),
           WarehouseService.getWarehouses()
         ]);
-        
+
         setProducts(productsData);
         setWarehouses(warehousesData);
       } catch (error) {
@@ -72,47 +72,47 @@ export default function CreateMovementPage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!movementType) {
       newErrors.type = 'El tipo de movimiento es requerido';
     }
-    
+
     if (!productId) {
       newErrors.productId = 'El producto es requerido';
     }
-    
+
     if ((movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA) && !sourceWarehouseId) {
       newErrors.sourceWarehouseId = 'El almacén de origen es requerido';
     }
-    
+
     if ((movementType === MovementType.ENTRADA || movementType === MovementType.TRANSFERENCIA) && !destinationWarehouseId) {
       newErrors.destinationWarehouseId = 'El almacén de destino es requerido';
     }
-    
+
     if (movementType === MovementType.TRANSFERENCIA && sourceWarehouseId === destinationWarehouseId) {
       newErrors.destinationWarehouseId = 'Los almacenes de origen y destino deben ser diferentes';
     }
-    
+
     if (!quantity) {
       newErrors.quantity = 'La cantidad es requerida';
     } else if (isNaN(Number(quantity)) || Number(quantity) <= 0) {
       newErrors.quantity = 'La cantidad debe ser un número mayor que cero';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       setSaving(true);
-      
+
       const movementData: CreateInventoryMovementDto = {
         type: movementType as MovementType,
         productId: Number(productId),
@@ -120,17 +120,17 @@ export default function CreateMovementPage() {
         reference: reference || undefined,
         notes: notes || undefined
       };
-      
+
       if (movementType === MovementType.ENTRADA || movementType === MovementType.TRANSFERENCIA) {
         movementData.destinationWarehouseId = Number(destinationWarehouseId);
       }
-      
+
       if (movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA) {
         movementData.sourceWarehouseId = Number(sourceWarehouseId);
       }
-      
+
       await InventoryService.createMovement(movementData);
-      
+
       toast.success('Movimiento creado correctamente');
       router.push('/inventory/movements');
     } catch (error) {
@@ -160,7 +160,7 @@ export default function CreateMovementPage() {
         </Link>
         <h1 className="text-2xl font-bold">Crear Movimiento de Inventario</h1>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Información del Movimiento</CardTitle>
@@ -185,7 +185,7 @@ export default function CreateMovementPage() {
                 </Select>
                 {errors.type && <p className="text-red-500 text-xs mt-1">{errors.type}</p>}
               </div>
-              
+
               <div className="space-y-2">
                 <label htmlFor="product" className="text-sm font-medium">
                   Producto <span className="text-red-500">*</span>
@@ -204,7 +204,7 @@ export default function CreateMovementPage() {
                 </Select>
                 {errors.productId && <p className="text-red-500 text-xs mt-1">{errors.productId}</p>}
               </div>
-              
+
               {(movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA) && (
                 <div className="space-y-2">
                   <label htmlFor="sourceWarehouse" className="text-sm font-medium">
@@ -225,7 +225,7 @@ export default function CreateMovementPage() {
                   {errors.sourceWarehouseId && <p className="text-red-500 text-xs mt-1">{errors.sourceWarehouseId}</p>}
                 </div>
               )}
-              
+
               {(movementType === MovementType.ENTRADA || movementType === MovementType.TRANSFERENCIA) && (
                 <div className="space-y-2">
                   <label htmlFor="destinationWarehouse" className="text-sm font-medium">
@@ -246,50 +246,50 @@ export default function CreateMovementPage() {
                   {errors.destinationWarehouseId && <p className="text-red-500 text-xs mt-1">{errors.destinationWarehouseId}</p>}
                 </div>
               )}
-              
+
               <div className="space-y-2">
                 <label htmlFor="quantity" className="text-sm font-medium">
                   Cantidad <span className="text-red-500">*</span>
                 </label>
-                <Input 
+                <Input
                   id="quantity"
                   type="number"
                   min="0.01"
-                  step="0.01" 
-                  value={quantity} 
+                  step="0.01"
+                  value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   placeholder="Ingrese la cantidad"
                   className={errors.quantity ? 'border-red-500' : ''}
                 />
                 {errors.quantity && <p className="text-red-500 text-xs mt-1">{errors.quantity}</p>}
               </div>
-              
+
               <div className="space-y-2">
                 <label htmlFor="reference" className="text-sm font-medium">
                   Referencia
                 </label>
-                <Input 
+                <Input
                   id="reference"
-                  value={reference} 
+                  value={reference}
                   onChange={(e) => setReference(e.target.value)}
                   placeholder="Referencia o número de documento"
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <label htmlFor="notes" className="text-sm font-medium">
                 Notas
               </label>
-              <Textarea 
+              <Textarea
                 id="notes"
-                value={notes} 
+                value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Notas adicionales"
                 rows={3}
               />
             </div>
-            
+
             {errors.general && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-red-600 text-sm">{errors.general}</p>

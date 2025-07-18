@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { InventoryMovement, MovementType, Product, Warehouse } from '@/types/inventory';
+import { InventoryMovement, MovementType, Product, Warehouse } from '@/lib/types/inventory';
 import { InventoryService, ProductService, WarehouseService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -26,18 +26,18 @@ export default function MovementsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  
+
   // Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<string>('all_products');
   const [selectedType, setSelectedType] = useState<string>('all_types');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  
+
   // Sorting state
   const [sortField, setSortField] = useState<'createdAt' | 'type' | 'quantity'>('createdAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -52,7 +52,7 @@ export default function MovementsPage() {
           ProductService.getProducts(),
           WarehouseService.getWarehouses()
         ]);
-        
+
         setMovements(movementsData);
         setProducts(productsData);
         setWarehouses(warehousesData);
@@ -74,14 +74,14 @@ export default function MovementsPage() {
       const type = selectedType !== 'all_types' ? selectedType as MovementType : undefined;
       const formattedStartDate = startDate ? format(startDate, 'yyyy-MM-dd') : undefined;
       const formattedEndDate = endDate ? format(endDate, 'yyyy-MM-dd') : undefined;
-      
+
       const filteredMovements = await InventoryService.getMovements(
         productId,
         type,
         formattedStartDate,
         formattedEndDate
       );
-      
+
       setMovements(filteredMovements);
       toast.success('Filtros aplicados correctamente');
     } catch (error) {
@@ -98,7 +98,7 @@ export default function MovementsPage() {
     setStartDate(undefined);
     setEndDate(undefined);
     setSearchTerm('');
-    
+
     try {
       setLoading(true);
       const movementsData = await InventoryService.getMovements();
@@ -120,7 +120,7 @@ export default function MovementsPage() {
         const productName = movement.product?.name?.toLowerCase() || '';
         const reference = movement.reference?.toLowerCase() || '';
         const notes = movement.notes?.toLowerCase() || '';
-        
+
         return (
           productName.includes(searchTermLower) ||
           reference.includes(searchTermLower) ||
@@ -138,7 +138,7 @@ export default function MovementsPage() {
           // Sort by type
           const typeA = a.type.toLowerCase();
           const typeB = b.type.toLowerCase();
-          return sortDirection === 'asc' 
+          return sortDirection === 'asc'
             ? typeA.localeCompare(typeB)
             : typeB.localeCompare(typeA);
         }
@@ -151,7 +151,7 @@ export default function MovementsPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  
+
   // Handle sorting
   const handleSort = (field: 'createdAt' | 'type' | 'quantity') => {
     if (field === sortField) {
@@ -215,7 +215,7 @@ export default function MovementsPage() {
           </Button>
         </Link>
       </div>
-      
+
       {/* Search and filter controls */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="relative">
@@ -228,7 +228,7 @@ export default function MovementsPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <Select value={selectedProductId} onValueChange={setSelectedProductId}>
           <SelectTrigger>
             <SelectValue placeholder="Filtrar por producto" />
@@ -242,7 +242,7 @@ export default function MovementsPage() {
             ))}
           </SelectContent>
         </Select>
-        
+
         <Select value={selectedType} onValueChange={setSelectedType}>
           <SelectTrigger>
             <SelectValue placeholder="Filtrar por tipo" />
@@ -255,7 +255,7 @@ export default function MovementsPage() {
             <SelectItem value={MovementType.TRANSFERENCIA}>Transferencia</SelectItem>
           </SelectContent>
         </Select>
-        
+
         <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
           <SelectTrigger>
             <SelectValue placeholder="Elementos por página" />
@@ -268,7 +268,7 @@ export default function MovementsPage() {
           </SelectContent>
         </Select>
       </div>
-      
+
       {/* Date filters */}
       <div className="mb-6 flex flex-wrap gap-4">
         <div className="flex items-center space-x-2">
@@ -292,7 +292,7 @@ export default function MovementsPage() {
             </PopoverContent>
           </Popover>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium">Hasta:</span>
           <Popover>
@@ -314,7 +314,7 @@ export default function MovementsPage() {
             </PopoverContent>
           </Popover>
         </div>
-        
+
         <div className="flex space-x-2 ml-auto">
           <Button variant="outline" onClick={resetFilters}>
             Limpiar Filtros
@@ -332,8 +332,8 @@ export default function MovementsPage() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('createdAt')}
                 >
@@ -342,8 +342,8 @@ export default function MovementsPage() {
                     <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('type')}
                 >
@@ -355,8 +355,8 @@ export default function MovementsPage() {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Producto
                 </th>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('quantity')}
                 >
@@ -442,7 +442,7 @@ export default function MovementsPage() {
           </table>
         </div>
       </div>
-      
+
       {/* Pagination controls */}
       <div className="mt-6 flex items-center justify-between">
         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -457,7 +457,7 @@ export default function MovementsPage() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          
+
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             // Show pages around current page
             let pageNum;
@@ -470,7 +470,7 @@ export default function MovementsPage() {
             } else {
               pageNum = currentPage - 2 + i;
             }
-            
+
             return (
               <Button
                 key={pageNum}
@@ -482,7 +482,7 @@ export default function MovementsPage() {
               </Button>
             );
           })}
-          
+
           <Button
             variant="outline"
             size="sm"

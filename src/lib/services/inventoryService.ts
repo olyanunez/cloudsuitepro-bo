@@ -17,7 +17,7 @@ import {
   UpdateProductDto,
   UpdateWarehouseDto,
   Warehouse,
-} from '@/types/inventory';
+} from '@/lib/types/inventory';
 
 // Servicio para categorías de productos
 export const ProductCategoryService = {
@@ -47,12 +47,12 @@ export const ProductService = {
   getProducts: async (categoryId?: number, search?: string): Promise<Product[]> => {
     let endpoint = '/products';
     const params = new URLSearchParams();
-    
+
     if (categoryId) params.append('categoryId', categoryId.toString());
     if (search) params.append('search', search);
-    
+
     if (params.toString()) endpoint += `?${params.toString()}`;
-    
+
     return apiGet(endpoint);
   },
 
@@ -102,13 +102,13 @@ export const InventoryService = {
   getItems: async (warehouseId?: number, productId?: number, lowStock?: boolean): Promise<InventoryItem[]> => {
     let endpoint = '/inventory/items';
     const params = new URLSearchParams();
-    
+
     if (warehouseId) params.append('warehouseId', warehouseId.toString());
     if (productId) params.append('productId', productId.toString());
     if (lowStock) params.append('lowStock', 'true');
-    
+
     if (params.toString()) endpoint += `?${params.toString()}`;
-    
+
     return apiGet(endpoint);
   },
 
@@ -137,14 +137,14 @@ export const InventoryService = {
   ): Promise<InventoryMovement[]> => {
     let endpoint = '/inventory/movements';
     const params = new URLSearchParams();
-    
+
     if (productId) params.append('productId', productId.toString());
     if (type) params.append('type', type);
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
-    
+
     if (params.toString()) endpoint += `?${params.toString()}`;
-    
+
     return apiGet(endpoint);
   },
 
@@ -160,14 +160,14 @@ export const InventoryService = {
   getStockValuationReport: async (warehouseId?: number): Promise<StockValuationReport> => {
     let endpoint = '/inventory/reports/stock-valuation';
     if (warehouseId) endpoint += `?warehouseId=${warehouseId}`;
-    
+
     return apiGet(endpoint);
   },
 
   getLowStockReport: async (warehouseId?: number): Promise<LowStockReport> => {
     let endpoint = '/inventory/reports/low-stock';
     if (warehouseId) endpoint += `?warehouseId=${warehouseId}`;
-    
+
     return apiGet(endpoint);
   },
 };

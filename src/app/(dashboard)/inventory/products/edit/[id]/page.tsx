@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Product, ProductCategory, UpdateProductDto } from '@/types/inventory';
+import { Product, ProductCategory, UpdateProductDto } from '@/lib/types/inventory';
 import { ProductService, ProductCategoryService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ export default function EditProductPage() {
   const params = useParams();
   const router = useRouter();
   const productId = parseInt(params.id as string, 10);
-  
+
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [product, setProduct] = useState<Product | null>(null);
@@ -26,8 +26,8 @@ export default function EditProductPage() {
     cost: 0,
     categoryId: 0
   });
-  
-  
+
+
   const [errors, setErrors] = useState<{
     name?: string;
     code?: string;
@@ -39,16 +39,16 @@ export default function EditProductPage() {
     async function loadData() {
       try {
         setLoading(true);
-        
+
         // Cargar categorías
         const categoriesData = await ProductCategoryService.getAll();
         const activeCategories = categoriesData.filter(cat => cat.isActive);
         setCategories(activeCategories);
-        
+
         // Cargar producto
         const productData = await ProductService.getProductById(productId);
         setProduct(productData);
-        
+
         // Inicializar formulario con datos del producto
         setFormData({
           name: productData.name,
@@ -58,7 +58,7 @@ export default function EditProductPage() {
           cost: productData.cost || 0,
           categoryId: productData.categoryId
         });
-        
+
 
       } catch (error) {
         console.error('Error loading data:', error);
@@ -75,7 +75,7 @@ export default function EditProductPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
+
     // Para campos numéricos, convertir a número
     if (name === 'price' || name === 'cost') {
       const numValue = parseFloat(value);
@@ -83,7 +83,7 @@ export default function EditProductPage() {
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
-    
+
     // Clear error when user types
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
@@ -95,7 +95,7 @@ export default function EditProductPage() {
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'categoryId') {
       setFormData(prev => ({ ...prev, [name]: parseInt(value, 10) }));
-      
+
       // Clear error when user selects
       if (errors.categoryId) {
         setErrors(prev => ({ ...prev, categoryId: undefined }));
@@ -110,34 +110,34 @@ export default function EditProductPage() {
       price?: string;
       categoryId?: string;
     } = {};
-    
+
     if (!formData.name || !formData.name.trim()) {
       newErrors.name = 'El nombre del producto es requerido';
     }
-    
+
     if (!formData.code || !formData.code.trim()) {
       newErrors.code = 'El código del producto es requerido';
     }
-    
+
     if (!formData.price || formData.price <= 0) {
       newErrors.price = 'El precio debe ser mayor que cero';
     }
-    
+
     if (!formData.categoryId || formData.categoryId <= 0) {
       newErrors.categoryId = 'Debe seleccionar una categoría';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       setSaving(true);
       await ProductService.updateProduct(productId, formData);
@@ -202,14 +202,13 @@ export default function EditProductPage() {
                   name="code"
                   value={formData.code}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.code ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.code ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
                   placeholder="Código del producto"
                 />
                 {errors.code && <p className="mt-1 text-sm text-red-500">{errors.code}</p>}
               </div>
-              
+
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Nombre del Producto <span className="text-red-500">*</span>
@@ -220,14 +219,13 @@ export default function EditProductPage() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
                   placeholder="Nombre del producto"
                 />
                 {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
               </div>
-              
+
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Descripción
@@ -242,12 +240,12 @@ export default function EditProductPage() {
                   placeholder="Descripción del producto"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Categoría <span className="text-red-500">*</span>
                 </label>
-                <Select 
+                <Select
                   onValueChange={(value) => handleSelectChange('categoryId', value)}
                   value={formData.categoryId ? formData.categoryId.toString() : ''}
                 >
@@ -268,7 +266,7 @@ export default function EditProductPage() {
               {/* isActive checkbox removed */}
             </div>
           </div>
-          
+
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Precio e Inventario</h2>
             <div className="space-y-4">
@@ -288,15 +286,14 @@ export default function EditProductPage() {
                     onChange={handleInputChange}
                     step="0.01"
                     min="0"
-                    className={`w-full pl-12 pr-3 py-2 border rounded-md ${
-                      errors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                    className={`w-full pl-12 pr-3 py-2 border rounded-md ${errors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
                     placeholder="0.00"
                   />
                 </div>
                 {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
               </div>
-              
+
               {/* Campos eliminados: stock, minimumStock, barcode */}
             </div>
           </div>
@@ -311,8 +308,8 @@ export default function EditProductPage() {
           >
             Cancelar
           </Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="bg-primary hover:bg-primary-600"
             disabled={saving}
           >

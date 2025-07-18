@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WarehouseService } from '@/lib/services/inventoryService';
-import { Warehouse } from '@/types/inventory';
+import { Warehouse } from '@/lib/types/inventory';
 import { toast } from 'react-hot-toast';
 import { ArrowLeftIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -104,8 +104,8 @@ export default function WarehouseDetailsPage({ params }: WarehouseDetailsPagePro
               Editar
             </Button>
           </Link>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="flex items-center border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
             onClick={() => setIsDeleteDialogOpen(true)}
           >

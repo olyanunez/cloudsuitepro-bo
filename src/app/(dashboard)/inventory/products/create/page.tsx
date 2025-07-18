@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CreateProductDto, ProductCategory } from '@/types/inventory';
+import { CreateProductDto, ProductCategory } from '@/lib/types/inventory';
 import { ProductService, ProductCategoryService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ export default function CreateProductPage() {
     cost: 0,
     categoryId: 0
   });
-  
+
   const [errors, setErrors] = useState<{
     name?: string;
     code?: string;
@@ -49,7 +49,7 @@ export default function CreateProductPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
+
     // Para campos numéricos, convertir a número
     if (name === 'price' || name === 'cost') {
       const numValue = parseFloat(value);
@@ -57,7 +57,7 @@ export default function CreateProductPage() {
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
-    
+
     // Clear error when user types
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
@@ -67,7 +67,7 @@ export default function CreateProductPage() {
   const handleSelectChange = (name: string, value: string) => {
     if (name === 'categoryId') {
       setFormData(prev => ({ ...prev, [name]: parseInt(value, 10) }));
-      
+
       // Clear error when user selects
       if (errors.categoryId) {
         setErrors(prev => ({ ...prev, categoryId: undefined }));
@@ -82,34 +82,34 @@ export default function CreateProductPage() {
       price?: string;
       categoryId?: string;
     } = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'El nombre del producto es requerido';
     }
-    
+
     if (!formData.code.trim()) {
       newErrors.code = 'El código del producto es requerido';
     }
-    
+
     if (formData.price <= 0) {
       newErrors.price = 'El precio debe ser mayor que cero';
     }
-    
+
     if (!formData.categoryId || formData.categoryId <= 0) {
       newErrors.categoryId = 'Debe seleccionar una categoría';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       setSaving(true);
       await ProductService.createProduct(formData);
@@ -157,14 +157,13 @@ export default function CreateProductPage() {
                   name="code"
                   value={formData.code}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.code ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.code ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
                   placeholder="Código del producto"
                 />
                 {errors.code && <p className="mt-1 text-sm text-red-500">{errors.code}</p>}
               </div>
-              
+
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Nombre del Producto <span className="text-red-500">*</span>
@@ -175,14 +174,13 @@ export default function CreateProductPage() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
                   placeholder="Nombre del producto"
                 />
                 {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
               </div>
-              
+
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Descripción
@@ -197,12 +195,12 @@ export default function CreateProductPage() {
                   placeholder="Descripción del producto"
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Categoría <span className="text-red-500">*</span>
                 </label>
-                <Select 
+                <Select
                   onValueChange={(value) => handleSelectChange('categoryId', value)}
                   value={formData.categoryId ? formData.categoryId.toString() : ''}
                 >
@@ -221,7 +219,7 @@ export default function CreateProductPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Precio e Inventario</h2>
             <div className="space-y-4">
@@ -241,15 +239,14 @@ export default function CreateProductPage() {
                     onChange={handleInputChange}
                     step="0.01"
                     min="0"
-                    className={`w-full pl-12 pr-3 py-2 border rounded-md ${
-                      errors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                    className={`w-full pl-12 pr-3 py-2 border rounded-md ${errors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
                     placeholder="0.00"
                   />
                 </div>
                 {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
               </div>
-              
+
               <div>
                 <label htmlFor="cost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Costo
@@ -279,8 +276,8 @@ export default function CreateProductPage() {
           >
             Cancelar
           </Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="bg-primary hover:bg-primary-600"
             disabled={saving}
           >

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WarehouseService } from '@/lib/services/inventoryService';
-import { CreateWarehouseDto } from '@/types/inventory';
+import { CreateWarehouseDto } from '@/lib/types/inventory';
 import { toast } from 'react-hot-toast';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -31,12 +31,12 @@ export default function CreateWarehousePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
       toast.error('El nombre del almacén es obligatorio');
       return;
     }
-    
+
     try {
       setSaving(true);
       await WarehouseService.createWarehouse(formData);
@@ -116,8 +116,8 @@ export default function CreateWarehousePage() {
                   Cancelar
                 </Button>
               </Link>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="bg-primary hover:bg-primary-600"
                 disabled={saving}
               >

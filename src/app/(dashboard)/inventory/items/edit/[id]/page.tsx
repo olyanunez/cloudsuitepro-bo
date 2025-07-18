@@ -21,19 +21,19 @@ export default function EditInventoryItemPage() {
   const params = useParams();
   const router = useRouter();
   const itemId = parseInt(params.id as string, 10);
-  
+
   const [item, setItem] = useState<InventoryItem | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
-  
+
   const [formData, setFormData] = useState<UpdateInventoryItemDto>({
     quantity: 0,
     minStock: 0,
     maxStock: undefined
   });
-  
+
   const [errors, setErrors] = useState<{
     quantity?: string;
     minStock?: string;
@@ -44,27 +44,27 @@ export default function EditInventoryItemPage() {
     async function loadData() {
       try {
         setLoading(true);
-        
+
         // Cargar el item actual
         const itemData = await InventoryService.getItemById(itemId);
         if (!itemData) {
           router.push('/inventory/items');
           return;
         }
-        
+
         setItem(itemData);
-        
+
         // Inicializar formData con los datos del item
         setFormData({
           quantity: itemData.quantity,
           minStock: itemData.minStock,
           maxStock: itemData.maxStock
         });
-        
+
         // Cargar productos y almacenes para referencia
         const productsData = await ProductService.getProducts();
         const warehousesData = await WarehouseService.getWarehouses();
-        
+
         setProducts(productsData);
         setWarehouses(warehousesData);
       } catch (error) {
@@ -83,7 +83,7 @@ export default function EditInventoryItemPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value === '' ? '' : Number(value) }));
-    
+
     // Clear error when user types
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
@@ -96,36 +96,36 @@ export default function EditInventoryItemPage() {
       minStock?: string;
       maxStock?: string;
     } = {};
-    
+
     if (formData.quantity === undefined || formData.quantity === null || formData.quantity < 0) {
       newErrors.quantity = 'La cantidad debe ser un número mayor o igual a cero';
     }
-    
+
     if (formData.minStock === undefined || formData.minStock === null || formData.minStock < 0) {
       newErrors.minStock = 'El stock mínimo debe ser un número mayor o igual a cero';
     }
-    
-    if (formData.maxStock !== undefined && formData.maxStock !== null && formData.maxStock < formData.minStock) {
+
+    if (formData.maxStock !== undefined && formData.maxStock !== null && formData.maxStock < formData.minStock!) {
       newErrors.maxStock = 'El stock máximo debe ser mayor o igual al stock mínimo';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       setSaving(true);
-      
+
       // Actualizar el item
       const updatedItem = await InventoryService.updateItem(itemId, formData);
-      
+
       console.log('Item actualizado:', updatedItem);
       router.push(`/inventory/items/${itemId}`);
     } catch (error) {
@@ -178,70 +178,70 @@ export default function EditInventoryItemPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <Label htmlFor="product">Producto</Label>
-              <Input 
-                id="product" 
-                value={item.product?.name || 'N/A'} 
-                disabled 
-                className="mt-1 bg-gray-100 dark:bg-gray-700" 
+              <Input
+                id="product"
+                value={item.product?.name || 'N/A'}
+                disabled
+                className="mt-1 bg-gray-100 dark:bg-gray-700"
               />
               <p className="text-xs text-gray-500 mt-1">No se puede cambiar el producto</p>
             </div>
-            
+
             <div>
               <Label htmlFor="warehouse">Almacén</Label>
-              <Input 
-                id="warehouse" 
-                value={item.warehouse?.name || 'N/A'} 
-                disabled 
-                className="mt-1 bg-gray-100 dark:bg-gray-700" 
+              <Input
+                id="warehouse"
+                value={item.warehouse?.name || 'N/A'}
+                disabled
+                className="mt-1 bg-gray-100 dark:bg-gray-700"
               />
               <p className="text-xs text-gray-500 mt-1">No se puede cambiar el almacén</p>
             </div>
-            
+
             <div>
               <Label htmlFor="quantity">Cantidad <span className="text-red-500">*</span></Label>
-              <Input 
-                id="quantity" 
-                name="quantity" 
-                type="number" 
-                value={formData.quantity?.toString() || ''} 
-                onChange={handleInputChange} 
-                className="mt-1" 
+              <Input
+                id="quantity"
+                name="quantity"
+                type="number"
+                value={formData.quantity?.toString() || ''}
+                onChange={handleInputChange}
+                className="mt-1"
                 min="0"
               />
               {errors.quantity && <p className="text-red-500 text-xs mt-1">{errors.quantity}</p>}
             </div>
-            
+
             <div>
               <Label htmlFor="minStock">Stock Mínimo <span className="text-red-500">*</span></Label>
-              <Input 
-                id="minStock" 
-                name="minStock" 
-                type="number" 
-                value={formData.minStock?.toString() || ''} 
-                onChange={handleInputChange} 
-                className="mt-1" 
+              <Input
+                id="minStock"
+                name="minStock"
+                type="number"
+                value={formData.minStock?.toString() || ''}
+                onChange={handleInputChange}
+                className="mt-1"
                 min="0"
               />
               {errors.minStock && <p className="text-red-500 text-xs mt-1">{errors.minStock}</p>}
             </div>
-            
+
             <div>
               <Label htmlFor="maxStock">Stock Máximo</Label>
-              <Input 
-                id="maxStock" 
-                name="maxStock" 
-                type="number" 
-                value={formData.maxStock?.toString() || ''} 
-                onChange={handleInputChange} 
-                className="mt-1" 
+              <Input
+                id="maxStock"
+                name="maxStock"
+                type="number"
+                value={formData.maxStock?.toString() || ''}
+                onChange={handleInputChange}
+                className="mt-1"
                 min="0"
                 placeholder="Opcional"
               />
               {errors.maxStock && <p className="text-red-500 text-xs mt-1">{errors.maxStock}</p>}
             </div>
           </div>
-          
+
           <div className="flex justify-end mt-6">
             <Link href={`/inventory/items/${itemId}`} className="mr-4">
               <Button type="button" variant="outline">Cancelar</Button>

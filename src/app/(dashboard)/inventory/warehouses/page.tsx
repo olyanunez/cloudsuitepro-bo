@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Warehouse } from '@/types/inventory';
+import { Warehouse } from '@/lib/types/inventory';
 import { WarehouseService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -30,12 +30,12 @@ export default function WarehousesPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [warehouseToDelete, setWarehouseToDelete] = useState<string | null>(null);
-  
+
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<'name' | 'address' | 'description' | 'createdAt' | 'isActive'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -63,7 +63,7 @@ export default function WarehousesPage() {
 
   const handleDeleteWarehouse = async () => {
     if (!warehouseToDelete) return;
-    
+
     try {
       await WarehouseService.deleteWarehouse(parseInt(warehouseToDelete, 10));
       setWarehouses(warehouses.filter(warehouse => warehouse.id !== parseInt(warehouseToDelete, 10)));
@@ -91,7 +91,7 @@ export default function WarehousesPage() {
         // Usar tipos específicos en lugar de any
         let fieldA: string | Date | boolean;
         let fieldB: string | Date | boolean;
-        
+
         if (sortField === 'createdAt') {
           // Asegurarse de que createdAt sea un valor válido para crear una fecha
           fieldA = a.createdAt ? new Date(a.createdAt) : new Date(0);
@@ -105,7 +105,7 @@ export default function WarehousesPage() {
           fieldA = (a[sortField] as string)?.toLowerCase() || '';
           fieldB = (b[sortField] as string)?.toLowerCase() || '';
         }
-        
+
         if (fieldA < fieldB) return sortDirection === 'asc' ? -1 : 1;
         if (fieldA > fieldB) return sortDirection === 'asc' ? 1 : -1;
         return 0;
@@ -118,7 +118,7 @@ export default function WarehousesPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  
+
   // Handle sorting
   const handleSort = (field: 'name' | 'address' | 'description' | 'createdAt' | 'isActive') => {
     if (field === sortField) {
@@ -148,7 +148,7 @@ export default function WarehousesPage() {
           </Button>
         </Link>
       </div>
-      
+
       {/* Search and filter controls */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="relative">
@@ -161,7 +161,7 @@ export default function WarehousesPage() {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <Select value={sortField} onValueChange={(value: string) => setSortField(value as 'name' | 'address' | 'description' | 'createdAt' | 'isActive')}>
           <SelectTrigger>
             <SelectValue placeholder="Ordenar por" />
@@ -174,7 +174,7 @@ export default function WarehousesPage() {
             <SelectItem value="createdAt">Fecha de Creación</SelectItem>
           </SelectContent>
         </Select>
-        
+
         <Select value={itemsPerPage.toString()} onValueChange={(value: string) => setItemsPerPage(Number(value))}>
           <SelectTrigger>
             <SelectValue placeholder="Elementos por página" />
@@ -193,8 +193,8 @@ export default function WarehousesPage() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('name')}
                 >
@@ -203,8 +203,8 @@ export default function WarehousesPage() {
                     <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('address')}
                 >
@@ -213,8 +213,8 @@ export default function WarehousesPage() {
                     <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('description')}
                 >
@@ -223,8 +223,8 @@ export default function WarehousesPage() {
                     <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('isActive')}
                 >
@@ -233,8 +233,8 @@ export default function WarehousesPage() {
                     <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('createdAt')}
                 >
@@ -282,9 +282,9 @@ export default function WarehousesPage() {
                           <PencilIcon className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
                         onClick={() => confirmDelete(warehouse.id)}
                       >
@@ -298,7 +298,7 @@ export default function WarehousesPage() {
           </table>
         </div>
       </div>
-      
+
       {/* Pagination controls */}
       <div className="mt-6 flex items-center justify-between">
         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -313,7 +313,7 @@ export default function WarehousesPage() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          
+
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             // Show pages around current page
             let pageNum;
@@ -326,7 +326,7 @@ export default function WarehousesPage() {
             } else {
               pageNum = currentPage - 2 + i;
             }
-            
+
             return (
               <Button
                 key={pageNum}
@@ -338,7 +338,7 @@ export default function WarehousesPage() {
               </Button>
             );
           })}
-          
+
           <Button
             variant="outline"
             size="sm"

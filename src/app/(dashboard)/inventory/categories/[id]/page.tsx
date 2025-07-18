@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ProductCategory } from '@/types/inventory';
+import { ProductCategory } from '@/lib/types/inventory';
 import { ProductCategoryService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';

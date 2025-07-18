@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ProductCategory, UpdateProductCategoryDto } from '@/types/inventory';
+import { ProductCategory, UpdateProductCategoryDto } from '@/lib/types/inventory';
 import { ProductCategoryService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ export default function EditCategoryPage() {
   const params = useParams();
   const router = useRouter();
   const categoryId = parseInt(params.id as string, 10);
-  
+
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [category, setCategory] = useState<ProductCategory | null>(null);
@@ -20,7 +20,7 @@ export default function EditCategoryPage() {
     name: '',
     description: ''
   });
-  
+
   const [errors, setErrors] = useState<{
     name?: string;
     description?: string;
@@ -65,22 +65,22 @@ export default function EditCategoryPage() {
       name?: string;
       description?: string;
     } = {};
-    
+
     if (!formData.name || !formData.name.trim()) {
       newErrors.name = 'El nombre de la categoría es requerido';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       setSaving(true);
       await ProductCategoryService.update(categoryId, formData);
@@ -145,14 +145,13 @@ export default function EditCategoryPage() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                  className={`w-full px-3 py-2 border rounded-md ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
                   placeholder="Nombre de la categoría"
                 />
                 {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
               </div>
-              
+
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Descripción
@@ -180,8 +179,8 @@ export default function EditCategoryPage() {
               >
                 Cancelar
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="bg-primary hover:bg-primary-600"
                 disabled={saving}
               >

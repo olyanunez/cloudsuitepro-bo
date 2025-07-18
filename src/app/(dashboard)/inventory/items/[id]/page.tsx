@@ -156,7 +156,7 @@ export default function InventoryItemDetailPage() {
                     <p className="font-medium">{item.product.isActive ? 'Activo' : 'Inactivo'}</p>
                   </div>
                 </div>
-                
+
                 {item.product.description && (
                   <div className="mt-4">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Descripción</p>
@@ -166,7 +166,7 @@ export default function InventoryItemDetailPage() {
               </div>
             )}
           </div>
-          
+
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mt-6">
             <h2 className="text-xl font-semibold mb-4">Información del Almacén</h2>
             {!item.warehouse ? (
