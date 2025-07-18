@@ -24,45 +24,56 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { isAuthenticated } from '@/lib/services/apiService';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function RolesPage() {
+  const router = useRouter();
+  const { toast } = useToast();
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
-  
+  const [error, setError] = useState<string | null>(null);
+
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<'name' | 'description' | 'createdAt'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
+    // Verificar autenticación
+    if (!isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+
     async function loadData() {
+      setLoading(true);
+      setError(null);
       try {
         const rolesData = await RoleService.getRoles();
-        console.log('Roles recibidos del backend:', rolesData);
-        
-        // Verificar la estructura de los datos recibidos
-        if (rolesData && rolesData.length > 0) {
-          console.log('Estructura del primer rol:', JSON.stringify(rolesData[0], null, 2));
-          console.log('_count disponible:', rolesData[0]._count);
-          console.log('Permisos calculados para el primer rol:', getPermissionsCount(rolesData[0]));
-        }
-        
         setRoles(rolesData);
       } catch (error) {
-        console.error('Error loading roles data:', error);
+        const message = error instanceof Error ? error.message : 'Error al cargar los roles';
+        setError(message);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: message,
+        });
       } finally {
         setLoading(false);
       }
     }
 
     loadData();
-  }, []);
+  }, [router, toast]);
 
   const confirmDelete = (roleId: string | number) => {
     setRoleToDelete(String(roleId));
@@ -71,7 +82,7 @@ export default function RolesPage() {
 
   const handleDeleteRole = async () => {
     if (!roleToDelete) return;
-    
+
     try {
       const response = await RoleService.deleteRole(roleToDelete);
       if (response && response.message) {
@@ -90,19 +101,19 @@ export default function RolesPage() {
 
   const getPermissionsCount = (role: Role): number => {
     console.log('Calculando permisos para rol:', role.name);
-  
+
     // Si el rol tiene el campo _count.roleScreenPermissions, usarlo directamente
     if (role._count && typeof role._count.roleScreenPermissions === 'number') {
       console.log('Usando _count.roleScreenPermissions:', role._count.roleScreenPermissions);
       return role._count.roleScreenPermissions;
     }
-  
+
     // Si el rol tiene el campo permissionsCount, usarlo directamente
     if (typeof role.permissionsCount === 'number') {
       console.log('Usando permissionsCount:', role.permissionsCount);
       return role.permissionsCount;
     }
-  
+
     // Si tiene screensWithPermissions, calcular el total sumando los permisos de cada pantalla
     if (role.screensWithPermissions && role.screensWithPermissions.length > 0) {
       const count = role.screensWithPermissions.reduce((total, screen) => {
@@ -111,12 +122,12 @@ export default function RolesPage() {
       console.log('Calculado desde screensWithPermissions:', count);
       return count;
     }
-  
+
     // Si no hay información de permisos, devolver 0
     console.log('No se encontró información de permisos, devolviendo 0');
     return 0;
   };
-  
+
   // Filter and sort roles
   const filteredRoles = useMemo(() => {
     return roles
@@ -131,7 +142,7 @@ export default function RolesPage() {
         // Usar tipos específicos en lugar de any
         let fieldA: string | Date;
         let fieldB: string | Date;
-        
+
         if (sortField === 'createdAt') {
           // Asegurarse de que createdAt sea un valor válido para crear una fecha
           fieldA = a.createdAt ? new Date(a.createdAt) : new Date(0);
@@ -141,7 +152,7 @@ export default function RolesPage() {
           fieldA = (a[sortField] as string)?.toLowerCase() || '';
           fieldB = (b[sortField] as string)?.toLowerCase() || '';
         }
-        
+
         if (fieldA < fieldB) return sortDirection === 'asc' ? -1 : 1;
         if (fieldA > fieldB) return sortDirection === 'asc' ? 1 : -1;
         return 0;
@@ -154,7 +165,7 @@ export default function RolesPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  
+
   // Handle sorting
   const handleSort = (field: 'name' | 'description' | 'createdAt') => {
     if (field === sortField) {
@@ -184,7 +195,7 @@ export default function RolesPage() {
           </Button>
         </Link>
       </div>
-      
+
       {/* Search and filter controls */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="relative">
@@ -197,7 +208,7 @@ export default function RolesPage() {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <Select value={sortField} onValueChange={(value: string) => setSortField(value as 'name' | 'description' | 'createdAt')}>
           <SelectTrigger>
             <SelectValue placeholder="Ordenar por" />
@@ -208,7 +219,7 @@ export default function RolesPage() {
             <SelectItem value="createdAt">Fecha de Creación</SelectItem>
           </SelectContent>
         </Select>
-        
+
         <Select value={itemsPerPage.toString()} onValueChange={(value: string) => setItemsPerPage(Number(value))}>
           <SelectTrigger>
             <SelectValue placeholder="Elementos por página" />
@@ -227,8 +238,8 @@ export default function RolesPage() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('name')}
                 >
@@ -237,8 +248,8 @@ export default function RolesPage() {
                     <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('description')}
                 >
@@ -250,8 +261,8 @@ export default function RolesPage() {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Permisos
                 </th>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('createdAt')}
                 >
@@ -296,9 +307,9 @@ export default function RolesPage() {
                           <PencilIcon className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
                         onClick={() => confirmDelete(role.id)}
                       >
@@ -312,7 +323,7 @@ export default function RolesPage() {
           </table>
         </div>
       </div>
-      
+
       {/* Pagination controls */}
       <div className="mt-6 flex items-center justify-between">
         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -327,7 +338,7 @@ export default function RolesPage() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          
+
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             // Show pages around current page
             let pageNum;
@@ -340,7 +351,7 @@ export default function RolesPage() {
             } else {
               pageNum = currentPage - 2 + i;
             }
-            
+
             return (
               <Button
                 key={pageNum}
@@ -352,7 +363,7 @@ export default function RolesPage() {
               </Button>
             );
           })}
-          
+
           <Button
             variant="outline"
             size="sm"

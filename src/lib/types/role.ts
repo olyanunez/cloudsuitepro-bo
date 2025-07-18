@@ -52,5 +52,8 @@ export interface RoleUpdateInput {
   isActive?: boolean;
   screenPermissionIds?: number[];
   // Agregamos el campo para los pares screenId-permissionId
-  screenPermissionPairs?: { screenId: number; permissionId: number }[];
+  screenPermissionPairs?: { screenId: number; permissionId: number; screenPermissionId?: number }[];
+  // Nuevos campos para el manejo de permisos a agregar y quitar
+  permissionsToAdd?: number[];
+  permissionsToRemove?: number[];
 }

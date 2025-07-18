@@ -38,13 +38,57 @@ export const setTenantId = (tenantId: string): void => {
 };
 
 /**
+ * Verifica si hay un token válido
+ */
+export const isAuthenticated = (): boolean => {
+  const token = getAuthToken();
+  return !!token;
+};
+
+/**
+ * Función para construir los headers de la petición
+ */
+const getHeaders = () => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const tenantId = getTenantId();
+  if (tenantId) {
+    headers['x-tenant-id'] = tenantId;
+  }
+
+  return headers;
+};
+
+/**
+ * Maneja los errores de la API
+ */
+const handleApiError = async (response: Response) => {
+  if (response.status === 401) {
+    // Token expirado o inválido
+    localStorage.removeItem('auth_token');
+    window.location.href = '/login';
+    throw new Error('Sesión expirada. Por favor, inicie sesión nuevamente.');
+  }
+
+  const error = await response.json();
+  throw new Error(error.message || 'Error en la petición');
+};
+
+/**
  * Opciones por defecto para todas las peticiones fetch
  * Incluye automáticamente el token de autenticación y el tenantId si están disponibles
  */
 export const getDefaultOptions = (method: string, body?: unknown): RequestInit => {
   const token = getAuthToken();
   const tenantId = getTenantId();
-  
+
   const options: RequestInit = {
     method,
     headers: {
@@ -67,21 +111,16 @@ export const getDefaultOptions = (method: string, body?: unknown): RequestInit =
  * @returns Promise con la respuesta
  */
 export const apiGet = async <T>(endpoint: string): Promise<T> => {
-  try {
-    const response = await fetch(`${API_URL}${endpoint}`, getDefaultOptions('GET'));
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({
-        message: 'Error desconocido',
-      }));
-      throw new Error(errorData.message || `Error: ${response.status}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`Error en apiGet para ${endpoint}:`, error);
-    throw error;
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    method: 'GET',
+    headers: getHeaders(),
+  });
+
+  if (!response.ok) {
+    await handleApiError(response);
   }
+
+  return response.json();
 };
 
 /**
@@ -90,17 +129,18 @@ export const apiGet = async <T>(endpoint: string): Promise<T> => {
  * @param data Datos a enviar en el cuerpo de la petición
  * @returns Promise con la respuesta
  */
-export const apiPost = async <T>(endpoint: string, data: unknown): Promise<T> => {
-  const response = await fetch(`${API_URL}${endpoint}`, getDefaultOptions('POST', data));
-  
+export const apiPost = async <T>(endpoint: string, data?: any): Promise<T> => {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: data ? JSON.stringify(data) : undefined,
+  });
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({
-      message: 'Error desconocido',
-    }));
-    throw new Error(errorData.message || `Error: ${response.status}`);
+    await handleApiError(response);
   }
-  
-  return await response.json();
+
+  return response.json();
 };
 
 /**
@@ -109,17 +149,18 @@ export const apiPost = async <T>(endpoint: string, data: unknown): Promise<T> =>
  * @param data Datos a enviar en el cuerpo de la petición
  * @returns Promise con la respuesta
  */
-export const apiPatch = async <T>(endpoint: string, data: unknown): Promise<T> => {
-  const response = await fetch(`${API_URL}${endpoint}`, getDefaultOptions('PATCH', data));
-  
+export const apiPatch = async <T>(endpoint: string, data: any): Promise<T> => {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    method: 'PATCH',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({
-      message: 'Error desconocido',
-    }));
-    throw new Error(errorData.message || `Error: ${response.status}`);
+    await handleApiError(response);
   }
-  
-  return await response.json();
+
+  return response.json();
 };
 
 /**
@@ -128,14 +169,14 @@ export const apiPatch = async <T>(endpoint: string, data: unknown): Promise<T> =
  * @returns Promise con la respuesta
  */
 export const apiDelete = async <T>(endpoint: string): Promise<T> => {
-  const response = await fetch(`${API_URL}${endpoint}`, getDefaultOptions('DELETE'));
-  
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({
-      message: 'Error desconocido',
-    }));
-    throw new Error(errorData.message || `Error: ${response.status}`);
+    await handleApiError(response);
   }
-  
-  return await response.json();
+
+  return response.json();
 };
