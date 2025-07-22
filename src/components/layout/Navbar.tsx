@@ -11,13 +11,13 @@ import {
   SheetClose
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
-import { Icon, MenuIcon, NotificationIcon, UserIcon, LogoutIcon, BuildingIcon } from './Icons'
 import { AuthService } from '@/lib/services/authService'
 import { useTenant } from '@/lib/contexts/TenantContext'
+import { BuildingIcon, Icon, MenuIcon, UserIcon } from 'lucide-react'
+import { LogoutIcon, NotificationIcon } from './Icons'
 
 // Definición de los elementos del menú
 const menuItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: 'grid' },
   { name: 'Usuarios', href: '/users', icon: 'user-cog' },
   { name: 'Roles', href: '/roles', icon: 'shield' },
   {
@@ -25,7 +25,7 @@ const menuItems = [
     href: '/inventory',
     icon: 'archive',
     submenu: [
-      { name: 'Inventario', href: '/inventory/items', icon: 'package' },
+      { name: 'Inventario', href: '/inventory/items', icon: 'box' },
       // { name: 'Dashboard', href: '/inventory', icon: 'layout-dashboard' },s
       { name: 'Categorías', href: '/inventory/categories', icon: 'tag' },
       { name: 'Productos', href: '/inventory/products', icon: 'shopping-bag' },
@@ -77,8 +77,8 @@ export default function Navbar() {
                 <Link
                   href={item.href}
                   className={`text-sm font-medium transition-colors hover:text-primary-600 ${pathname === item.href || pathname.startsWith(item.href + '/')
-                      ? "text-primary-600 dark:text-primary-400"
-                      : "text-gray-500 dark:text-gray-400"
+                    ? "text-primary-600 dark:text-primary-400"
+                    : "text-gray-500 dark:text-gray-400"
                     } flex items-center gap-1`}
                 >
                   {item.name}
@@ -96,7 +96,7 @@ export default function Navbar() {
                         href={subItem.href}
                         className={`flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm ${pathname === subItem.href ? 'bg-primary-50 text-primary-900 dark:bg-primary-900/20 dark:text-primary-100' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'}`}
                       >
-                        <Icon name={subItem.icon} className="h-4 w-4" />
+                        <Icon name={subItem.icon} className="h-4 w-4" iconNode={[]} />
                         <span>{subItem.name}</span>
                       </Link>
                     ))}
@@ -144,11 +144,11 @@ export default function Navbar() {
                           setOpenSubmenus(newOpenSubmenus);
                         }}
                         className={`flex items-center gap-2 px-2 py-1 rounded-md w-full text-left ${isActive
-                            ? "bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100"
-                            : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
+                          ? "bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100"
+                          : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
                           }`}
                       >
-                        <Icon name={item.icon} />
+                        <Icon name={item.icon} iconNode={[]} />
                         <span>{item.name}</span>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -170,8 +170,8 @@ export default function Navbar() {
                         <Link
                           href={item.href}
                           className={`flex items-center gap-2 px-2 py-1 rounded-md w-full ${isActive
-                              ? "bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100"
-                              : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
+                            ? "bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100"
+                            : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
                             }`}
                         >
                           <Icon name={item.icon} />
@@ -188,11 +188,11 @@ export default function Navbar() {
                           <Link
                             href={subItem.href}
                             className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm ${pathname === subItem.href
-                                ? "bg-primary-50 text-primary-900 dark:bg-primary-900/20 dark:text-primary-100"
-                                : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
+                              ? "bg-primary-50 text-primary-900 dark:bg-primary-900/20 dark:text-primary-100"
+                              : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
                               }`}
                           >
-                            <Icon name={subItem.icon} className="h-4 w-4" />
+                            <Icon name={subItem.icon} className="h-4 w-4" iconNode={[]} />
                             <span>{subItem.name}</span>
                           </Link>
                         </SheetClose>

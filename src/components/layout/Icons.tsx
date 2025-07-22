@@ -1,5 +1,6 @@
 "use client"
 
+import { BuildingIcon, Tag } from 'lucide-react'
 import * as React from 'react'
 
 export const MenuIcon: React.FC<IconWithClassProps> = ({ className }) => (
@@ -99,23 +100,6 @@ export const ShieldIcon: React.FC<IconWithClassProps> = ({ className }) => (
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
   </svg>
 )
-
-export const BuildingIcon: React.FC<IconWithClassProps> = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-    <path d="M9 22v-4h6v4"></path>
-    <path d="M8 6h.01"></path>
-    <path d="M16 6h.01"></path>
-    <path d="M12 6h.01"></path>
-    <path d="M12 10h.01"></path>
-    <path d="M12 14h.01"></path>
-    <path d="M16 10h.01"></path>
-    <path d="M16 14h.01"></path>
-    <path d="M8 10h.01"></path>
-    <path d="M8 14h.01"></path>
-  </svg>
-)
-
 interface IconProps {
   name: string;
   className?: string;
@@ -126,7 +110,6 @@ export const Icon: React.FC<IconProps> = ({ name, className }) => {
   const getIconWithClass = (IconComponent: React.FC<IconWithClassProps>) => (
     <IconComponent className={className} />
   );
-  
   const icons: Record<string, React.ReactNode> = {
     'grid': getIconWithClass(GridIcon as React.FC<IconWithClassProps>),
     'box': getIconWithClass(BoxIcon as React.FC<IconWithClassProps>),
@@ -136,6 +119,7 @@ export const Icon: React.FC<IconProps> = ({ name, className }) => {
     'user-cog': getIconWithClass(UserCogIcon as React.FC<IconWithClassProps>),
     'shield': getIconWithClass(ShieldIcon as React.FC<IconWithClassProps>),
     'building': getIconWithClass(BuildingIcon as React.FC<IconWithClassProps>),
+    'tag': getIconWithClass(Tag as React.FC<IconWithClassProps>), // Assuming 'tag' uses ShoppingBagIcon
   }
 
   return <>{icons[name] || null}</>
