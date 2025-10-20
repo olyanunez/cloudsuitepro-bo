@@ -237,7 +237,7 @@ export default function CreateProductPage() {
                     name="price"
                     value={formData.price}
                     onChange={handleInputChange}
-                    step="0.01"
+                    step="1"
                     min="0"
                     className={`w-full pl-12 pr-3 py-2 border rounded-md ${errors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                       } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
@@ -247,21 +247,49 @@ export default function CreateProductPage() {
                 {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
               </div>
 
+              {/* <div>
+                <label htmlFor="cost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Costo
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    DOP
+                  </span>
+                  <input
+                    type="number"
+                    id="cost"
+                    name="cost"
+                    value={formData.cost}
+                    onChange={handleInputChange}
+                    min="0"
+                    step="1"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700"
+                    placeholder="0.00"
+                  />
+                  </div>
+              </div> */}
+
               <div>
                 <label htmlFor="cost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Costo
                 </label>
-                <input
-                  type="number"
-                  id="cost"
-                  name="cost"
-                  value={formData.cost}
-                  onChange={handleInputChange}
-                  min="0"
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700"
-                  placeholder="0.00"
-                />
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                    DOP
+                  </span>
+                  <input
+                    type="number"
+                    id="cost"
+                    name="cost"
+                    value={formData.cost}
+                    onChange={handleInputChange}
+                    step="1"
+                    min="0"
+                    className={`w-full pl-12 pr-3 py-2 border rounded-md border-gray-300 dark:border-gray-600'
+                      focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                    placeholder="0.00"
+                  />
+                </div>
               </div>
             </div>
           </div>

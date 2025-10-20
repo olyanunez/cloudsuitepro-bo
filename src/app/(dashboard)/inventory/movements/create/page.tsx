@@ -26,6 +26,7 @@ export default function CreateMovementPage() {
   // Data state
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [availableSourceWarehouses, setAvailableSourceWarehouses] = useState<Warehouse[]>([]);
 
   // Form state
   const [movementType, setMovementType] = useState<string>('');
@@ -70,6 +71,44 @@ export default function CreateMovementPage() {
     loadData();
   }, []);
 
+  // Cargar almacenes con stock del producto seleccionado
+  useEffect(() => {
+    async function loadWarehousesWithStock() {
+      if (!productId) {
+        setAvailableSourceWarehouses([]);
+        return;
+      }
+
+      try {
+        // Obtener items de inventario para el producto seleccionado
+        const inventoryItems = await InventoryService.getItems(undefined, Number(productId));
+
+        // Filtrar almacenes que tienen stock (cantidad > 0)
+        const warehouseIdsWithStock = inventoryItems
+          .filter(item => item.quantity > 0)
+          .map(item => item.warehouseId);
+
+        // Filtrar la lista de almacenes para incluir solo los que tienen stock
+        const warehousesWithStock = warehouses.filter(warehouse =>
+          warehouseIdsWithStock.includes(warehouse.id)
+        );
+
+        setAvailableSourceWarehouses(warehousesWithStock);
+
+        // Si el almacén de origen seleccionado ya no tiene stock, limpiarlo
+        if (sourceWarehouseId && !warehouseIdsWithStock.includes(Number(sourceWarehouseId))) {
+          setSourceWarehouseId('');
+        }
+      } catch (error) {
+        console.error('Error loading warehouses with stock:', error);
+        toast.error('Error al cargar almacenes con stock');
+        setAvailableSourceWarehouses([]);
+      }
+    }
+
+    loadWarehousesWithStock();
+  }, [productId, warehouses, sourceWarehouseId]);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -81,7 +120,7 @@ export default function CreateMovementPage() {
       newErrors.productId = 'El producto es requerido';
     }
 
-    if ((movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA) && !sourceWarehouseId) {
+    if ((movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA || movementType === MovementType.AJUSTE) && !sourceWarehouseId) {
       newErrors.sourceWarehouseId = 'El almacén de origen es requerido';
     }
 
@@ -125,7 +164,7 @@ export default function CreateMovementPage() {
         movementData.destinationWarehouseId = Number(destinationWarehouseId);
       }
 
-      if (movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA) {
+      if (movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA || movementType === MovementType.AJUSTE) {
         movementData.sourceWarehouseId = Number(sourceWarehouseId);
       }
 
@@ -205,21 +244,27 @@ export default function CreateMovementPage() {
                 {errors.productId && <p className="text-red-500 text-xs mt-1">{errors.productId}</p>}
               </div>
 
-              {(movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA) && (
+              {(movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA || movementType === MovementType.AJUSTE) && (
                 <div className="space-y-2">
                   <label htmlFor="sourceWarehouse" className="text-sm font-medium">
-                    Almacén de Origen <span className="text-red-500">*</span>
+                    Almacén {movementType === MovementType.AJUSTE ? '' : 'de Origen'} <span className="text-red-500">*</span>
                   </label>
-                  <Select value={sourceWarehouseId} onValueChange={setSourceWarehouseId}>
+                  <Select value={sourceWarehouseId} onValueChange={setSourceWarehouseId} disabled={!productId}>
                     <SelectTrigger id="sourceWarehouse" className={errors.sourceWarehouseId ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Seleccionar almacén de origen" />
+                      <SelectValue placeholder={!productId ? "Primero seleccione un producto" : `Seleccionar almacén ${movementType === MovementType.AJUSTE ? '' : 'de origen'}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      {warehouses.map(warehouse => (
-                        <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
-                          {warehouse.name}
+                      {availableSourceWarehouses.length === 0 && productId ? (
+                        <SelectItem value="no-stock" disabled>
+                          No hay almacenes con stock de este producto
                         </SelectItem>
-                      ))}
+                      ) : (
+                        availableSourceWarehouses.map(warehouse => (
+                          <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
+                            {warehouse.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   {errors.sourceWarehouseId && <p className="text-red-500 text-xs mt-1">{errors.sourceWarehouseId}</p>}
