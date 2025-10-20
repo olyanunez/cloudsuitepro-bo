@@ -100,6 +100,40 @@ export const ShieldIcon: React.FC<IconWithClassProps> = ({ className }) => (
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
   </svg>
 )
+
+export const ArchiveIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="2" y="3" width="20" height="5" rx="2"></rect>
+    <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path>
+    <path d="M10 12h4"></path>
+  </svg>
+)
+
+export const RepeatIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="m17 2 4 4-4 4"></path>
+    <path d="M3 11v-1a4 4 0 0 1 4-4h14"></path>
+    <path d="m7 22-4-4 4-4"></path>
+    <path d="M21 13v1a4 4 0 0 1-4 4H3"></path>
+  </svg>
+)
+
+export const BarChartIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <line x1="12" y1="20" x2="12" y2="10"></line>
+    <line x1="18" y1="20" x2="18" y2="4"></line>
+    <line x1="6" y1="20" x2="6" y2="16"></line>
+  </svg>
+)
+
+export const LayoutDashboardIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="3" y="3" width="7" height="9"></rect>
+    <rect x="14" y="3" width="7" height="5"></rect>
+    <rect x="14" y="12" width="7" height="9"></rect>
+    <rect x="3" y="16" width="7" height="5"></rect>
+  </svg>
+)
 interface IconProps {
   name: string;
   className?: string;
@@ -119,7 +153,11 @@ export const Icon: React.FC<IconProps> = ({ name, className }) => {
     'user-cog': getIconWithClass(UserCogIcon as React.FC<IconWithClassProps>),
     'shield': getIconWithClass(ShieldIcon as React.FC<IconWithClassProps>),
     'building': getIconWithClass(BuildingIcon as React.FC<IconWithClassProps>),
-    'tag': getIconWithClass(Tag as React.FC<IconWithClassProps>), // Assuming 'tag' uses ShoppingBagIcon
+    'tag': getIconWithClass(Tag as React.FC<IconWithClassProps>),
+    'archive': getIconWithClass(ArchiveIcon as React.FC<IconWithClassProps>),
+    'repeat': getIconWithClass(RepeatIcon as React.FC<IconWithClassProps>),
+    'bar-chart-2': getIconWithClass(BarChartIcon as React.FC<IconWithClassProps>),
+    'layout-dashboard': getIconWithClass(LayoutDashboardIcon as React.FC<IconWithClassProps>),
   }
 
   return <>{icons[name] || null}</>

@@ -13,8 +13,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { AuthService } from '@/lib/services/authService'
 import { useTenant } from '@/lib/contexts/TenantContext'
-import { BuildingIcon, Icon, MenuIcon, UserIcon } from 'lucide-react'
-import { LogoutIcon, NotificationIcon } from './Icons'
+import { BuildingIcon, MenuIcon, UserIcon } from 'lucide-react'
+import { LogoutIcon, NotificationIcon, Icon } from './Icons'
 
 // Definición de los elementos del menú
 const menuItems = [
@@ -96,7 +96,7 @@ export default function Navbar() {
                         href={subItem.href}
                         className={`flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm ${pathname === subItem.href ? 'bg-primary-50 text-primary-900 dark:bg-primary-900/20 dark:text-primary-100' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'}`}
                       >
-                        <Icon name={subItem.icon} className="h-4 w-4" iconNode={[]} />
+                        <Icon name={subItem.icon} className="h-4 w-4" />
                         <span>{subItem.name}</span>
                       </Link>
                     ))}
@@ -148,7 +148,7 @@ export default function Navbar() {
                           : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
                           }`}
                       >
-                        <Icon name={item.icon} iconNode={[]} />
+                        <Icon name={item.icon} />
                         <span>{item.name}</span>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -192,7 +192,7 @@ export default function Navbar() {
                               : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
                               }`}
                           >
-                            <Icon name={subItem.icon} className="h-4 w-4" iconNode={[]} />
+                            <Icon name={subItem.icon} className="h-4 w-4" />
                             <span>{subItem.name}</span>
                           </Link>
                         </SheetClose>
