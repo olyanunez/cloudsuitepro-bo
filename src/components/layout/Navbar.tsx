@@ -76,10 +76,10 @@ export default function Navbar() {
               <div key={item.href} className="relative group">
                 <Link
                   href={item.href}
-                  className={`text-sm font-medium transition-colors hover:text-primary-600 ${pathname === item.href || pathname.startsWith(item.href + '/')
-                    ? "text-primary-600 dark:text-primary-400"
-                    : "text-gray-500 dark:text-gray-400"
-                    } flex items-center gap-1`}
+                  className={`text-sm font-medium transition-colors ${pathname === item.href || pathname.startsWith(item.href + '/')
+                    ? "text-blue-600 dark:text-blue-400 font-bold border-b-2 border-blue-600 dark:border-blue-400"
+                    : "text-gray-500 dark:text-gray-400 hover:text-blue-600"
+                    } flex items-center gap-1 pb-1`}
                 >
                   {item.name}
                   {item.submenu && (
@@ -132,21 +132,23 @@ export default function Navbar() {
             {menuItems.map((item) => {
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
               const isSubmenuOpen = !!openSubmenus[item.href];
-
               return (
                 <div key={item.href} className="flex flex-col">
                   <div className="flex items-center justify-between">
                     {item.submenu ? (
-                      <button
+                      <div
                         onClick={() => {
+                          console.log('Esta activo: ' + isActive)
                           const newOpenSubmenus = { ...openSubmenus };
                           newOpenSubmenus[item.href] = !isSubmenuOpen;
                           setOpenSubmenus(newOpenSubmenus);
                         }}
-                        className={`flex items-center gap-2 px-2 py-1 rounded-md w-full text-left ${isActive
-                          ? "bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100"
-                          : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
-                          }`}
+                        className={
+                          `flex items-center gap-2 px-2 py-1 rounded-md w-full cursor-pointer ${isActive
+                            ? "bg-yellow-50 text-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-100 font-bold border-l-4 border-yellow-500"
+                            : "bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                          }`
+                        }
                       >
                         <Icon name={item.icon} />
                         <span>{item.name}</span>
@@ -164,14 +166,14 @@ export default function Navbar() {
                         >
                           <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
-                      </button>
+                      </div>
                     ) : (
                       <SheetClose asChild>
                         <Link
                           href={item.href}
                           className={`flex items-center gap-2 px-2 py-1 rounded-md w-full ${isActive
-                            ? "bg-primary-100 text-primary-900 dark:bg-primary-900 dark:text-primary-100"
-                            : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
+                            ? "bg-yellow-50 text-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-100 font-bold border-l-4 border-yellow-500"
+                            : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
                             }`}
                         >
                           <Icon name={item.icon} />
@@ -188,8 +190,8 @@ export default function Navbar() {
                           <Link
                             href={subItem.href}
                             className={`flex items-center gap-2 px-2 py-1 rounded-md text-sm ${pathname === subItem.href
-                              ? "bg-primary-50 text-primary-900 dark:bg-primary-900/20 dark:text-primary-100"
-                              : "text-gray-600 hover:bg-primary-50 dark:text-gray-300 dark:hover:bg-primary-900/20"
+                              ? "bg-yellow-50 text-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-100 font-bold border-l-4 border-yellow-500"
+                              : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
                               }`}
                           >
                             <Icon name={subItem.icon} className="h-4 w-4" />
