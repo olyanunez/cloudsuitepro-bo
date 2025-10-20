@@ -26,7 +26,7 @@ export default function UserDetailPage() {
   const params = useParams();
   const router = useRouter();
   const userId = params.id as string;
-  
+
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -38,13 +38,13 @@ export default function UserDetailPage() {
         // Convertir el userId a número ya que el servicio espera un number
         const userIdNum = parseInt(userId, 10);
         const userData = await UserService.getUserById(userIdNum);
-        
+
         if (!userData) {
           return;
         }
-        
+
         setUser(userData);
-        
+
         // Cargar información del rol si existe roleId
         if (userData.roleId) {
           const roleData = await RoleService.getRoleById(userData.roleId);
@@ -130,8 +130,8 @@ export default function UserDetailPage() {
           <h1 className="text-2xl font-bold">Detalle de Usuario</h1>
         </div>
         <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={handleToggleStatus}
             className={user.isActive ? "text-yellow-600" : "text-green-600"}
@@ -144,9 +144,9 @@ export default function UserDetailPage() {
               Editar
             </Button>
           </Link>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="text-red-500"
             onClick={() => setDeleteDialogOpen(true)}
           >
@@ -163,9 +163,9 @@ export default function UserDetailPage() {
               <div className="flex items-start">
                 <div className="flex-shrink-0">
                   {user.avatar ? (
-                    <Image 
-                      src={user.avatar} 
-                      alt={user.name} 
+                    <Image
+                      src={user.avatar}
+                      alt={user.name}
                       width={64}
                       height={64}
                       className="h-16 w-16 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
@@ -231,7 +231,7 @@ export default function UserDetailPage() {
               <div>
                 <h4 className="font-medium">{role.name}</h4>
                 <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{role.description}</p>
-                
+
                 <div className="mt-4">
                   <p className="text-sm font-medium mb-2">Permisos ({role._count?.roleScreenPermissions || role.permissionsCount || 0})</p>
                   <div className="space-y-2 max-h-60 overflow-y-auto">

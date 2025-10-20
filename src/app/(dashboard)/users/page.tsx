@@ -296,7 +296,7 @@ export default function UsersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
-                      {user.permissionsCount || 0} permisos
+                      {user.role?._count?.roleScreenPermissions || 0} permisos
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

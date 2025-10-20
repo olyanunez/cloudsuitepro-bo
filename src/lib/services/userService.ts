@@ -19,6 +19,9 @@ interface UserDataFromBackend {
     id: number;
     name: string;
     code: string;
+    _count?: {
+      roleScreenPermissions?: number;
+    };
   };
   avatar?: string;
   isActive?: boolean;
@@ -51,7 +54,8 @@ const normalizeUserData = (userData: UserDataFromBackend): User => {
       description: '',
       version: userData.version,
       createdAt: userData.createdAt ? new Date(userData.createdAt) : undefined,
-      updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : undefined
+      updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : undefined,
+      _count: userData.role._count
     } : undefined,
     avatar: userData.avatar,
     isActive: userData.isActive !== undefined ? userData.isActive : true,

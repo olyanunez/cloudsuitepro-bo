@@ -35,7 +35,6 @@ export default function RolesPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,13 +54,11 @@ export default function RolesPage() {
 
     async function loadData() {
       setLoading(true);
-      setError(null);
       try {
         const rolesData = await RoleService.getRoles();
         setRoles(rolesData);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Error al cargar los roles';
-        setError(message);
         toast({
           variant: "destructive",
           title: "Error",
@@ -85,14 +82,30 @@ export default function RolesPage() {
 
     try {
       const response = await RoleService.deleteRole(roleToDelete);
-      if (response && response.message) {
-        // Convertir roleToDelete a número para comparar con role.id que es número
-        const roleToDeleteNum = parseInt(roleToDelete, 10);
-        setRoles(roles.filter(role => role.id !== roleToDeleteNum));
-        console.log('Rol eliminado exitosamente:', response.message);
-      }
+
+      // Convertir roleToDelete a número para comparar con role.id que es número
+      const roleToDeleteNum = parseInt(roleToDelete, 10);
+
+      // Actualizar el estado removiendo el rol eliminado
+      setRoles(prevRoles => prevRoles.filter(role => role.id !== roleToDeleteNum));
+
+      // Mostrar mensaje de éxito
+      toast({
+        title: "Rol eliminado",
+        description: response?.message || "El rol ha sido eliminado exitosamente",
+      });
+
+      console.log('Rol eliminado exitosamente:', response?.message);
     } catch (error) {
       console.error('Error deleting role:', error);
+
+      // Mostrar mensaje de error
+      const message = error instanceof Error ? error.message : 'Error al eliminar el rol';
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: message,
+      });
     } finally {
       setRoleToDelete(null);
       setIsDeleteDialogOpen(false);
@@ -385,7 +398,10 @@ export default function RolesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteRole} className="bg-red-500 hover:bg-red-600">
+            <AlertDialogAction
+              onClick={handleDeleteRole}
+              className="!bg-red-600 hover:!bg-red-700 !text-white border-red-600"
+            >
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
