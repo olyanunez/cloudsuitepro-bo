@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from './Navbar'
+import { BranchLoader } from '../providers/BranchLoader'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -40,6 +41,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
+      <BranchLoader />
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-8">
         {children}

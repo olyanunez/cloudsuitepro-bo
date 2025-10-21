@@ -155,6 +155,8 @@ export class AuthService {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('tenant_id');
     localStorage.removeItem('tenant_name');
+    localStorage.removeItem('active_branch_id');
+    localStorage.removeItem('active_branch_name');
   }
 
   /**

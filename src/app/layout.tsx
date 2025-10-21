@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { TenantProvider } from "../lib/contexts/TenantContext";
+import { BranchProvider } from "../lib/contexts/BranchContext";
 import { Toaster } from "@/components/ui/toaster";
 import ReduxProvider from "@/lib/providers/ReduxProvider";
 
@@ -32,8 +33,10 @@ export default function RootLayout({
       >
         <ReduxProvider>
           <TenantProvider>
-            {children}
-            <Toaster />
+            <BranchProvider>
+              {children}
+              <Toaster />
+            </BranchProvider>
           </TenantProvider>
         </ReduxProvider>
       </body>

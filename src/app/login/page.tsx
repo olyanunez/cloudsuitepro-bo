@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AuthService } from '@/lib/services/authService';
 import { useTenant } from '@/lib/contexts/TenantContext';
+import { useBranch } from '@/lib/contexts/BranchContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('admin@xotica.com');
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { setCurrentTenant } = useTenant();
+  const { loadUserBranches } = useBranch();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +41,11 @@ export default function LoginPage() {
           response.user.tenantId.toString(),
           response.user.tenant.name
         );
+      }
+
+      // Cargar las sucursales del usuario
+      if (response.user && response.user.id) {
+        await loadUserBranches(response.user.id);
       }
 
       // Redirigir al dashboard después del inicio de sesión exitoso

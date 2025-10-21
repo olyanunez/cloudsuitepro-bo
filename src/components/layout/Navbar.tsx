@@ -15,6 +15,7 @@ import { AuthService } from '@/lib/services/authService'
 import { useTenant } from '@/lib/contexts/TenantContext'
 import { BuildingIcon, MenuIcon, UserIcon } from 'lucide-react'
 import { LogoutIcon, NotificationIcon, Icon } from './Icons'
+import BranchSwitcher from './BranchSwitcher'
 
 // Definición de los elementos del menú
 const menuItems = [
@@ -72,7 +73,7 @@ export default function Navbar() {
           </div>
 
           {/* Navegación de escritorio */}
-          <nav className="hidden md:flex gap-6">
+          {/* <nav className="hidden md:flex gap-6">
             {menuItems.map((item) => (
               <div key={item.href} className="relative group">
                 <Link
@@ -105,13 +106,17 @@ export default function Navbar() {
                 )}
               </div>
             ))}
-          </nav>
+          </nav> */}
 
           <div className="flex items-center gap-4">
             {tenantId && (
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                <BuildingIcon className="h-4 w-4" />
-                <span>{tenantName || `Empresa ${tenantId}`}</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                  <BuildingIcon className="h-4 w-4" />
+                  <span>{tenantName || `Empresa ${tenantId}`}</span>
+                </div>
+                <div className="h-6 w-px bg-gray-300 dark:bg-gray-700" />
+                <BranchSwitcher />
               </div>
             )}
             <Button variant="ghost" size="icon">
