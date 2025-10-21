@@ -147,6 +147,14 @@ export const Building2Icon: React.FC<IconWithClassProps> = ({ className }) => (
   </svg>
 )
 
+export const ShoppingCartIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="8" cy="21" r="1"></circle>
+    <circle cx="19" cy="21" r="1"></circle>
+    <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+  </svg>
+)
+
 interface IconProps {
   name: string;
   className?: string;
@@ -161,6 +169,7 @@ export const Icon: React.FC<IconProps> = ({ name, className }) => {
     'grid': getIconWithClass(GridIcon as React.FC<IconWithClassProps>),
     'box': getIconWithClass(BoxIcon as React.FC<IconWithClassProps>),
     'shopping-bag': getIconWithClass(ShoppingBagIcon as React.FC<IconWithClassProps>),
+    'shopping-cart': getIconWithClass(ShoppingCartIcon as React.FC<IconWithClassProps>),
     'users': getIconWithClass(UsersIcon as React.FC<IconWithClassProps>),
     'settings': getIconWithClass(SettingsIcon as React.FC<IconWithClassProps>),
     'user-cog': getIconWithClass(UserCogIcon as React.FC<IconWithClassProps>),

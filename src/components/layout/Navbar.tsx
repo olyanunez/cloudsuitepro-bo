@@ -21,6 +21,7 @@ import BranchSwitcher from './BranchSwitcher'
 const menuItems = [
   { name: 'Usuarios', href: '/users', icon: 'user-cog' },
   { name: 'Roles', href: '/roles', icon: 'shield' },
+  { name: 'Punto de Venta', href: '/pos', icon: 'shopping-cart' },
   {
     name: 'Inventario',
     href: '/inventory',
