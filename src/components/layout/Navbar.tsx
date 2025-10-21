@@ -22,6 +22,7 @@ const menuItems = [
   { name: 'Usuarios', href: '/users', icon: 'user-cog' },
   { name: 'Roles', href: '/roles', icon: 'shield' },
   { name: 'Punto de Venta', href: '/pos', icon: 'shopping-cart' },
+  { name: 'Facturas', href: '/invoices', icon: 'file-text' },
   {
     name: 'Inventario',
     href: '/inventory',
