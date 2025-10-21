@@ -134,6 +134,19 @@ export const LayoutDashboardIcon: React.FC<IconWithClassProps> = ({ className })
     <rect x="3" y="16" width="7" height="5"></rect>
   </svg>
 )
+
+export const Building2Icon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
+    <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+    <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path>
+    <path d="M10 6h4"></path>
+    <path d="M10 10h4"></path>
+    <path d="M10 14h4"></path>
+    <path d="M10 18h4"></path>
+  </svg>
+)
+
 interface IconProps {
   name: string;
   className?: string;
@@ -153,6 +166,7 @@ export const Icon: React.FC<IconProps> = ({ name, className }) => {
     'user-cog': getIconWithClass(UserCogIcon as React.FC<IconWithClassProps>),
     'shield': getIconWithClass(ShieldIcon as React.FC<IconWithClassProps>),
     'building': getIconWithClass(BuildingIcon as React.FC<IconWithClassProps>),
+    'building-2': getIconWithClass(Building2Icon as React.FC<IconWithClassProps>),
     'tag': getIconWithClass(Tag as React.FC<IconWithClassProps>),
     'archive': getIconWithClass(ArchiveIcon as React.FC<IconWithClassProps>),
     'repeat': getIconWithClass(RepeatIcon as React.FC<IconWithClassProps>),

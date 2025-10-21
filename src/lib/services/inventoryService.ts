@@ -1,5 +1,8 @@
 import { apiGet, apiPost, apiPatch, apiDelete } from './apiService';
 import {
+  AssignWarehousesDto,
+  Branch,
+  CreateBranchDto,
   CreateInventoryItemDto,
   CreateInventoryMovementDto,
   CreateProductCategoryDto,
@@ -12,6 +15,7 @@ import {
   Product,
   ProductCategory,
   StockValuationReport,
+  UpdateBranchDto,
   UpdateInventoryItemDto,
   UpdateProductCategoryDto,
   UpdateProductDto,
@@ -169,5 +173,36 @@ export const InventoryService = {
     if (warehouseId) endpoint += `?warehouseId=${warehouseId}`;
 
     return apiGet(endpoint);
+  },
+};
+
+// Servicio para sucursales
+export const BranchService = {
+  getBranches: async (): Promise<Branch[]> => {
+    return apiGet('/branches');
+  },
+
+  getBranchById: async (id: number): Promise<Branch> => {
+    return apiGet(`/branches/${id}`);
+  },
+
+  createBranch: async (data: CreateBranchDto): Promise<Branch> => {
+    return apiPost('/branches', data);
+  },
+
+  updateBranch: async (id: number, data: UpdateBranchDto): Promise<Branch> => {
+    return apiPatch(`/branches/${id}`, data);
+  },
+
+  deleteBranch: async (id: number): Promise<void> => {
+    return apiDelete(`/branches/${id}`);
+  },
+
+  assignWarehouses: async (id: number, data: AssignWarehousesDto): Promise<Branch> => {
+    return apiPost(`/branches/${id}/warehouses`, data);
+  },
+
+  unassignWarehouse: async (branchId: number, warehouseId: number): Promise<Branch> => {
+    return apiDelete(`/branches/${branchId}/warehouses/${warehouseId}`);
   },
 };

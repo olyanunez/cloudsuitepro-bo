@@ -29,6 +29,7 @@ const menuItems = [
       // { name: 'Dashboard', href: '/inventory', icon: 'layout-dashboard' },s
       { name: 'Categorías', href: '/inventory/categories', icon: 'tag' },
       { name: 'Productos', href: '/inventory/products', icon: 'shopping-bag' },
+      { name: 'Sucursales', href: '/inventory/branches', icon: 'building-2' },
       { name: 'Almacenes', href: '/inventory/warehouses', icon: 'building' },
       { name: 'Movimientos', href: '/inventory/movements', icon: 'repeat' },
       { name: 'Reportes', href: '/inventory/reports', icon: 'bar-chart-2' },

@@ -24,11 +24,27 @@ export interface Product {
   inventoryItems?: InventoryItem[];
 }
 
+export interface Branch {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  warehouses?: Warehouse[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Warehouse {
   id: number;
   name: string;
   description?: string;
   address?: string;
+  branchId?: number;
+  branch?: Branch;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -99,6 +115,28 @@ export interface UpdateProductDto {
   price?: number;
   cost?: number;
   categoryId?: number;
+}
+
+export interface CreateBranchDto {
+  code: string;
+  name: string;
+  description?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface UpdateBranchDto {
+  code?: string;
+  name?: string;
+  description?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface AssignWarehousesDto {
+  warehouseIds: number[];
 }
 
 export interface CreateWarehouseDto {
