@@ -84,18 +84,24 @@ export class AuthService {
       }
 
       const data = await response.json();
-      
+
+      console.log('Login response data:', data);
+      console.log('Tenant object:', data.user?.tenant);
+      console.log('Tenant name:', data.user?.tenant?.name);
+
       // Guardar el token en localStorage para futuras peticiones
       if (data && data.access_token) {
         localStorage.setItem('auth_token', data.access_token);
       }
-      
+
       // Guardar el tenantId si está disponible
       if (data && data.user && data.user.tenantId) {
         localStorage.setItem('tenant_id', data.user.tenantId.toString());
-        localStorage.setItem('tenant_name', data.user.tenant?.name || '');
+        const tenantName = data.user.tenant?.name || '';
+        console.log('Saving tenant_name to localStorage:', tenantName);
+        localStorage.setItem('tenant_name', tenantName);
       }
-      
+
       return data;
     } catch (error) {
       console.error('Error en login:', error);
@@ -148,6 +154,7 @@ export class AuthService {
   static logout(): void {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('tenant_id');
+    localStorage.removeItem('tenant_name');
   }
 
   /**

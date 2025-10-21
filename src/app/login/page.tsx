@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AuthService } from '@/lib/services/authService';
+import { useTenant } from '@/lib/contexts/TenantContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('admin@xotica.com');
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { setCurrentTenant } = useTenant();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,11 +28,19 @@ export default function LoginPage() {
 
     try {
       // Llamar al servicio de autenticación para iniciar sesión
-      await AuthService.login({
+      const response = await AuthService.login({
         email,
         password
       });
-      
+
+      // Actualizar el contexto del tenant con el nombre correcto
+      if (response.user && response.user.tenantId && response.user.tenant) {
+        setCurrentTenant(
+          response.user.tenantId.toString(),
+          response.user.tenant.name
+        );
+      }
+
       // Redirigir al dashboard después del inicio de sesión exitoso
       router.push('/dashboard');
     } catch (error: unknown) {

@@ -31,27 +31,50 @@ export const TenantProvider: React.FC<TenantProviderProps> = ({ children }) => {
   const [tenantId, setTenantIdState] = useState<string | null>(null);
   const [tenantName, setTenantName] = useState<string | null>(null);
 
-  // Cargar el tenantId del localStorage al iniciar
+  // Cargar el tenantId y tenantName del localStorage al iniciar
   useEffect(() => {
-    const storedTenantId = getTenantId();
-    if (storedTenantId) {
-      setTenantIdState(storedTenantId);
-      // Aquí podrías hacer una llamada a la API para obtener el nombre de la empresa
-      // basado en el ID, por ahora usamos un placeholder
-      setTenantName(`Empresa ${storedTenantId}`);
-    }
+    const loadTenantData = () => {
+      const storedTenantId = getTenantId();
+      const storedTenantName = localStorage.getItem('tenant_name');
+      console.log('Loading tenant data from localStorage:');
+      console.log('- storedTenantId:', storedTenantId);
+      console.log('- storedTenantName:', storedTenantName);
+
+      if (storedTenantId) {
+        setTenantIdState(storedTenantId);
+        const finalTenantName = storedTenantName || `Empresa ${storedTenantId}`;
+        console.log('- finalTenantName:', finalTenantName);
+        setTenantName(finalTenantName);
+      }
+    };
+
+    loadTenantData();
+
+    // Escuchar cambios en localStorage
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'tenant_id' || e.key === 'tenant_name') {
+        console.log('Storage changed:', e.key, '=', e.newValue);
+        loadTenantData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Función para establecer el tenant actual
   const setCurrentTenant = (id: string, name: string) => {
+    console.log('setCurrentTenant called with:', { id, name });
     setTenantId(id);
     setTenantIdState(id);
     setTenantName(name);
+    localStorage.setItem('tenant_name', name);
   };
 
   // Función para limpiar el tenant
   const clearTenant = () => {
     localStorage.removeItem('tenant_id');
+    localStorage.removeItem('tenant_name');
     setTenantIdState(null);
     setTenantName(null);
   };
