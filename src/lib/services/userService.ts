@@ -1,4 +1,4 @@
-import { User, UserCreateInput, UserUpdateInput } from '../types/user';
+import { User, UserCreateInput, UserUpdateInput, AssignBranchesDto, UserBranch } from '../types/user';
 import { apiGet, apiPost, apiPatch, apiDelete } from './apiService';
 
 // Ya no necesitamos definir estas funciones aquí, se obtienen del apiService
@@ -33,6 +33,7 @@ interface UserDataFromBackend {
   lastLogin?: string;
   permissionsCount?: number;
   tenantId?: string; // ID de la empresa a la que pertenece el usuario
+  userBranches?: UserBranch[]; // Sucursales asignadas al usuario
 }
 
 /**
@@ -67,6 +68,7 @@ const normalizeUserData = (userData: UserDataFromBackend): User => {
     lastLogin: userData.lastLogin ? new Date(userData.lastLogin) : undefined,
     permissionsCount: userData.permissionsCount || 0,
     tenantId: userData.tenantId,
+    userBranches: userData.userBranches,
   };
 };
 
@@ -164,11 +166,37 @@ export class UserService {
       if (!currentUser) {
         throw new Error(`Usuario con ID ${id} no encontrado`);
       }
-      
+
       // Luego actualizamos su estado
       return this.updateUser(id, { isActive: !currentUser.isActive });
     } catch (error) {
       console.error(`Error al cambiar estado del usuario ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Asignar sucursales a un usuario
+   */
+  static async assignBranches(userId: number, assignBranchesDto: AssignBranchesDto): Promise<User> {
+    try {
+      const data = await apiPost<UserDataFromBackend>(`/users/${userId}/branches`, assignBranchesDto);
+      return normalizeUserData(data);
+    } catch (error) {
+      console.error(`Error al asignar sucursales al usuario ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Desasignar una sucursal de un usuario
+   */
+  static async unassignBranch(userId: number, branchId: number): Promise<User> {
+    try {
+      const data = await apiDelete<UserDataFromBackend>(`/users/${userId}/branches/${branchId}`);
+      return normalizeUserData(data);
+    } catch (error) {
+      console.error(`Error al desasignar sucursal ${branchId} del usuario ${userId}:`, error);
       throw error;
     }
   }

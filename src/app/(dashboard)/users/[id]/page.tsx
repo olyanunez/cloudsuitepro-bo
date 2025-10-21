@@ -3,13 +3,18 @@
 import { useState, useEffect } from 'react';
 import { User } from '@/lib/types/user';
 import { Role } from '@/lib/types/role';
+import { Branch } from '@/lib/types/inventory';
 import { UserService } from '@/lib/services/userService';
 import { RoleService } from '@/lib/services/roleService';
+import { BranchService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftIcon, PencilIcon, TrashIcon, UserIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ArrowLeftIcon, PencilIcon, TrashIcon, UserIcon, Building2, PlusIcon, XIcon } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +25,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-// No se necesita importar Badge ya que usaremos divs con Tailwind
 
 export default function UserDetailPage() {
   const params = useParams();
@@ -32,10 +36,17 @@ export default function UserDetailPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
 
+  // Branch assignment states
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [isUnassignDialogOpen, setIsUnassignDialogOpen] = useState(false);
+  const [availableBranches, setAvailableBranches] = useState<Branch[]>([]);
+  const [selectedBranches, setSelectedBranches] = useState<number[]>([]);
+  const [branchToUnassign, setBranchToUnassign] = useState<number | null>(null);
+  const [assigning, setAssigning] = useState(false);
+
   useEffect(() => {
     async function loadData() {
       try {
-        // Convertir el userId a número ya que el servicio espera un number
         const userIdNum = parseInt(userId, 10);
         const userData = await UserService.getUserById(userIdNum);
 
@@ -45,7 +56,6 @@ export default function UserDetailPage() {
 
         setUser(userData);
 
-        // Cargar información del rol si existe roleId
         if (userData.roleId) {
           const roleData = await RoleService.getRoleById(userData.roleId);
           setRole(roleData);
@@ -62,12 +72,76 @@ export default function UserDetailPage() {
     }
   }, [userId]);
 
+  const handleOpenAssignDialog = async () => {
+    try {
+      const branches = await BranchService.getBranches();
+      setAvailableBranches(branches);
+      setIsAssignDialogOpen(true);
+    } catch (error) {
+      console.error('Error loading branches:', error);
+      toast.error('Error al cargar las sucursales');
+    }
+  };
+
+  const handleBranchSelection = (branchId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedBranches([...selectedBranches, branchId]);
+    } else {
+      setSelectedBranches(selectedBranches.filter((id) => id !== branchId));
+    }
+  };
+
+  const handleAssignBranches = async () => {
+    if (selectedBranches.length === 0) {
+      toast.error('Debe seleccionar al menos una sucursal');
+      return;
+    }
+
+    try {
+      setAssigning(true);
+      const userIdNum = parseInt(userId, 10);
+      const updatedUser = await UserService.assignBranches(userIdNum, {
+        branchIds: selectedBranches,
+      });
+      setUser(updatedUser);
+      toast.success('Sucursales asignadas exitosamente');
+      setIsAssignDialogOpen(false);
+      setSelectedBranches([]);
+    } catch (error) {
+      console.error('Error assigning branches:', error);
+      toast.error('Error al asignar sucursales');
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  const confirmUnassign = (branchId: number) => {
+    setBranchToUnassign(branchId);
+    setIsUnassignDialogOpen(true);
+  };
+
+  const handleUnassignBranch = async () => {
+    if (!branchToUnassign) return;
+
+    try {
+      const userIdNum = parseInt(userId, 10);
+      const updatedUser = await UserService.unassignBranch(userIdNum, branchToUnassign);
+      setUser(updatedUser);
+      toast.success('Sucursal desasignada exitosamente');
+      setIsUnassignDialogOpen(false);
+      setBranchToUnassign(null);
+    } catch (error) {
+      console.error('Error unassigning branch:', error);
+      toast.error('Error al desasignar la sucursal');
+      setBranchToUnassign(null);
+      setIsUnassignDialogOpen(false);
+    }
+  };
+
   const handleDelete = async () => {
     try {
-      // Convertir el userId a número ya que el servicio espera un number
       const userIdNum = parseInt(userId, 10);
       await UserService.deleteUser(userIdNum);
-      // El método deleteUser no devuelve un valor, así que siempre redirigimos
       router.push('/users');
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -79,7 +153,6 @@ export default function UserDetailPage() {
 
   const handleToggleStatus = async () => {
     try {
-      // Convertir el userId a número ya que el servicio espera un number
       const userIdNum = parseInt(userId, 10);
       const updatedUser = await UserService.toggleUserStatus(userIdNum);
       if (updatedUser) {
@@ -158,14 +231,14 @@ export default function UserDetailPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
-          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden mb-6">
             <div className="p-6">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
                   {user.avatar ? (
                     <Image
                       src={user.avatar}
-                      alt={user.name}
+                      alt={user.name || ''}
                       width={64}
                       height={64}
                       className="h-16 w-16 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
@@ -205,11 +278,11 @@ export default function UserDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Fecha de Creación</p>
-                  <p>{new Date(user.createdAt).toLocaleDateString()}</p>
+                  <p>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Última Actualización</p>
-                  <p>{new Date(user.updatedAt).toLocaleDateString()}</p>
+                  <p>{user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : 'N/A'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Último Inicio de Sesión</p>
@@ -222,6 +295,55 @@ export default function UserDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Assigned Branches */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center">
+                <Building2 className="mr-2 h-5 w-5" />
+                Sucursales Asignadas ({user.userBranches?.length || 0})
+              </CardTitle>
+              <Button onClick={handleOpenAssignDialog} size="sm" className="bg-primary hover:bg-primary-600">
+                <PlusIcon className="mr-2 h-4 w-4" />
+                Asignar Sucursales
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {!user.userBranches || user.userBranches.length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+                  No hay sucursales asignadas a este usuario
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {user.userBranches.map((userBranch) => (
+                    <div
+                      key={userBranch.id}
+                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-semibold text-base">{userBranch.branch.name}</h4>
+                        <button
+                          onClick={() => confirmUnassign(userBranch.branchId)}
+                          className="text-red-500 hover:text-red-700 transition-colors"
+                          title="Desasignar sucursal"
+                        >
+                          <XIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Código: {userBranch.branch.code}
+                      </p>
+                      {userBranch.branch.address && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {userBranch.branch.address}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         <div className="md:col-span-1">
@@ -259,6 +381,97 @@ export default function UserDetailPage() {
         </div>
       </div>
 
+      {/* Assign Branches Dialog */}
+      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Asignar Sucursales al Usuario</DialogTitle>
+            <DialogDescription>
+              Seleccione las sucursales que desea asignar a este usuario
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {availableBranches.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No hay sucursales disponibles</p>
+            ) : (
+              <div className="space-y-3">
+                {availableBranches.map((branch) => {
+                  const isAlreadyAssigned = user?.userBranches?.some((ub) => ub.branchId === branch.id) || false;
+                  return (
+                    <div
+                      key={branch.id}
+                      className="flex items-start space-x-3 p-3 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                      <input
+                        type="checkbox"
+                        id={`branch-${branch.id}`}
+                        checked={selectedBranches.includes(branch.id) || isAlreadyAssigned}
+                        onChange={(e) => {
+                          if (!isAlreadyAssigned) {
+                            handleBranchSelection(branch.id, e.target.checked);
+                          }
+                        }}
+                        disabled={isAlreadyAssigned}
+                        className="h-4 w-4 mt-1 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                      <label
+                        htmlFor={`branch-${branch.id}`}
+                        className="flex-1 cursor-pointer"
+                      >
+                        <div className="font-medium">{branch.name}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Código: {branch.code}
+                        </div>
+                        {branch.address && (
+                          <div className="text-sm text-gray-500 dark:text-gray-500">{branch.address}</div>
+                        )}
+                        {isAlreadyAssigned && (
+                          <span className="text-xs text-green-600 dark:text-green-400">Ya asignada</span>
+                        )}
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleAssignBranches}
+              disabled={assigning || selectedBranches.length === 0}
+              className="bg-primary hover:bg-primary-600"
+            >
+              {assigning ? 'Asignando...' : 'Asignar Sucursales'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Unassign Branch Dialog */}
+      <AlertDialog open={isUnassignDialogOpen} onOpenChange={setIsUnassignDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Desasignar Sucursal?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Está seguro de que desea desasignar esta sucursal del usuario? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleUnassignBranch}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Desasignar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete User Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
