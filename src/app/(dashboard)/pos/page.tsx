@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBranch } from '@/lib/contexts/BranchContext';
 import { PosService, ProductStock, InvoiceItem } from '@/lib/services/posService';
+import { BranchService } from '@/lib/services/branchService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -44,45 +45,99 @@ export default function PosPage() {
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'TRANSFER'>('CASH');
   const [loading, setLoading] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [activeWarehouseId, setActiveWarehouseId] = useState<number | null>(null);
+  const [loadingWarehouse, setLoadingWarehouse] = useState(false);
 
-  // Obtener almacén de la sucursal activa
-  const activeWarehouseId = userBranches.find(
-    (ub) => ub.branch.id === activeBranchId
-  )?.branch.warehouses?.[0]?.warehouseId;
-
-  // Búsqueda de productos
-  const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim() || !activeWarehouseId) return;
-
-    setLoading(true);
-    try {
-      const results = await PosService.searchProducts({
-        search: searchQuery,
-        warehouseId: activeWarehouseId,
-        branchId: activeBranchId || undefined,
-        limit: 20,
-      });
-      setSearchResults(results);
-    } catch (error) {
-      console.error('Error searching products:', error);
-      toast.error('Error al buscar productos');
-    } finally {
-      setLoading(false);
-    }
-  }, [searchQuery, activeWarehouseId, activeBranchId]);
-
-  // Buscar al presionar Enter
+  // Log inicial para debug
   useEffect(() => {
-    const handler = setTimeout(() => {
-      if (searchQuery.length >= 2) {
-        handleSearch();
-      } else {
-        setSearchResults([]);
+    console.log('🎯 POS Page Mounted');
+    console.log('🎯 Active Branch ID:', activeBranchId);
+    console.log('🎯 User Branches:', userBranches);
+  }, []);
+
+  // Cargar el warehouse de la sucursal activa
+  useEffect(() => {
+    const loadWarehouse = async () => {
+      console.log('🏢 useEffect triggered - activeBranchId:', activeBranchId);
+
+      if (!activeBranchId) {
+        console.log('⚠️ No active branch ID, skipping warehouse load');
+        setActiveWarehouseId(null);
+        return;
       }
+
+      setLoadingWarehouse(true);
+      try {
+        console.log('🏢 Loading warehouse for branch:', activeBranchId);
+        const branch = await BranchService.getBranch(activeBranchId);
+        console.log('📦 Branch data:', branch);
+
+        // Obtener el primer warehouse activo de la sucursal
+        const warehouse = (branch as any).warehouses?.find((w: any) => w.isActive);
+        if (warehouse) {
+          setActiveWarehouseId(warehouse.id);
+          console.log('✅ Warehouse loaded:', warehouse.id, warehouse.name);
+        } else {
+          console.warn('⚠️ No active warehouse found for branch');
+          setActiveWarehouseId(null);
+        }
+      } catch (error) {
+        console.error('❌ Error loading warehouse:', error);
+        setActiveWarehouseId(null);
+      } finally {
+        setLoadingWarehouse(false);
+      }
+    };
+
+    loadWarehouse();
+  }, [activeBranchId]);
+
+  // Búsqueda de productos con debounce
+  useEffect(() => {
+    const searchProducts = async () => {
+      console.log('🔍 Search triggered - Query:', searchQuery);
+      console.log('🔍 Search triggered - Warehouse ID:', activeWarehouseId);
+      console.log('🔍 Search triggered - Branch ID:', activeBranchId);
+
+      if (!searchQuery.trim() || !activeWarehouseId) {
+        console.log('⚠️ Search cancelled - Missing query or warehouse');
+        setSearchResults([]);
+        return;
+      }
+
+      if (searchQuery.length < 2) {
+        console.log('⚠️ Search cancelled - Query too short');
+        setSearchResults([]);
+        return;
+      }
+
+      console.log('✅ Starting search...');
+      setLoading(true);
+      try {
+        const results = await PosService.searchProducts({
+          search: searchQuery,
+          warehouseId: activeWarehouseId,
+          branchId: activeBranchId || undefined,
+          limit: 20,
+        });
+        console.log('✅ Search results:', results);
+        setSearchResults(results);
+      } catch (error) {
+        console.error('❌ Error searching products:', error);
+        toast.error('Error al buscar productos');
+        setSearchResults([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handler = setTimeout(() => {
+      console.log("BUSCARRRRRR")
+      searchProducts();
     }, 300);
 
     return () => clearTimeout(handler);
-  }, [searchQuery, handleSearch]);
+  }, [searchQuery, activeWarehouseId, activeBranchId]);
 
   // Agregar producto al carrito
   const addToCart = (product: ProductStock) => {
@@ -238,11 +293,6 @@ export default function PosPage() {
                   placeholder="Buscar por código, nombre o categoría..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSearch();
-                    }
-                  }}
                   className="w-full"
                 />
                 {loading && (
