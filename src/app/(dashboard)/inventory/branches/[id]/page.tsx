@@ -17,7 +17,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -296,16 +295,18 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
                 {availableWarehouses.map((warehouse) => {
                   const isAlreadyAssigned = branch.warehouses?.some(w => w.id === warehouse.id);
                   return (
-                    <div key={warehouse.id} className="flex items-start space-x-3 p-3 border rounded-lg">
-                      <Checkbox
+                    <div key={warehouse.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <input
+                        type="checkbox"
                         id={`warehouse-${warehouse.id}`}
                         checked={selectedWarehouses.includes(warehouse.id) || isAlreadyAssigned}
-                        onCheckedChange={(checked) => {
+                        onChange={(e) => {
                           if (!isAlreadyAssigned) {
-                            handleWarehouseSelection(warehouse.id, checked as boolean);
+                            handleWarehouseSelection(warehouse.id, e.target.checked);
                           }
                         }}
                         disabled={isAlreadyAssigned}
+                        className="h-4 w-4 mt-1 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                       />
                       <label
                         htmlFor={`warehouse-${warehouse.id}`}
