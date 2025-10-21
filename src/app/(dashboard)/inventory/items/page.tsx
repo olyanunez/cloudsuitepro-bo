@@ -30,12 +30,12 @@ export default function InventoryItemsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
-  
+
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<'product.name' | 'warehouse.name' | 'quantity' | 'createdAt'>('product.name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -63,7 +63,7 @@ export default function InventoryItemsPage() {
 
   const handleDeleteItem = async () => {
     if (!itemToDelete) return;
-    
+
     try {
       await InventoryService.deleteItem(itemToDelete);
       setItems(items.filter(item => item.id !== itemToDelete));
@@ -89,7 +89,7 @@ export default function InventoryItemsPage() {
       .sort((a, b) => {
         let fieldA: string | number | Date;
         let fieldB: string | number | Date;
-        
+
         if (sortField === 'product.name') {
           fieldA = a.product?.name?.toLowerCase() || '';
           fieldB = b.product?.name?.toLowerCase() || '';
@@ -103,7 +103,7 @@ export default function InventoryItemsPage() {
           fieldA = a.createdAt ? new Date(a.createdAt) : new Date(0);
           fieldB = b.createdAt ? new Date(b.createdAt) : new Date(0);
         }
-        
+
         if (fieldA < fieldB) return sortDirection === 'asc' ? -1 : 1;
         if (fieldA > fieldB) return sortDirection === 'asc' ? 1 : -1;
         return 0;
@@ -116,7 +116,7 @@ export default function InventoryItemsPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-  
+
   // Handle sorting
   const handleSort = (field: 'product.name' | 'warehouse.name' | 'quantity' | 'createdAt') => {
     if (field === sortField) {
@@ -146,7 +146,7 @@ export default function InventoryItemsPage() {
           </Button>
         </Link>
       </div>
-      
+
       {/* Search and filter controls */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="relative">
@@ -159,7 +159,7 @@ export default function InventoryItemsPage() {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <Select value={sortField} onValueChange={(value: string) => setSortField(value as 'product.name' | 'warehouse.name' | 'quantity' | 'createdAt')}>
           <SelectTrigger>
             <SelectValue placeholder="Ordenar por" />
@@ -171,7 +171,7 @@ export default function InventoryItemsPage() {
             <SelectItem value="createdAt">Fecha de Creación</SelectItem>
           </SelectContent>
         </Select>
-        
+
         <Select value={itemsPerPage.toString()} onValueChange={(value: string) => setItemsPerPage(Number(value))}>
           <SelectTrigger>
             <SelectValue placeholder="Elementos por página" />
@@ -190,8 +190,8 @@ export default function InventoryItemsPage() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('product.name')}
                 >
@@ -200,8 +200,8 @@ export default function InventoryItemsPage() {
                     <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('warehouse.name')}
                 >
@@ -210,8 +210,8 @@ export default function InventoryItemsPage() {
                     <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('quantity')}
                 >
@@ -223,8 +223,8 @@ export default function InventoryItemsPage() {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Stock Mínimo
                 </th>
-                <th 
-                  scope="col" 
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('createdAt')}
                 >
@@ -275,9 +275,9 @@ export default function InventoryItemsPage() {
                           <PencilIcon className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
                         onClick={() => confirmDelete(item.id)}
                       >
@@ -291,7 +291,7 @@ export default function InventoryItemsPage() {
           </table>
         </div>
       </div>
-      
+
       {/* Pagination controls */}
       <div className="mt-6 flex items-center justify-between">
         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -306,7 +306,7 @@ export default function InventoryItemsPage() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          
+
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             // Show pages around current page
             let pageNum;
@@ -319,7 +319,7 @@ export default function InventoryItemsPage() {
             } else {
               pageNum = currentPage - 2 + i;
             }
-            
+
             return (
               <Button
                 key={pageNum}
@@ -331,7 +331,7 @@ export default function InventoryItemsPage() {
               </Button>
             );
           })}
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -353,7 +353,7 @@ export default function InventoryItemsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteItem} className="bg-red-500 hover:bg-red-600">
+            <AlertDialogAction onClick={handleDeleteItem} className="!bg-red-600 hover:!bg-red-700 !text-white border-red-600">
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>

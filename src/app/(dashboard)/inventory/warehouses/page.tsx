@@ -360,7 +360,7 @@ export default function WarehousesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteWarehouse} className="bg-red-500 hover:bg-red-600">
+            <AlertDialogAction onClick={handleDeleteWarehouse} className="!bg-red-600 hover:!bg-red-700 !text-white border-red-600">
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>

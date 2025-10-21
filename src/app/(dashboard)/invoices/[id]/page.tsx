@@ -379,7 +379,7 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCancelInvoice} className="bg-red-500 hover:bg-red-600">
+            <AlertDialogAction onClick={handleCancelInvoice} className="!bg-red-600 hover:!bg-red-700 !text-white border-red-600">
               Confirmar Cancelación
             </AlertDialogAction>
           </AlertDialogFooter>
