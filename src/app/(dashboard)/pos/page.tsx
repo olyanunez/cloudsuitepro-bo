@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import PageHeader from '@/components/layout/PageHeader';
 import {
   Select,
   SelectContent,
@@ -452,15 +453,14 @@ export default function PosPage() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Punto de Venta</h1>
-          <p className="text-muted-foreground">
-            Sucursal:{' '}
-            {userBranches.find((ub) => ub.branch.id === activeBranchId)?.branch.name}
-          </p>
+      <PageHeader
+        title="Punto de Venta"
+        icon="shopping-cart"
+        description={`Sucursal: ${userBranches.find((ub) => ub.branch.id === activeBranchId)?.branch.name || 'No seleccionada'}`}
+      >
+        <div className="flex flex-col items-end gap-2">
           {currentSession && (
-            <div className="mt-2 flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <div className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded-md text-sm font-medium">
                 Sesión #{currentSession.sessionNumber} - Abierta
               </div>
@@ -469,8 +469,7 @@ export default function PosPage() {
               </span>
             </div>
           )}
-        </div>
-        <div className="flex gap-2">
+          <div className="flex gap-2">
           {!currentSession ? (
             <Button
               onClick={handleOpenSession}
@@ -497,8 +496,9 @@ export default function PosPage() {
             <XCircle className="h-4 w-4 mr-2" />
             Cancelar Factura
           </Button>
+          </div>
         </div>
-      </div>
+      </PageHeader>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Panel de búsqueda y productos */}

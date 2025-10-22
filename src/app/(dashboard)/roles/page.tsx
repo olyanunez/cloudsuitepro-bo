@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import PageHeader from '@/components/layout/PageHeader';
 import {
   Select,
   SelectContent,
@@ -199,15 +200,17 @@ export default function RolesPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gestión de Roles</h1>
+      <PageHeader
+        title="Gestión de Roles"
+        icon="shield"
+      >
         <Link href="/roles/create">
           <Button className="bg-primary hover:bg-primary-600">
             <PlusIcon className="mr-2 h-4 w-4" />
             Nuevo Rol
           </Button>
         </Link>
-      </div>
+      </PageHeader>
 
       {/* Search and filter controls */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">

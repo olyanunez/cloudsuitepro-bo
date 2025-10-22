@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import PageHeader from '@/components/layout/PageHeader';
 import {
   Select,
   SelectContent,
@@ -153,15 +154,17 @@ export default function UsersPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gestión de Usuarios</h1>
+      <PageHeader
+        title="Gestión de Usuarios"
+        icon="user-cog"
+      >
         <Link href="/users/create">
           <Button className="bg-primary hover:bg-primary-600">
             <PlusIcon className="mr-2 h-4 w-4" />
             Nuevo Usuario
           </Button>
         </Link>
-      </div>
+      </PageHeader>
       
       {/* Search and filter controls */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">

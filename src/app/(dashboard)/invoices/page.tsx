@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight, FilterIcon, XIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import PageHeader from '@/components/layout/PageHeader';
 import {
   Select,
   SelectContent,
@@ -161,14 +162,11 @@ export default function InvoicesPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Gestión de Facturas</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Visualiza y administra todas las facturas del sistema
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Gestión de Facturas"
+        description="Visualiza y administra todas las facturas del sistema"
+        icon="file-text"
+      />
 
       {/* Search and filter controls */}
       <div className="mb-6 space-y-4">
