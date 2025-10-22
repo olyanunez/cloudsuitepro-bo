@@ -12,35 +12,38 @@ import {
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { AuthService } from '@/lib/services/authService'
+import { PermissionService } from '@/lib/services/permissionService'
 import { useTenant } from '@/lib/contexts/TenantContext'
 import { BuildingIcon, MenuIcon, UserIcon } from 'lucide-react'
 import { LogoutIcon, NotificationIcon, Icon } from './Icons'
 import BranchSwitcher from './BranchSwitcher'
 
 // Definición de los elementos del menú
+// screenCode: código de la pantalla para validar permisos (null = sin permisos requeridos)
 const menuItems = [
-  { name: 'Usuarios', href: '/users', icon: 'user-cog' },
-  { name: 'Roles', href: '/roles', icon: 'shield' },
-  { name: 'Punto de Venta', href: '/pos', icon: 'shopping-cart' },
-  { name: 'Facturas', href: '/invoices', icon: 'file-text' },
+  { name: 'Usuarios', href: '/users', icon: 'user-cog', screenCode: 'USERS' },
+  { name: 'Roles', href: '/roles', icon: 'shield', screenCode: 'ROLE' },
+  { name: 'Punto de Venta', href: '/pos', icon: 'shopping-cart', screenCode: 'POS' },
+  { name: 'Facturas', href: '/invoices', icon: 'file-text', screenCode: 'INVOICE' },
   {
     name: 'Inventario',
     href: '/inventory',
     icon: 'archive',
+    screenCode: null, // Este es un contenedor, no requiere permisos
     submenu: [
-      { name: 'Inventario', href: '/inventory/items', icon: 'box' },
+      { name: 'Inventario', href: '/inventory/items', icon: 'box', screenCode: 'INVENTORY' },
       // { name: 'Dashboard', href: '/inventory', icon: 'layout-dashboard' },s
-      { name: 'Categorías', href: '/inventory/categories', icon: 'tag' },
-      { name: 'Productos', href: '/inventory/products', icon: 'shopping-bag' },
-      { name: 'Sucursales', href: '/inventory/branches', icon: 'building-2' },
-      { name: 'Almacenes', href: '/inventory/warehouses', icon: 'building' },
-      { name: 'Movimientos', href: '/inventory/movements', icon: 'repeat' },
-      { name: 'Reportes', href: '/inventory/reports', icon: 'bar-chart-2' },
+      { name: 'Categorías', href: '/inventory/categories', icon: 'tag', screenCode: 'PRODUCT_CATEGORY' },
+      { name: 'Productos', href: '/inventory/products', icon: 'shopping-bag', screenCode: 'PRODUCTS' },
+      { name: 'Sucursales', href: '/inventory/branches', icon: 'building-2', screenCode: 'BRANCH' },
+      { name: 'Almacenes', href: '/inventory/warehouses', icon: 'building', screenCode: 'WAREHOUSE' },
+      { name: 'Movimientos', href: '/inventory/movements', icon: 'repeat', screenCode: 'INVENTORY' },
+      { name: 'Reportes', href: '/inventory/reports', icon: 'bar-chart-2', screenCode: 'INVENTORY_REPORT' },
     ]
   },
-  { name: 'Órdenes', href: '/orders', icon: 'shopping-bag' },
-  { name: 'Clientes', href: '/customers', icon: 'users' },
-  { name: 'Configuración', href: '/settings', icon: 'settings' },
+  { name: 'Órdenes', href: '/orders', icon: 'shopping-bag', screenCode: null },
+  { name: 'Clientes', href: '/customers', icon: 'users', screenCode: null },
+  { name: 'Configuración', href: '/settings', icon: 'settings', screenCode: null },
 ]
 
 export default function Navbar() {
@@ -49,16 +52,46 @@ export default function Navbar() {
   const pathname = usePathname()
   const { tenantId, tenantName } = useTenant()
 
+  // Función para verificar si un item debe ser visible
+  const shouldShowMenuItem = (item: any) => {
+    // Si no tiene screenCode, es de acceso libre
+    if (!item.screenCode) return true
+
+    // Verificar si el usuario tiene permiso VIEW para esta pantalla
+    return PermissionService.canView(item.screenCode)
+  }
+
+  // Filtrar items del menú basado en permisos
+  const filteredMenuItems = React.useMemo(() => {
+    return menuItems.map(item => {
+      // Si el item tiene submenú, filtrar los items del submenú
+      if (item.submenu) {
+        const filteredSubmenu = item.submenu.filter(shouldShowMenuItem)
+
+        // Solo mostrar el item padre si tiene al menos un hijo visible
+        if (filteredSubmenu.length === 0) return null
+
+        return {
+          ...item,
+          submenu: filteredSubmenu
+        }
+      }
+
+      // Para items sin submenú, verificar permisos directamente
+      return shouldShowMenuItem(item) ? item : null
+    }).filter(Boolean) // Remover items null
+  }, []) // Se recalcula cuando cambian los permisos (en login/logout)
+
   // Inicializar submenús abiertos basados en la ruta actual
   React.useEffect(() => {
     const newOpenSubmenus: Record<string, boolean> = {}
-    menuItems.forEach(item => {
-      if (item.submenu && (pathname === item.href || pathname.startsWith(item.href + '/'))) {
+    filteredMenuItems.forEach(item => {
+      if (item && item.submenu && (pathname === item.href || pathname.startsWith(item.href + '/'))) {
         newOpenSubmenus[item.href] = true
       }
     })
     setOpenSubmenus(newOpenSubmenus)
-  }, [pathname])
+  }, [pathname, filteredMenuItems])
 
   return (
     <>
@@ -137,7 +170,8 @@ export default function Navbar() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-[240px] sm:w-[300px]">
           <nav className="flex flex-col gap-4 mt-8">
-            {menuItems.map((item) => {
+            {filteredMenuItems.map((item) => {
+              if (!item) return null;
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
               const isSubmenuOpen = !!openSubmenus[item.href];
               return (

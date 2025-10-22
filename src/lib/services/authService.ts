@@ -2,6 +2,7 @@
 
 import { AuthResponse, LoginDto } from '../types/auth';
 import { apiGet } from './apiService';
+import { PermissionService } from './permissionService';
 
 /**
  * Interfaz para el perfil del usuario
@@ -102,6 +103,12 @@ export class AuthService {
         localStorage.setItem('tenant_name', tenantName);
       }
 
+      // Guardar permisos del usuario
+      if (data && data.user && data.user.permissions) {
+        console.log('Saving user permissions:', data.user.permissions);
+        PermissionService.setUserPermissions(data.user.permissions);
+      }
+
       return data;
     } catch (error) {
       console.error('Error en login:', error);
@@ -157,6 +164,7 @@ export class AuthService {
     localStorage.removeItem('tenant_name');
     localStorage.removeItem('active_branch_id');
     localStorage.removeItem('active_branch_name');
+    PermissionService.clearUserPermissions();
   }
 
   /**
