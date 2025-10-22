@@ -33,6 +33,7 @@ export interface CreateInvoicePayload {
   customerId?: number;
   branchId: number;
   warehouseId: number;
+  cashSessionId?: number; // Sesión de caja asociada
   subtotal: number;
   tax?: number;
   discount?: number;

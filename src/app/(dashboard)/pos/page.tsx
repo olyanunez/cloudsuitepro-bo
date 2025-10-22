@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useBranch } from '@/lib/contexts/BranchContext';
 import { PosService, ProductStock, InvoiceItem } from '@/lib/services/posService';
 import { BranchService } from '@/lib/services/branchService';
+import { CashSessionService, CashSession } from '@/lib/services/cashSessionService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { OpenCashSessionModal } from '@/components/cash-session/OpenCashSessionModal';
+import { CloseCashSessionModal } from '@/components/cash-session/CloseCashSessionModal';
 import { toast } from 'sonner';
 import {
   Search,
@@ -47,6 +50,8 @@ import {
   CreditCard,
   Banknote,
   XCircle,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 
 interface CartItem extends ProductStock {
@@ -65,6 +70,7 @@ export default function PosPage() {
   const [loading, setLoading] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [activeWarehouseId, setActiveWarehouseId] = useState<number | null>(null);
+  const [activeWarehouseName, setActiveWarehouseName] = useState<string | null>(null);
   const [loadingWarehouse, setLoadingWarehouse] = useState(false);
 
   // Estados para cancelar factura
@@ -74,6 +80,12 @@ export default function PosPage() {
   const [invoiceToCancel, setInvoiceToCancel] = useState<any>(null);
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [cancellingInvoice, setCancellingInvoice] = useState(false);
+
+  // Estados para sesión de caja
+  const [currentSession, setCurrentSession] = useState<CashSession | null>(null);
+  const [showOpenSessionModal, setShowOpenSessionModal] = useState(false);
+  const [showCloseSessionModal, setShowCloseSessionModal] = useState(false);
+  const [loadingSession, setLoadingSession] = useState(false);
 
   // Log inicial para debug
   useEffect(() => {
@@ -103,10 +115,12 @@ export default function PosPage() {
         const warehouse = (branch as any).warehouses?.find((w: any) => w.isActive);
         if (warehouse) {
           setActiveWarehouseId(warehouse.id);
+          setActiveWarehouseName(warehouse.name);
           console.log('✅ Warehouse loaded:', warehouse.id, warehouse.name);
         } else {
           console.warn('⚠️ No active warehouse found for branch');
           setActiveWarehouseId(null);
+          setActiveWarehouseName(null);
         }
       } catch (error) {
         console.error('❌ Error loading warehouse:', error);
@@ -118,6 +132,27 @@ export default function PosPage() {
 
     loadWarehouse();
   }, [activeBranchId]);
+
+  // Cargar sesión de caja actual
+  useEffect(() => {
+    const loadCurrentSession = async () => {
+      setLoadingSession(true);
+      try {
+        const session = await CashSessionService.getCurrentSession();
+        setCurrentSession(session);
+        if (session) {
+          console.log('💰 Sesión de caja activa:', session);
+        }
+      } catch (error) {
+        console.error('Error loading cash session:', error);
+        setCurrentSession(null);
+      } finally {
+        setLoadingSession(false);
+      }
+    };
+
+    loadCurrentSession();
+  }, []);
 
   // Búsqueda de productos con debounce
   useEffect(() => {
@@ -248,6 +283,12 @@ export default function PosPage() {
       return;
     }
 
+    // Validar que haya una sesión de caja activa
+    if (!currentSession) {
+      toast.error('Debe abrir una sesión de caja antes de procesar ventas');
+      return;
+    }
+
     setProcessingPayment(true);
     try {
       const items: InvoiceItem[] = cart.map((item) => ({
@@ -265,6 +306,7 @@ export default function PosPage() {
         total,
         paymentMethod,
         items,
+        cashSessionId: currentSession.id,
       });
 
       toast.success(`Factura ${invoice.invoiceNumber} creada exitosamente`);
@@ -347,6 +389,33 @@ export default function PosPage() {
     setInvoiceToCancel(null);
   };
 
+  // Manejar apertura de sesión de caja
+  const handleOpenSession = () => {
+    setShowOpenSessionModal(true);
+  };
+
+  const handleSessionOpened = async () => {
+    // Recargar la sesión actual
+    try {
+      const session = await CashSessionService.getCurrentSession();
+      setCurrentSession(session);
+      console.log('💰 Nueva sesión de caja abierta:', session);
+    } catch (error) {
+      console.error('Error loading cash session after opening:', error);
+    }
+  };
+
+  // Manejar cierre de sesión de caja
+  const handleCloseSession = () => {
+    setShowCloseSessionModal(true);
+  };
+
+  const handleSessionClosed = () => {
+    // Limpiar la sesión actual
+    setCurrentSession(null);
+    console.log('💰 Sesión de caja cerrada');
+  };
+
   if (!activeBranchId) {
     return (
       <div className="container mx-auto py-8">
@@ -371,15 +440,45 @@ export default function PosPage() {
             Sucursal:{' '}
             {userBranches.find((ub) => ub.branch.id === activeBranchId)?.branch.name}
           </p>
+          {currentSession && (
+            <div className="mt-2 flex items-center gap-2">
+              <div className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded-md text-sm font-medium">
+                Sesión #{currentSession.sessionNumber} - Abierta
+              </div>
+              <span className="text-xs text-muted-foreground">
+                Apertura: ${parseFloat(currentSession.openingAmount).toFixed(2)}
+              </span>
+            </div>
+          )}
         </div>
-        <Button
-          variant="outline"
-          onClick={openCancelDialog}
-          className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-        >
-          <XCircle className="h-4 w-4 mr-2" />
-          Cancelar Factura
-        </Button>
+        <div className="flex gap-2">
+          {!currentSession ? (
+            <Button
+              onClick={handleOpenSession}
+              disabled={loadingSession}
+            // className="bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all"
+            >
+              <LogIn className="h-4 w-4 mr-2" />
+              Abrir Caja
+            </Button>
+          ) : (
+            <Button
+              onClick={handleCloseSession}
+            // className="bg-orange-600 hover:bg-orange-700 text-white shadow-md hover:shadow-lg transition-all"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Cerrar Caja
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={openCancelDialog}
+            className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground shadow-sm"
+          >
+            <XCircle className="h-4 w-4 mr-2" />
+            Cancelar Factura
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -730,6 +829,26 @@ export default function PosPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modales de sesión de caja */}
+      {activeBranchId && (
+        <OpenCashSessionModal
+          open={showOpenSessionModal}
+          onOpenChange={setShowOpenSessionModal}
+          onSuccess={handleSessionOpened}
+          branchId={activeBranchId}
+          branchName={userBranches.find((ub) => ub.branch.id === activeBranchId)?.branch.name || 'Sin nombre'}
+          warehouseId={activeWarehouseId || undefined}
+          warehouseName={activeWarehouseName || undefined}
+        />
+      )}
+
+      <CloseCashSessionModal
+        open={showCloseSessionModal}
+        onOpenChange={setShowCloseSessionModal}
+        session={currentSession}
+        onSuccess={handleSessionClosed}
+      />
     </div>
   );
 }
