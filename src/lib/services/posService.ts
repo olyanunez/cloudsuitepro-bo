@@ -147,4 +147,12 @@ export class PosService {
   static async getInvoiceById(id: number): Promise<Invoice> {
     return apiGet<Invoice>(`/pos/invoices/${id}`);
   }
+
+  /**
+   * Cancela una factura desde POS (Caja)
+   * Solo permite cancelar facturas del día actual creadas por el mismo usuario
+   */
+  static async cancelInvoice(invoiceNumber: string): Promise<Invoice> {
+    return apiPost<Invoice>('/pos/invoices/cancel', { invoiceNumber });
+  }
 }

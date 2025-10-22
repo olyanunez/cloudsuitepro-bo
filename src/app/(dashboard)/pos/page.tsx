@@ -18,6 +18,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import {
   Search,
@@ -28,6 +46,7 @@ import {
   DollarSign,
   CreditCard,
   Banknote,
+  XCircle,
 } from 'lucide-react';
 
 interface CartItem extends ProductStock {
@@ -47,6 +66,14 @@ export default function PosPage() {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [activeWarehouseId, setActiveWarehouseId] = useState<number | null>(null);
   const [loadingWarehouse, setLoadingWarehouse] = useState(false);
+
+  // Estados para cancelar factura
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelInvoiceNumber, setCancelInvoiceNumber] = useState('');
+  const [searchingInvoice, setSearchingInvoice] = useState(false);
+  const [invoiceToCancel, setInvoiceToCancel] = useState<any>(null);
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
+  const [cancellingInvoice, setCancellingInvoice] = useState(false);
 
   // Log inicial para debug
   useEffect(() => {
@@ -250,6 +277,76 @@ export default function PosPage() {
     }
   };
 
+  // Buscar factura para cancelar
+  const searchInvoiceToCancel = async () => {
+    if (!cancelInvoiceNumber.trim()) {
+      toast.error('Ingrese un número de factura');
+      return;
+    }
+
+    setSearchingInvoice(true);
+    try {
+      // Buscar factura por número usando el servicio de facturas
+      const invoices = await PosService.getInvoices();
+      const invoice = invoices.find(
+        (inv) => inv.invoiceNumber.toUpperCase() === cancelInvoiceNumber.toUpperCase()
+      );
+
+      if (!invoice) {
+        toast.error('Factura no encontrada');
+        setInvoiceToCancel(null);
+        setSearchingInvoice(false);
+        return;
+      }
+
+      // Cargar detalle completo si es necesario
+      const fullInvoice = await PosService.getInvoiceById(invoice.id);
+      setInvoiceToCancel(fullInvoice);
+      setShowCancelDialog(false);
+      setShowCancelConfirmation(true);
+    } catch (error: any) {
+      console.error('Error searching invoice:', error);
+      toast.error(error?.message || 'Factura no encontrada');
+      setInvoiceToCancel(null);
+    } finally {
+      setSearchingInvoice(false);
+    }
+  };
+
+  // Confirmar cancelación de factura
+  const confirmCancelInvoice = async () => {
+    if (!invoiceToCancel) return;
+
+    setCancellingInvoice(true);
+    try {
+      await PosService.cancelInvoice(invoiceToCancel.invoiceNumber);
+      toast.success(`Factura ${invoiceToCancel.invoiceNumber} cancelada exitosamente`);
+      setShowCancelConfirmation(false);
+      setInvoiceToCancel(null);
+      setCancelInvoiceNumber('');
+    } catch (error: any) {
+      console.error('Error cancelling invoice:', error);
+      toast.error(error?.message || 'Error al cancelar la factura');
+    } finally {
+      setCancellingInvoice(false);
+    }
+  };
+
+  // Abrir diálogo de cancelación
+  const openCancelDialog = () => {
+    setCancelInvoiceNumber('');
+    setInvoiceToCancel(null);
+    setShowCancelDialog(true);
+  };
+
+  // Cerrar diálogos de cancelación
+  const closeCancelDialogs = () => {
+    setShowCancelDialog(false);
+    setShowCancelConfirmation(false);
+    setCancelInvoiceNumber('');
+    setInvoiceToCancel(null);
+  };
+
   if (!activeBranchId) {
     return (
       <div className="container mx-auto py-8">
@@ -275,6 +372,14 @@ export default function PosPage() {
             {userBranches.find((ub) => ub.branch.id === activeBranchId)?.branch.name}
           </p>
         </div>
+        <Button
+          variant="outline"
+          onClick={openCancelDialog}
+          className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+        >
+          <XCircle className="h-4 w-4 mr-2" />
+          Cancelar Factura
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -511,6 +616,120 @@ export default function PosPage() {
           </Card>
         </div>
       </div>
+
+      {/* Diálogo para buscar factura a cancelar */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancelar Factura</DialogTitle>
+            <DialogDescription>
+              Ingrese el número de factura que desea cancelar. Solo puede cancelar facturas del día actual creadas por usted.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="invoiceNumber">Número de Factura</Label>
+              <Input
+                id="invoiceNumber"
+                placeholder="Ej: INV-0001"
+                value={cancelInvoiceNumber}
+                onChange={(e) => setCancelInvoiceNumber(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !searchingInvoice) {
+                    searchInvoiceToCancel();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelDialog(false)}
+              disabled={searchingInvoice}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={searchInvoiceToCancel}
+              disabled={searchingInvoice || !cancelInvoiceNumber.trim()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {searchingInvoice ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                  Buscando...
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4 mr-2" />
+                  Buscar
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de confirmación de cancelación */}
+      <AlertDialog open={showCancelConfirmation} onOpenChange={setShowCancelConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Confirmar cancelación?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción cancelará la factura y restaurará el inventario. No se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {invoiceToCancel && (
+            <div className="space-y-3 py-4">
+              <div className="border rounded-lg p-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Factura:</span>
+                  <span className="font-medium">{invoiceToCancel.invoiceNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Total:</span>
+                  <span className="font-medium">
+                    ${parseFloat(invoiceToCancel.total).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Cliente:</span>
+                  <span className="font-medium">
+                    {invoiceToCancel.customer?.name || 'Sin cliente'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Fecha:</span>
+                  <span className="font-medium">
+                    {new Date(invoiceToCancel.createdAt).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={closeCancelDialogs}>
+              No, mantener factura
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCancelInvoice}
+              disabled={cancellingInvoice}
+              className="!bg-destructive !text-white hover:!bg-destructive/90"
+            >
+              {cancellingInvoice ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                  Cancelando...
+                </>
+              ) : (
+                'Sí, cancelar factura'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
