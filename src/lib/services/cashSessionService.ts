@@ -72,10 +72,12 @@ export class CashSessionService {
 
   /**
    * Obtiene la sesión de caja abierta del usuario actual
+   * @param branchId - ID de la sucursal para filtrar (opcional)
    */
-  static async getCurrentSession(): Promise<CashSession | null> {
+  static async getCurrentSession(branchId?: number): Promise<CashSession | null> {
     try {
-      return await apiGet<CashSession>('/cash-sessions/current');
+      const queryParams = branchId ? `?branchId=${branchId}` : '';
+      return await apiGet<CashSession>(`/cash-sessions/current${queryParams}`);
     } catch (error: any) {
       // Si no hay sesión abierta, retorna null en lugar de lanzar error
       if (error?.message?.includes('no encontrada') || error?.status === 404) {
@@ -129,17 +131,19 @@ export class CashSessionService {
 
   /**
    * Verifica si el usuario tiene una sesión de caja abierta
+   * @param branchId - ID de la sucursal para filtrar (opcional)
    */
-  static async hasOpenSession(): Promise<boolean> {
-    const session = await this.getCurrentSession();
+  static async hasOpenSession(branchId?: number): Promise<boolean> {
+    const session = await this.getCurrentSession(branchId);
     return session !== null && session.status === 'OPEN';
   }
 
   /**
    * Obtiene el ID de la sesión de caja abierta (para vincular facturas)
+   * @param branchId - ID de la sucursal para filtrar (opcional)
    */
-  static async getOpenSessionId(): Promise<number | null> {
-    const session = await this.getCurrentSession();
+  static async getOpenSessionId(branchId?: number): Promise<number | null> {
+    const session = await this.getCurrentSession(branchId);
     return session?.id || null;
   }
 }

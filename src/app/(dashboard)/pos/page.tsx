@@ -133,15 +133,23 @@ export default function PosPage() {
     loadWarehouse();
   }, [activeBranchId]);
 
-  // Cargar sesión de caja actual
+  // Cargar sesión de caja actual (se recarga al cambiar de sucursal)
   useEffect(() => {
     const loadCurrentSession = async () => {
+      if (!activeBranchId) {
+        console.log('⚠️ No active branch ID, skipping session load');
+        setCurrentSession(null);
+        return;
+      }
+
       setLoadingSession(true);
       try {
-        const session = await CashSessionService.getCurrentSession();
+        const session = await CashSessionService.getCurrentSession(activeBranchId);
         setCurrentSession(session);
         if (session) {
-          console.log('💰 Sesión de caja activa:', session);
+          console.log('💰 Sesión de caja activa para sucursal', activeBranchId, ':', session);
+        } else {
+          console.log('💰 No hay sesión de caja abierta para sucursal', activeBranchId);
         }
       } catch (error) {
         console.error('Error loading cash session:', error);
@@ -152,7 +160,7 @@ export default function PosPage() {
     };
 
     loadCurrentSession();
-  }, []);
+  }, [activeBranchId]); // ✅ Se recarga cuando cambia la sucursal activa
 
   // Búsqueda de productos con debounce
   useEffect(() => {
@@ -289,6 +297,15 @@ export default function PosPage() {
       return;
     }
 
+    // Validar que la sesión de caja sea de la sucursal correcta
+    if (currentSession.branchId !== activeBranchId) {
+      toast.error(
+        `La sesión de caja está abierta para otra sucursal (${currentSession.branch?.name}). ` +
+        'Por favor, cierre la sesión actual o cambie a la sucursal correcta.'
+      );
+      return;
+    }
+
     setProcessingPayment(true);
     try {
       const items: InvoiceItem[] = cart.map((item) => ({
@@ -395,11 +412,13 @@ export default function PosPage() {
   };
 
   const handleSessionOpened = async () => {
-    // Recargar la sesión actual
+    // Recargar la sesión actual para la sucursal activa
     try {
-      const session = await CashSessionService.getCurrentSession();
-      setCurrentSession(session);
-      console.log('💰 Nueva sesión de caja abierta:', session);
+      if (activeBranchId) {
+        const session = await CashSessionService.getCurrentSession(activeBranchId);
+        setCurrentSession(session);
+        console.log('💰 Nueva sesión de caja abierta:', session);
+      }
     } catch (error) {
       console.error('Error loading cash session after opening:', error);
     }
