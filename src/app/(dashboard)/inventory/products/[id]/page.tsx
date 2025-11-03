@@ -63,6 +63,12 @@ export default function ProductDetailPage() {
     currency: 'DOP'
   }).format(product.price);
 
+  // Formatear el costo en moneda local (DOP)
+  const formattedCost = new Intl.NumberFormat('es-DO', {
+    style: 'currency',
+    currency: 'DOP'
+  }).format(product.cost || 0);
+
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6 flex justify-between items-center">
@@ -102,6 +108,10 @@ export default function ProductDetailPage() {
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Precio</p>
               <p className="font-medium text-lg">{formattedPrice}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Costo</p>
+              <p className="font-medium text-lg">{formattedCost}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Categoría</p>

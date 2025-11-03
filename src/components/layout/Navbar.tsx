@@ -38,8 +38,22 @@ const menuItems = [
       { name: 'Productos', href: '/inventory/products', icon: 'shopping-bag', screenCode: 'PRODUCTS' },
       { name: 'Sucursales', href: '/inventory/branches', icon: 'building-2', screenCode: 'BRANCH' },
       { name: 'Almacenes', href: '/inventory/warehouses', icon: 'building', screenCode: 'WAREHOUSE' },
-      { name: 'Movimientos', href: '/inventory/movements', icon: 'repeat', screenCode: 'INVENTORY' },
+      { name: 'Movimientos', href: '/inventory/movements', icon: 'repeat', screenCode: 'MOVEMENTS' },
       { name: 'Reportes', href: '/inventory/reports', icon: 'bar-chart-2', screenCode: 'INVENTORY_REPORT' },
+    ]
+  },
+  {
+    name: 'Reportes',
+    href: '/reports',
+    icon: 'bar-chart-3',
+    screenCode: 'REPORTS',
+    submenu: [
+      { name: 'Productos Más Vendidos', href: '/reports/top-products', icon: 'trending-up', screenCode: 'REPORTS' },
+      { name: 'Márgenes de Productos', href: '/reports/product-margins', icon: 'dollar-sign', screenCode: 'REPORTS' },
+      { name: 'Ventas por Categoría', href: '/reports/sales-by-category', icon: 'tag', screenCode: 'REPORTS' },
+      { name: 'Ventas por Cajero', href: '/reports/sales-by-cashier', icon: 'users', screenCode: 'REPORTS' },
+      { name: 'Tendencia de Ventas', href: '/reports/sales-trend', icon: 'calendar', screenCode: 'REPORTS' },
+      { name: 'Comparación de Períodos', href: '/reports/period-comparison', icon: 'git-compare', screenCode: 'REPORTS' },
     ]
   },
   { name: 'Órdenes', href: '/orders', icon: 'shopping-bag', screenCode: null },
@@ -169,8 +183,8 @@ export default function Navbar() {
 
       {/* Drawer para móvil */}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="w-[240px] sm:w-[300px]">
-          <nav className="flex flex-col gap-4 mt-8">
+        <SheetContent side="left" className="w-[240px] sm:w-[300px] flex flex-col">
+          <nav className="flex flex-col gap-4 mt-8 overflow-y-auto flex-1 pr-2">
             {filteredMenuItems.map((item) => {
               if (!item) return null;
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -179,37 +193,42 @@ export default function Navbar() {
                 <div key={item.href} className="flex flex-col">
                   <div className="flex items-center justify-between">
                     {item.submenu ? (
-                      <div
-                        onClick={() => {
-                          console.log('Esta activo: ' + isActive)
-                          const newOpenSubmenus = { ...openSubmenus };
-                          newOpenSubmenus[item.href] = !isSubmenuOpen;
-                          setOpenSubmenus(newOpenSubmenus);
-                        }}
-                        className={
-                          `flex items-center gap-2 px-2 py-1 rounded-md w-full cursor-pointer ${isActive
-                            ? "bg-yellow-50 text-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-100 font-bold border-l-4 border-yellow-500"
-                            : "bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-                          }`
-                        }
-                      >
-                        <Icon name={item.icon} />
-                        <span>{item.name}</span>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className={`ml-auto h-4 w-4 transition-transform ${isSubmenuOpen ? 'rotate-180' : ''}`}
+                      <Link href={item.href} className="w-full">
+                        <div
+                          onClick={(e) => {
+                            // Prevent navigation to allow submenu toggle
+                            e.preventDefault();
+                            const newOpenSubmenus = { ...openSubmenus };
+                            newOpenSubmenus[item.href] = !isSubmenuOpen;
+                            setOpenSubmenus(newOpenSubmenus);
+                            // Navigate after setting submenu state
+                            window.location.href = item.href;
+                          }}
+                          className={
+                            `flex items-center gap-2 px-2 py-1 rounded-md w-full cursor-pointer ${isActive
+                              ? "bg-yellow-50 text-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-100 font-bold border-l-4 border-yellow-500"
+                              : "bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                            }`
+                          }
                         >
-                          <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                      </div>
+                          <Icon name={item.icon} />
+                          <span>{item.name}</span>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className={`ml-auto h-4 w-4 transition-transform ${isSubmenuOpen ? 'rotate-180' : ''}`}
+                          >
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                          </svg>
+                        </div>
+                      </Link>
                     ) : (
                       <SheetClose asChild>
                         <Link
@@ -248,7 +267,7 @@ export default function Navbar() {
               );
             })}
           </nav>
-          <div className="absolute bottom-4 w-full pr-8">
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button variant="outline" className="w-full" onClick={() => {
               AuthService.logout();
               window.location.href = '/login';
