@@ -40,6 +40,7 @@ export interface CreateInvoicePayload {
   total: number;
   paymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | 'CHECK' | 'CREDIT';
   notes?: string;
+  paymentReference?: string; // Voucher de tarjeta o referencia de transferencia
   items: InvoiceItem[];
 }
 
@@ -58,6 +59,7 @@ export interface Invoice {
   paymentMethod: string;
   status: string;
   notes: string | null;
+  paymentReference: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

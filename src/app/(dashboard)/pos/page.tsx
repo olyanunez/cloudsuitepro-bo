@@ -68,6 +68,7 @@ export default function PosPage() {
   const [searchResults, setSearchResults] = useState<ProductStock[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'TRANSFER'>('CASH');
+  const [paymentReference, setPaymentReference] = useState('');
   const [loading, setLoading] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [activeWarehouseId, setActiveWarehouseId] = useState<number | null>(null);
@@ -269,6 +270,7 @@ export default function PosPage() {
   const clearCart = () => {
     setCart([]);
     setPaymentMethod('CASH');
+    setPaymentReference('');
   };
 
   // Calcular totales
@@ -307,6 +309,16 @@ export default function PosPage() {
       return;
     }
 
+    // Validar que se ingrese referencia de pago para tarjetas y transferencias
+    if ((paymentMethod === 'CARD' || paymentMethod === 'TRANSFER') && !paymentReference.trim()) {
+      toast.error(
+        paymentMethod === 'CARD'
+          ? 'Debe ingresar el número de voucher de la tarjeta'
+          : 'Debe ingresar la referencia de la transferencia'
+      );
+      return;
+    }
+
     setProcessingPayment(true);
     try {
       const items: InvoiceItem[] = cart.map((item) => ({
@@ -323,6 +335,7 @@ export default function PosPage() {
         discount,
         total,
         paymentMethod,
+        paymentReference: paymentReference.trim() || undefined,
         items,
         cashSessionId: currentSession.id,
       });
@@ -681,7 +694,13 @@ export default function PosPage() {
                     <Label>Método de Pago</Label>
                     <Select
                       value={paymentMethod}
-                      onValueChange={(value: any) => setPaymentMethod(value)}
+                      onValueChange={(value: any) => {
+                        setPaymentMethod(value);
+                        // Limpiar referencia al cambiar método de pago
+                        if (value === 'CASH') {
+                          setPaymentReference('');
+                        }
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -708,6 +727,31 @@ export default function PosPage() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Campo de referencia para tarjeta o transferencia */}
+                  {(paymentMethod === 'CARD' || paymentMethod === 'TRANSFER') && (
+                    <div className="space-y-2">
+                      <Label htmlFor="paymentReference">
+                        {paymentMethod === 'CARD' ? 'Número de Voucher *' : 'Referencia de Transferencia *'}
+                      </Label>
+                      <Input
+                        id="paymentReference"
+                        placeholder={
+                          paymentMethod === 'CARD'
+                            ? 'Ej: 123456'
+                            : 'Ej: TRANS-2024-001'
+                        }
+                        value={paymentReference}
+                        onChange={(e) => setPaymentReference(e.target.value)}
+                        className="font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {paymentMethod === 'CARD'
+                          ? 'Ingrese el número del voucher de la transacción con tarjeta'
+                          : 'Ingrese la referencia bancaria de la transferencia'}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Botón de pagar */}
                   <Button

@@ -21,6 +21,7 @@ interface CloseCashSessionModalProps {
 export function CloseCashSessionModal({ open, onOpenChange, session, onSuccess }: CloseCashSessionModalProps) {
   const [loading, setLoading] = useState(false);
   const [closingAmount, setClosingAmount] = useState<string>('');
+  const [closingVouchers, setClosingVouchers] = useState<string>('');
   const [closingNotes, setClosingNotes] = useState<string>('');
   const [sessionSummary, setSessionSummary] = useState<CashSession | null>(null);
 
@@ -56,6 +57,7 @@ export function CloseCashSessionModal({ open, onOpenChange, session, onSuccess }
     try {
       await CashSessionService.closeSession(session.id, {
         closingAmount: parseFloat(closingAmount),
+        closingVouchers: closingVouchers ? parseFloat(closingVouchers) : undefined,
         closingNotes: closingNotes || undefined,
       });
 
@@ -72,6 +74,7 @@ export function CloseCashSessionModal({ open, onOpenChange, session, onSuccess }
 
   const handleClose = () => {
     setClosingAmount('');
+    setClosingVouchers('');
     setClosingNotes('');
     setSessionSummary(null);
     onOpenChange(false);
@@ -103,6 +106,11 @@ export function CloseCashSessionModal({ open, onOpenChange, session, onSuccess }
   const expectedAmount = openingAmount + totalCash;
   const closingAmountNum = parseFloat(closingAmount || '0');
   const difference = closingAmountNum - expectedAmount;
+
+  // Cálculos para vouchers
+  const expectedVouchers = totalCard + totalTransfer;
+  const closingVouchersNum = parseFloat(closingVouchers || '0');
+  const differenceVouchers = closingVouchersNum - expectedVouchers;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -171,7 +179,31 @@ export function CloseCashSessionModal({ open, onOpenChange, session, onSuccess }
               </p>
             </div>
 
-            {/* Monto de cierre */}
+            {/* Resumen de Vouchers Esperados */}
+            {expectedVouchers > 0 && (
+              <div className="rounded-lg border p-4 space-y-3 bg-blue-50/50 dark:bg-blue-950/20">
+                <h3 className="font-semibold text-sm">Vouchers Esperados (Tarjetas + Transferencias)</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Tarjetas:</span>
+                    <span className="font-medium">${totalCard.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Transferencias:</span>
+                    <span className="font-medium">${totalTransfer.toFixed(2)}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="font-semibold">Total Vouchers Esperado:</span>
+                    <span className="font-semibold text-lg text-blue-600 dark:text-blue-400">
+                      ${expectedVouchers.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Monto de cierre en efectivo */}
             <div className="grid gap-2">
               <Label htmlFor="closingAmount">Efectivo Contado en Caja *</Label>
               <div className="relative">
@@ -195,7 +227,32 @@ export function CloseCashSessionModal({ open, onOpenChange, session, onSuccess }
               </p>
             </div>
 
-            {/* Diferencia calculada */}
+            {/* Monto de vouchers contados */}
+            {expectedVouchers > 0 && (
+              <div className="grid gap-2">
+                <Label htmlFor="closingVouchers">Vouchers Contados (Tarjetas + Transferencias)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    id="closingVouchers"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={closingVouchers}
+                    onChange={(e) => setClosingVouchers(e.target.value)}
+                    className="pl-7"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Cuente los vouchers físicos y referencias de transferencias e ingrese el monto total
+                </p>
+              </div>
+            )}
+
+            {/* Diferencia calculada en efectivo */}
             {closingAmount && (
               <div className={`rounded-lg border p-4 ${
                 difference === 0 ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' :
@@ -212,7 +269,7 @@ export function CloseCashSessionModal({ open, onOpenChange, session, onSuccess }
                       <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
                     )}
                     <span className="font-semibold">
-                      {difference === 0 ? 'Cuadre Exacto' :
+                      Efectivo: {difference === 0 ? 'Cuadre Exacto' :
                        difference > 0 ? 'Sobrante' : 'Faltante'}
                     </span>
                   </div>
@@ -229,6 +286,45 @@ export function CloseCashSessionModal({ open, onOpenChange, session, onSuccess }
                     {difference > 0
                       ? 'Hay más efectivo del esperado en la caja'
                       : 'Hay menos efectivo del esperado en la caja'}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Diferencia calculada en vouchers */}
+            {closingVouchers && expectedVouchers > 0 && (
+              <div className={`rounded-lg border p-4 ${
+                differenceVouchers === 0 ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' :
+                differenceVouchers > 0 ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800' :
+                'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {differenceVouchers === 0 ? (
+                      <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    ) : differenceVouchers > 0 ? (
+                      <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    ) : (
+                      <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
+                    )}
+                    <span className="font-semibold">
+                      Vouchers: {differenceVouchers === 0 ? 'Cuadre Exacto' :
+                       differenceVouchers > 0 ? 'Sobrante' : 'Faltante'}
+                    </span>
+                  </div>
+                  <span className={`text-lg font-bold ${
+                    differenceVouchers === 0 ? 'text-green-600 dark:text-green-400' :
+                    differenceVouchers > 0 ? 'text-blue-600 dark:text-blue-400' :
+                    'text-red-600 dark:text-red-400'
+                  }`}>
+                    {differenceVouchers >= 0 ? '+' : ''}${differenceVouchers.toFixed(2)}
+                  </span>
+                </div>
+                {differenceVouchers !== 0 && (
+                  <p className="text-xs mt-2 text-muted-foreground">
+                    {differenceVouchers > 0
+                      ? 'Hay más vouchers del esperado'
+                      : 'Hay menos vouchers del esperado'}
                   </p>
                 )}
               </div>

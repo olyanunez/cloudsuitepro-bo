@@ -8,8 +8,11 @@ export interface CashSession {
   warehouseId: number | null;
   openingAmount: string;
   closingAmount: string | null;
+  closingVouchers: string | null;
   expectedAmount: string | null;
+  expectedVouchers: string | null;
   difference: string | null;
+  differenceVouchers: string | null;
   totalCash: string | null;
   totalCard: string | null;
   totalTransfer: string | null;
@@ -49,6 +52,7 @@ export interface OpenCashSessionDto {
 
 export interface CloseCashSessionDto {
   closingAmount: number;
+  closingVouchers?: number;
   closingNotes?: string;
 }
 
