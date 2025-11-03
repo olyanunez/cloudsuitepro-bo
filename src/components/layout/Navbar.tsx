@@ -21,6 +21,7 @@ import BranchSwitcher from './BranchSwitcher'
 // Definición de los elementos del menú
 // screenCode: código de la pantalla para validar permisos (null = sin permisos requeridos)
 const menuItems = [
+  { name: 'Dashboard', href: '/dashboard', icon: 'layout-dashboard', screenCode: null },
   { name: 'Usuarios', href: '/users', icon: 'user-cog', screenCode: 'USERS' },
   { name: 'Roles', href: '/roles', icon: 'shield', screenCode: 'ROLE' },
   { name: 'Punto de Venta', href: '/pos', icon: 'shopping-cart', screenCode: 'POS' },
