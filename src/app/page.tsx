@@ -1,46 +1,281 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from "next/image";
+import { LandingNavbar } from '@/components/layout/LandingNavbar';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import Link from 'next/link';
+import {
+  BarChart3,
+  Package,
+  ShoppingCart,
+  Users,
+  TrendingUp,
+  Shield,
+  Zap,
+  CheckCircle2
+} from 'lucide-react';
 
 export default function Home() {
-  const router = useRouter();
-
-  useEffect(() => {
-    // Asegurarse de que estamos en el cliente antes de acceder a localStorage
-    if (typeof window !== 'undefined') {
-      // Verificar si el usuario está autenticado
-      const isLoggedIn = localStorage.getItem('auth_token');
-
-      // const isLoggedIn = localStorage.getItem('auth_token');
-      if (isLoggedIn) {
-        // Si está autenticado, redirigir al dashboard
-        router.push('/dashboard');
-      } else {
-        // Si no está autenticado, redirigir al login
-        router.push('/login');
-      }
-    }
-  }, [router]);
-
-  // This will be shown briefly before redirecting
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="text-center">
-        <div className="mb-8">
-          <Image
-            className="dark:invert mx-auto"
-            src="/next.svg"
-            alt="Next.js logo"
-            width={180}
-            height={38}
-            priority
-          />
+    <div className="min-h-screen bg-white">
+      {/* Navbar */}
+      <LandingNavbar />
+
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-yellow-50 to-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+              Gestiona tu negocio con{' '}
+              <span className="text-yellow-500">Xotica</span>
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              La plataforma todo-en-uno para gestionar inventario, ventas, facturación y reportes.
+              Optimiza tu negocio y toma decisiones inteligentes basadas en datos.
+            </p>
+            <div className="flex justify-center gap-4">
+              <Link href="/register">
+                <Button
+                  size="lg"
+                  style={{
+                    backgroundColor: '#eab308',
+                    color: 'white',
+                    borderColor: '#eab308'
+                  }}
+                  className="text-lg px-8 py-6 hover:opacity-90 transition-opacity font-semibold"
+                >
+                  Comenzar Gratis
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="text-lg px-8 py-6"
+                >
+                  Iniciar Sesión
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent"></div>
-        <p className="mt-4 text-gray-700 dark:text-gray-300">Redirigiendo...</p>
-      </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Todo lo que necesitas en un solo lugar
+            </h2>
+            <p className="text-xl text-gray-600">
+              Herramientas poderosas diseñadas para hacer crecer tu negocio
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="bg-yellow-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <Package className="h-6 w-6 text-yellow-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Gestión de Inventario
+              </h3>
+              <p className="text-gray-600">
+                Controla tu stock en tiempo real, múltiples almacenes y sucursales con alertas automáticas.
+              </p>
+            </Card>
+
+            {/* Feature 2 */}
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="bg-yellow-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <ShoppingCart className="h-6 w-6 text-yellow-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Punto de Venta (POS)
+              </h3>
+              <p className="text-gray-600">
+                Sistema POS rápido e intuitivo para procesar ventas y generar facturas al instante.
+              </p>
+            </Card>
+
+            {/* Feature 3 */}
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="bg-yellow-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <BarChart3 className="h-6 w-6 text-yellow-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Reportes y Analytics
+              </h3>
+              <p className="text-gray-600">
+                Visualiza tendencias, márgenes de ganancia y toma decisiones basadas en datos reales.
+              </p>
+            </Card>
+
+            {/* Feature 4 */}
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="bg-yellow-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <Users className="h-6 w-6 text-yellow-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Gestión de Usuarios
+              </h3>
+              <p className="text-gray-600">
+                Control de accesos y permisos para tu equipo con roles personalizables.
+              </p>
+            </Card>
+
+            {/* Feature 5 */}
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="bg-yellow-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <TrendingUp className="h-6 w-6 text-yellow-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Facturación Electrónica
+              </h3>
+              <p className="text-gray-600">
+                Genera facturas profesionales y gestiona tus documentos fiscales con facilidad.
+              </p>
+            </Card>
+
+            {/* Feature 6 */}
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="bg-yellow-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <Shield className="h-6 w-6 text-yellow-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Seguridad Garantizada
+              </h3>
+              <p className="text-gray-600">
+                Tus datos protegidos con encriptación y respaldos automáticos en la nube.
+              </p>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-4xl font-bold text-gray-900 mb-6">
+                ¿Por qué elegir Xotica?
+              </h2>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  <CheckCircle2 className="h-6 w-6 text-yellow-500 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Fácil de usar</h3>
+                    <p className="text-gray-600">
+                      Interfaz intuitiva que no requiere capacitación técnica
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <CheckCircle2 className="h-6 w-6 text-yellow-500 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Acceso desde cualquier lugar</h3>
+                    <p className="text-gray-600">
+                      Gestiona tu negocio desde cualquier dispositivo con conexión a internet
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <CheckCircle2 className="h-6 w-6 text-yellow-500 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Soporte 24/7</h3>
+                    <p className="text-gray-600">
+                      Equipo de soporte disponible para ayudarte cuando lo necesites
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <CheckCircle2 className="h-6 w-6 text-yellow-500 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Actualizaciones constantes</h3>
+                    <p className="text-gray-600">
+                      Nuevas funcionalidades y mejoras sin costo adicional
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-yellow-400 to-orange-400 rounded-2xl p-12 text-white">
+              <div className="text-center">
+                <Zap className="h-16 w-16 mx-auto mb-6" />
+                <h3 className="text-3xl font-bold mb-4">Comienza hoy</h3>
+                <p className="text-xl mb-8">
+                  Únete a cientos de negocios que ya están creciendo con Xotica
+                </p>
+                <div className="grid grid-cols-3 gap-6 mb-8">
+                  <div>
+                    <p className="text-4xl font-bold">500+</p>
+                    <p className="text-sm">Empresas</p>
+                  </div>
+                  <div>
+                    <p className="text-4xl font-bold">99.9%</p>
+                    <p className="text-sm">Uptime</p>
+                  </div>
+                  <div>
+                    <p className="text-4xl font-bold">24/7</p>
+                    <p className="text-sm">Soporte</p>
+                  </div>
+                </div>
+                <Link href="/register">
+                  <Button
+                    size="lg"
+                    style={{
+                      backgroundColor: 'white',
+                      color: '#ca8a04',
+                      borderColor: 'white'
+                    }}
+                    className="hover:bg-gray-100 w-full font-semibold"
+                  >
+                    Regístrate Gratis
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl font-bold text-gray-900 mb-6">
+            ¿Listo para transformar tu negocio?
+          </h2>
+          <p className="text-xl text-gray-600 mb-8">
+            Crea tu cuenta gratis y empieza a gestionar tu negocio de manera profesional
+          </p>
+          <Link href="/register">
+            <Button
+              size="lg"
+              style={{
+                backgroundColor: '#eab308',
+                color: 'white',
+                borderColor: '#eab308'
+              }}
+              className="text-lg px-12 py-6 hover:opacity-90 transition-opacity font-semibold"
+            >
+              Comenzar Ahora
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto text-center">
+          <p className="text-2xl font-bold mb-2">Xotica</p>
+          <p className="text-gray-400">
+            &copy; {new Date().getFullYear()} Xotica. Todos los derechos reservados.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
