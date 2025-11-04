@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { toast } from 'react-hot-toast';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -151,15 +152,15 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Lado izquierdo - Formulario con fondo amarillo degradado */}
+    <div className="flex min-h-screen flex-row-reverse">
+      {/* Lado derecho - Formulario con fondo amarillo degradado */}
       <div className="w-full lg:w-1/2 bg-gradient-to-br from-yellow-400 via-yellow-300 to-orange-400 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-2xl p-8">
-            {/* Logo o nombre de la app */}
+            {/* Título */}
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Xotica</h2>
-              <p className="text-sm text-gray-600 mt-1">
+              <h2 className="text-2xl font-bold text-gray-900 text-center">Registro</h2>
+              <p className="text-sm text-gray-600 text-center mt-1">
                 Crea tu cuenta empresarial
               </p>
             </div>
@@ -381,14 +382,25 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* Lado derecho - Contenido promocional */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 items-center justify-center p-12">
+      {/* Lado izquierdo - Contenido promocional */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900  justify-center">
         <div className="max-w-xl text-white">
+          {/* Logo */}
+          <div className="mb-2 flex justify-center">
+            <Image
+              src="/xotica_logo.png"
+              alt="Xotica Business"
+              width={800}
+              height={240}
+              priority
+              className="h-56 w-auto"
+            />
+          </div>
+
           {/* Título principal */}
           <div className="mb-8">
-            <h1 className="text-5xl font-bold mb-4 leading-tight">
-              Transforma tu negocio con
-              <span className="text-yellow-400"> Xotica</span>
+            <h1 className="text-4xl font-bold mb-4 leading-tight text-center">
+              Transforma tu negocio con la mejor plataforma
             </h1>
             <p className="text-xl text-gray-300 leading-relaxed">
               La plataforma todo-en-uno para gestionar tu inventario, ventas y

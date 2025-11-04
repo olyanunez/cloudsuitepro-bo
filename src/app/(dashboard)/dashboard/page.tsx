@@ -24,6 +24,7 @@ export default function DashboardPage() {
   // Estados para datos
   const [salesStats, setSalesStats] = useState<any>(null);
   const [salesTrend, setSalesTrend] = useState<any[]>([]);
+  const [growthData, setGrowthData] = useState<any>(null);
   const [inventoryData, setInventoryData] = useState<any>(null);
   const [lowStockData, setLowStockData] = useState<any>(null);
   const [cashSessions, setCashSessions] = useState<any[]>([]);
@@ -39,7 +40,7 @@ export default function DashboardPage() {
       const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
       // Cargar datos en paralelo
-      const [stats, trend, inventory, lowStock, sessions] = await Promise.all([
+      const [stats, trend, growth, inventory, lowStock, sessions] = await Promise.all([
         // Estadísticas de ventas de hoy
         DashboardService.getSalesStats({
           branchId: activeBranchId || undefined,
@@ -49,6 +50,13 @@ export default function DashboardPage() {
 
         // Tendencia de ventas (últimos 30 días)
         DashboardService.getSalesTrend(30, activeBranchId || undefined),
+
+        // Tasa de crecimiento (hoy vs ayer)
+        DashboardService.getGrowthRate({
+          branchId: activeBranchId || undefined,
+          startDate: startOfDay.toISOString().split('T')[0],
+          endDate: endOfDay.toISOString().split('T')[0],
+        }),
 
         // Valorización de inventario
         DashboardService.getStockValuation(),
@@ -66,6 +74,7 @@ export default function DashboardPage() {
 
       setSalesStats(stats);
       setSalesTrend(trend);
+      setGrowthData(growth);
       setInventoryData(inventory);
       setLowStockData(lowStock);
       setCashSessions(sessions);
@@ -86,7 +95,7 @@ export default function DashboardPage() {
   const totalSales = parseFloat(salesStats?.totalAmount || 0);
   const transactionCount = parseInt(salesStats?.totalInvoices || 0);
   const avgTicket = transactionCount > 0 ? totalSales / transactionCount : 0;
-  const growthRate = 0; // TODO: Implementar comparativa con período anterior
+  const growthRate = growthData?.growthRate || 0;
 
   // Calcular métricas de sesiones de caja
   const openSessions = cashSessions.filter((s) => s.status === 'OPEN').length;

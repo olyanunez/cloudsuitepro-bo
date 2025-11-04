@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   Sheet,
@@ -141,8 +142,16 @@ export default function Navbar() {
               <MenuIcon className="h-5 w-5" />
               <span className="sr-only">Toggle Menu</span>
             </SheetTrigger>
-            <Link href="/" className="flex items-center space-x-2">
-              <span className="font-bold text-xl text-primary-600 dark:text-primary-400">Xotica</span>
+            <Link href="/dashboard" className="flex items-center space-x-2">
+              <Image
+                src="/xotica_short_logo.png"
+                alt="Xotica"
+                width={32}
+                height={32}
+                priority
+                className="h-12 w-12"
+              />
+              <span className="font-bold text-xl text-primary-600 dark:text-primary-400 hidden sm:inline">Xotica</span>
             </Link>
           </div>
 
@@ -241,6 +250,17 @@ export default function Navbar() {
       {/* Drawer para móvil */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-[240px] sm:w-[300px] flex flex-col">
+          {/* Logo en el sidebar */}
+          <div className="flex items-center justify-center  border-b border-gray-200 dark:border-gray-800">
+            <Image
+              src="/xotica_logo.png"
+              alt="Xotica Business"
+              width={140}
+              height={40}
+              priority
+              className="h-20 w-auto"
+            />
+          </div>
           <nav className="flex flex-col gap-4 mt-8 overflow-y-auto flex-1 pr-2">
             {filteredMenuItems.map((item) => {
               if (!item) return null;

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 
 export function LandingNavbar() {
@@ -11,9 +12,14 @@ export function LandingNavbar() {
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <span className="text-2xl font-bold text-gray-900">
-                Xotica
-              </span>
+              <Image
+                src="/xotica_logo.png"
+                alt="Xotica Business"
+                width={360}
+                height={100}
+                priority
+                className="h-20 w-auto"
+              />
             </Link>
           </div>
 

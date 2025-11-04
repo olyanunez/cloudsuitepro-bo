@@ -89,37 +89,43 @@ export class DashboardService {
    * Obtiene tendencia de ventas por día (últimos N días)
    */
   static async getSalesTrend(days: number = 30, branchId?: number): Promise<SalesTrend[]> {
-    // Calcular fecha de inicio
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    const queryParams = new URLSearchParams();
+    queryParams.append('days', days.toString());
+    if (branchId) queryParams.append('branchId', branchId.toString());
 
-    const stats = await this.getSalesStats({
-      branchId,
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
-    });
+    const query = queryParams.toString();
+    return apiGet(`/invoices/sales-trend${query ? `?${query}` : ''}`);
+  }
 
-    // Por ahora retornamos datos simulados para la tendencia
-    // TODO: Crear endpoint en backend que retorne datos por día
-    const trend: SalesTrend[] = [];
-    const avgDaily = stats.totalAmount / days;
+  /**
+   * Obtiene la tasa de crecimiento comparando el período actual con el anterior
+   */
+  static async getGrowthRate(params?: {
+    branchId?: number;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<{
+    currentPeriod: {
+      startDate: string;
+      endDate: string;
+      total: number;
+      invoiceCount: number;
+    };
+    previousPeriod: {
+      startDate: string;
+      endDate: string;
+      total: number;
+      invoiceCount: number;
+    };
+    growthRate: number;
+    periodDurationDays: number;
+  }> {
+    const queryParams = new URLSearchParams();
+    if (params?.branchId) queryParams.append('branchId', params.branchId.toString());
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
 
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-
-      // Simular variación diaria
-      const variation = (Math.random() - 0.5) * 0.4;
-      const total = avgDaily * (1 + variation);
-
-      trend.push({
-        date: date.toISOString().split('T')[0],
-        total: Math.round(total * 100) / 100,
-        count: Math.floor(stats.totalInvoices / days),
-      });
-    }
-
-    return trend;
+    const query = queryParams.toString();
+    return apiGet(`/invoices/growth-rate${query ? `?${query}` : ''}`);
   }
 }

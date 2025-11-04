@@ -4,6 +4,7 @@ import { LandingNavbar } from '@/components/layout/LandingNavbar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   BarChart3,
   Package,
@@ -270,7 +271,16 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-2xl font-bold mb-2">Xotica</p>
+          <div className="flex justify-center">
+            <Image
+              src="/xotica_short_logo.png"
+              alt="Xotica"
+              width={100}
+              height={100}
+              className="h-30 w-30"
+            />
+          </div>
+          {/* <p className="text-2xl font-bold mb-2">Xotica</p> */}
           <p className="text-gray-400">
             &copy; {new Date().getFullYear()} Xotica. Todos los derechos reservados.
           </p>

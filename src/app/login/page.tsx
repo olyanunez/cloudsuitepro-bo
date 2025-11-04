@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { AuthService } from '@/lib/services/authService';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import { useBranch } from '@/lib/contexts/BranchContext';
@@ -64,6 +65,16 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-amber-50 to-amber-100 dark:from-gray-900 dark:to-gray-800 px-4">
       <div className="w-full max-w-md space-y-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
         <div className="text-center">
+          <div className="flex justify-center">
+            <Image
+              src="/xotica_logo.png"
+              alt="Xotica Business"
+              width={200}
+              height={60}
+              priority
+              className="h-30 w-auto"
+            />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Iniciar Sesión</h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             Accede a tu cuenta para continuar
