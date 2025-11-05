@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ProductImageUpload, ProductImage } from '@/components/products/ProductImageUpload';
 
 export default function CreateProductPage() {
   const router = useRouter();
   const [saving, setSaving] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [images, setImages] = useState<ProductImage[]>([]);
   const [formData, setFormData] = useState<CreateProductDto>({
     name: '',
     code: '',
@@ -112,7 +114,11 @@ export default function CreateProductPage() {
 
     try {
       setSaving(true);
-      await ProductService.createProduct(formData);
+
+      // Extraer archivos File de las imágenes
+      const imageFiles = images.map(img => img.file).filter((file): file is File => file !== undefined);
+
+      await ProductService.createProduct(formData, imageFiles);
       router.push('/inventory/products');
     } catch (error) {
       console.error('Error creating product:', error);
@@ -293,6 +299,11 @@ export default function CreateProductPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mt-6">
+          <h2 className="text-xl font-semibold mb-4">Imágenes del Producto</h2>
+          <ProductImageUpload images={images} onChange={setImages} maxImages={10} />
         </div>
 
         <div className="mt-6 flex justify-end">

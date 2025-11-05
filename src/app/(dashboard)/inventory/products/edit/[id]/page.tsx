@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ProductImageUpload, ProductImage } from '@/components/products/ProductImageUpload';
 
 export default function EditProductPage() {
   const params = useParams();
@@ -18,6 +19,8 @@ export default function EditProductPage() {
   const [saving, setSaving] = useState<boolean>(false);
   const [product, setProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [images, setImages] = useState<ProductImage[]>([]);
+  const [initialImageIds, setInitialImageIds] = useState<number[]>([]);
   const [formData, setFormData] = useState<UpdateProductDto>({
     name: '',
     code: '',
@@ -58,6 +61,19 @@ export default function EditProductPage() {
           cost: productData.cost || 0,
           categoryId: productData.categoryId
         });
+
+        // Cargar imágenes existentes
+        if (productData.images && productData.images.length > 0) {
+          const existingImages: ProductImage[] = productData.images.map((img) => ({
+            id: img.id,
+            url: img.url,
+            publicId: img.publicId,
+            isPrimary: img.isPrimary,
+            order: img.order
+          }));
+          setImages(existingImages);
+          setInitialImageIds(existingImages.map(img => img.id!));
+        }
 
 
       } catch (error) {
@@ -140,7 +156,23 @@ export default function EditProductPage() {
 
     try {
       setSaving(true);
-      await ProductService.updateProduct(productId, formData);
+
+      // Identificar imágenes nuevas (las que tienen file)
+      const newImageFiles = images
+        .filter(img => img.file)
+        .map(img => img.file!);
+
+      // Identificar imágenes a eliminar (las que estaban inicialmente pero ya no están)
+      const currentImageIds = images
+        .filter(img => img.id)
+        .map(img => img.id!);
+      const imagesToDelete = initialImageIds.filter(id => !currentImageIds.includes(id));
+
+      // Obtener el ID de la imagen principal (solo de las existentes, no las nuevas)
+      const primaryImage = images.find(img => img.isPrimary && img.id);
+      const primaryImageId = primaryImage?.id;
+
+      await ProductService.updateProduct(productId, formData, newImageFiles, imagesToDelete, primaryImageId);
       router.push('/inventory/products');
     } catch (error) {
       console.error('Error updating product:', error);
@@ -297,6 +329,11 @@ export default function EditProductPage() {
               {/* Campos eliminados: stock, minimumStock, barcode */}
             </div>
           </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mt-6">
+          <h2 className="text-xl font-semibold mb-4">Imágenes del Producto</h2>
+          <ProductImageUpload images={images} onChange={setImages} maxImages={10} />
         </div>
 
         <div className="mt-6 flex justify-end">

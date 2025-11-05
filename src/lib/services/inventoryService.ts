@@ -64,12 +64,98 @@ export const ProductService = {
     return apiGet(`/products/${id}`);
   },
 
-  createProduct: async (data: CreateProductDto): Promise<Product> => {
-    return apiPost('/products', data);
+  createProduct: async (data: CreateProductDto, images?: File[]): Promise<Product> => {
+    const formData = new FormData();
+
+    // Agregar campos del producto
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value.toString());
+      }
+    });
+
+    // Agregar imágenes si existen
+    if (images && images.length > 0) {
+      images.forEach((image) => {
+        formData.append('images', image);
+      });
+    }
+
+    const token = localStorage.getItem('auth_token');
+    const tenantId = localStorage.getItem('tenant_id');
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    if (tenantId) {
+      headers['x-tenant-id'] = tenantId;
+    }
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error al crear el producto');
+    }
+
+    return response.json();
   },
 
-  updateProduct: async (id: number, data: UpdateProductDto): Promise<Product> => {
-    return apiPatch(`/products/${id}`, data);
+  updateProduct: async (id: number, data: UpdateProductDto, images?: File[], imagesToDelete?: number[], primaryImageId?: number): Promise<Product> => {
+    const formData = new FormData();
+
+    // Agregar campos del producto
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value.toString());
+      }
+    });
+
+    // Agregar imágenes nuevas si existen
+    if (images && images.length > 0) {
+      images.forEach((image) => {
+        formData.append('images', image);
+      });
+    }
+
+    // Agregar IDs de imágenes a eliminar
+    if (imagesToDelete && imagesToDelete.length > 0) {
+      formData.append('imagesToDelete', JSON.stringify(imagesToDelete));
+    }
+
+    // Agregar ID de imagen principal
+    if (primaryImageId !== undefined) {
+      formData.append('primaryImageId', primaryImageId.toString());
+    }
+
+    const token = localStorage.getItem('auth_token');
+    const tenantId = localStorage.getItem('tenant_id');
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    if (tenantId) {
+      headers['x-tenant-id'] = tenantId;
+    }
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`, {
+      method: 'PATCH',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error al actualizar el producto');
+    }
+
+    return response.json();
   },
 
   deleteProduct: async (id: number): Promise<void> => {

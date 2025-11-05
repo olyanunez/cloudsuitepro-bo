@@ -9,6 +9,17 @@ export interface ProductCategory {
   updatedAt: string;
 }
 
+export interface ProductImage {
+  id: number;
+  productId: number;
+  url: string;
+  publicId: string;
+  isPrimary: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Product {
   id: number;
   code: string;
@@ -18,6 +29,7 @@ export interface Product {
   cost: number;
   categoryId: number;
   category?: ProductCategory;
+  images?: ProductImage[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
