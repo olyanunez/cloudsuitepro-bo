@@ -4,8 +4,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { Product } from '@/lib/types/inventory';
 import { ProductService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -24,6 +25,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 // Importaciones de utilidades
 
 export default function ProductsPage() {
@@ -31,6 +38,11 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+
+  // Image carousel state
+  const [isCarouselOpen, setIsCarouselOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,6 +86,30 @@ export default function ProductsPage() {
     } finally {
       setProductToDelete(null);
       setIsDeleteDialogOpen(false);
+    }
+  };
+
+  const openImageCarousel = (product: Product, imageIndex: number = 0) => {
+    setSelectedProduct(product);
+    setCurrentImageIndex(imageIndex);
+    setIsCarouselOpen(true);
+  };
+
+  const closeCarousel = () => {
+    setIsCarouselOpen(false);
+    setSelectedProduct(null);
+    setCurrentImageIndex(0);
+  };
+
+  const nextImage = () => {
+    if (selectedProduct && selectedProduct.images) {
+      setCurrentImageIndex((prev) => (prev + 1) % selectedProduct.images!.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (selectedProduct && selectedProduct.images) {
+      setCurrentImageIndex((prev) => (prev - 1 + selectedProduct.images!.length) % selectedProduct.images!.length);
     }
   };
 
@@ -208,6 +244,12 @@ export default function ProductsPage() {
               <tr>
                 <th
                   scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  Imagen
+                </th>
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('code')}
                 >
@@ -270,56 +312,79 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {paginatedProducts.map((product) => (
-                <tr key={product.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                      {product.code}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                      {product.name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                    {formatCurrency(product.price)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                    {product.category?.name || `Categoría #${product.categoryId}`}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${product.isActive ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'}`}>
-                      {product.isActive ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                    {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end space-x-2">
-                      <Link href={`/inventory/products/${product.id}`}>
-                        <Button variant="outline" size="sm" className="px-2 py-1">
-                          <EyeIcon className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Link href={`/inventory/products/edit/${product.id}`}>
-                        <Button variant="outline" size="sm" className="px-2 py-1">
-                          <PencilIcon className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
-                        onClick={() => confirmDelete(product.id)}
+              {paginatedProducts.map((product) => {
+                const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+
+                return (
+                  <tr key={product.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div
+                        className="relative w-16 h-16 cursor-pointer rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 hover:border-primary transition-colors"
+                        onClick={() => openImageCarousel(product, 0)}
                       >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        {primaryImage ? (
+                          <Image
+                            src={primaryImage.url}
+                            alt={product.name}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                            <ImageIcon className="h-8 w-8 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {product.code}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {product.name}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                      {formatCurrency(product.price)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                      {product.category?.name || `Categoría #${product.categoryId}`}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${product.isActive ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'}`}>
+                        {product.isActive ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                      {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end space-x-2">
+                        <Link href={`/inventory/products/${product.id}`}>
+                          <Button variant="outline" size="sm" className="px-2 py-1">
+                            <EyeIcon className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Link href={`/inventory/products/edit/${product.id}`}>
+                          <Button variant="outline" size="sm" className="px-2 py-1">
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
+                          onClick={() => confirmDelete(product.id)}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -375,6 +440,76 @@ export default function ProductsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Image Carousel Dialog */}
+      <Dialog open={isCarouselOpen} onOpenChange={closeCarousel}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{selectedProduct?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedProduct && selectedProduct.images && selectedProduct.images.length > 0 ? (
+            <div className="space-y-4">
+              <div className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
+                <Image
+                  src={selectedProduct.images[currentImageIndex].url}
+                  alt={`${selectedProduct.name} - Imagen ${currentImageIndex + 1}`}
+                  fill
+                  className="object-contain"
+                />
+                {selectedProduct.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="outline absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all hover:scale-110"
+                      aria-label="Imagen anterior"
+                    >
+                      <ChevronLeft className="h-6 w-6" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="outline absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all hover:scale-110"
+                      aria-label="Imagen siguiente"
+                    >
+                      <ChevronRight className="h-6 w-6" />
+                    </button>
+                  </>
+                )}
+              </div>
+              {selectedProduct.images.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {selectedProduct.images.map((image, index) => (
+                    <div
+                      key={image.id}
+                      className={`relative w-20 h-20 flex-shrink-0 cursor-pointer rounded-md overflow-hidden border-2 transition-colors ${index === currentImageIndex
+                        ? 'border-primary'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-primary/50'
+                        }`}
+                      onClick={() => setCurrentImageIndex(index)}
+                    >
+                      <Image
+                        src={image.url}
+                        alt={`Miniatura ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+                Imagen {currentImageIndex + 1} de {selectedProduct.images.length}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg">
+              <div className="text-center">
+                <ImageIcon className="h-16 w-16 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500 dark:text-gray-400">No hay imágenes disponibles</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>

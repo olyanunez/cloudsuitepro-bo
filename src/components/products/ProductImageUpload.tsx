@@ -97,8 +97,8 @@ export function ProductImageUpload({ images, onChange, maxImages = 10 }: Product
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${dragOver
-            ? 'border-primary bg-primary/5'
-            : 'border-gray-300 dark:border-gray-600'
+          ? 'border-primary bg-primary/5'
+          : 'border-gray-300 dark:border-gray-600'
           } ${images.length >= maxImages ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <input
