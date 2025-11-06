@@ -19,6 +19,12 @@ export interface ProductStock {
       name: string;
     };
   };
+  images?: Array<{
+    id: number;
+    url: string;
+    isPrimary: boolean;
+    order: number;
+  }>;
 }
 
 export interface InvoiceItem {

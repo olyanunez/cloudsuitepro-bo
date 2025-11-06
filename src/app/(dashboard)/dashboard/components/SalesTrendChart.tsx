@@ -1,57 +1,85 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface SalesTrendChartProps {
   data: Array<{
     date: string;
     total: number;
+    invoiceCount?: number;
+    averageTicket?: number;
   }>;
 }
 
 export function SalesTrendChart({ data }: SalesTrendChartProps) {
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+  };
+
   // Formatear datos para el gráfico
   const chartData = data.map(item => ({
-    date: new Date(item.date).toLocaleDateString('es-DO', { month: 'short', day: 'numeric' }),
-    total: parseFloat(item.total as any) || 0,
+    date: formatDate(item.date),
+    ingresos: parseFloat(item.total as any) || 0,
+    facturas: item.invoiceCount || 0,
+    promedio: parseFloat(item.averageTicket as any) || 0,
   }));
 
   return (
     <Card className="col-span-full lg:col-span-2">
       <CardHeader>
         <CardTitle>Tendencia de Ventas</CardTitle>
-        <CardDescription>Ventas de los últimos 30 días</CardDescription>
+        <CardDescription>Evolución de ingresos y facturas por día</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={400}>
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis
-              dataKey="date"
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
-            />
-            <YAxis
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
-              tickFormatter={(value) => `$${value}`}
-            />
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis yAxisId="left" />
+            <YAxis yAxisId="right" orientation="right" />
             <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--background))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '6px',
+              formatter={(value: any, name: string) => {
+                if (name === 'ingresos' || name === 'promedio') {
+                  return formatCurrency(parseFloat(value));
+                }
+                return value;
               }}
-              formatter={(value: number) => [`$${value.toFixed(2)}`, 'Ventas']}
+              labelFormatter={(label) => `Fecha: ${label}`}
+            />
+            <Legend />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="ingresos"
+              stroke="#3b82f6"
+              strokeWidth={2}
+              name="Ingresos"
             />
             <Line
+              yAxisId="right"
               type="monotone"
-              dataKey="total"
-              stroke="hsl(var(--primary))"
+              dataKey="facturas"
+              stroke="#10b981"
               strokeWidth={2}
-              dot={{ fill: 'hsl(var(--primary))', r: 4 }}
-              activeDot={{ r: 6 }}
+              name="Facturas"
+            />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="promedio"
+              stroke="#f59e0b"
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              name="Ticket Promedio"
             />
           </LineChart>
         </ResponsiveContainer>

@@ -270,42 +270,37 @@ export default function Navbar() {
                 <div key={item.href} className="flex flex-col">
                   <div className="flex items-center justify-between">
                     {item.submenu ? (
-                      <Link href={item.href} className="w-full">
-                        <div
-                          onClick={(e) => {
-                            // Prevent navigation to allow submenu toggle
-                            e.preventDefault();
-                            const newOpenSubmenus = { ...openSubmenus };
-                            newOpenSubmenus[item.href] = !isSubmenuOpen;
-                            setOpenSubmenus(newOpenSubmenus);
-                            // Navigate after setting submenu state
-                            window.location.href = item.href;
-                          }}
-                          className={
-                            `flex items-center gap-2 px-2 py-1 rounded-md w-full cursor-pointer ${isActive
-                              ? "bg-yellow-50 text-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-100 font-bold border-l-4 border-yellow-500"
-                              : "bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-                            }`
-                          }
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const newOpenSubmenus = { ...openSubmenus };
+                          newOpenSubmenus[item.href] = !isSubmenuOpen;
+                          setOpenSubmenus(newOpenSubmenus);
+                        }}
+                        className={
+                          `flex items-center gap-2 px-2 py-1 rounded-md w-full cursor-pointer ${isActive
+                            ? "bg-yellow-50 text-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-100 font-bold border-l-4 border-yellow-500"
+                            : "bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                          }`
+                        }
+                      >
+                        <Icon name={item.icon} />
+                        <span>{item.name}</span>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className={`ml-auto h-4 w-4 transition-transform ${isSubmenuOpen ? 'rotate-180' : ''}`}
                         >
-                          <Icon name={item.icon} />
-                          <span>{item.name}</span>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className={`ml-auto h-4 w-4 transition-transform ${isSubmenuOpen ? 'rotate-180' : ''}`}
-                          >
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                          </svg>
-                        </div>
-                      </Link>
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </div>
                     ) : (
                       <SheetClose asChild>
                         <Link

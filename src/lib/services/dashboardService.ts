@@ -20,7 +20,8 @@ export interface DashboardStats {
 export interface SalesTrend {
   date: string;
   total: number;
-  count: number;
+  invoiceCount: number;
+  averageTicket: number;
 }
 
 export interface StockValuation {

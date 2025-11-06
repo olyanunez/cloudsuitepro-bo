@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useBranch } from '@/lib/contexts/BranchContext';
 import { PosService, ProductStock, InvoiceItem, Invoice } from '@/lib/services/posService';
 import { BranchService } from '@/lib/services/branchService';
@@ -55,6 +56,7 @@ import {
   LogOut,
   Printer,
   CheckCircle,
+  ImageIcon,
 } from 'lucide-react';
 
 interface CartItem extends ProductStock {
@@ -724,38 +726,61 @@ export default function PosPage() {
 
               {searchResults.length > 0 && (
                 <div className="mt-4 border rounded-lg divide-y max-h-96 overflow-y-auto">
-                  {searchResults.map((product) => (
-                    <div
-                      key={product.id}
-                      className="p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                      onClick={() => addToCart(product)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium">{product.name}</p>
-                            <Badge variant="outline">{product.code}</Badge>
+                  {searchResults.map((product) => {
+                    const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+
+                    return (
+                      <div
+                        key={product.id}
+                        className="p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                        onClick={() => addToCart(product)}
+                      >
+                        <div className="flex items-start gap-4">
+                          {/* Imagen del producto */}
+                          <div className="relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
+                            {primaryImage ? (
+                              <Image
+                                src={primaryImage.url}
+                                alt={product.name}
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <ImageIcon className="h-10 w-10 text-gray-400" />
+                              </div>
+                            )}
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {product.description}
-                          </p>
-                          <div className="flex items-center gap-3 mt-2">
-                            <Badge variant="secondary">
-                              {product.category.name}
-                            </Badge>
-                            <span className="text-sm text-muted-foreground">
-                              Stock: {product.stock.quantity}
-                            </span>
+
+                          {/* Información del producto */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">{product.name}</p>
+                              <Badge variant="outline">{product.code}</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {product.description}
+                            </p>
+                            <div className="flex items-center gap-3 mt-2">
+                              <Badge variant="secondary">
+                                {product.category.name}
+                              </Badge>
+                              <span className="text-sm text-muted-foreground">
+                                Stock: {product.stock.quantity}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-primary">
-                            ${parseFloat(product.price).toFixed(2)}
-                          </p>
+
+                          {/* Precio */}
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-lg font-bold text-primary">
+                              ${parseFloat(product.price).toFixed(2)}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
