@@ -4,14 +4,16 @@ import { useState, useEffect } from 'react';
 import { InventoryItem } from '@/lib/types/inventory';
 import { InventoryService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftIcon, PencilIcon } from 'lucide-react';
+import { ArrowLeftIcon, PencilIcon, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useParams } from 'next/navigation';
 
 export default function InventoryItemDetailPage() {
   const params = useParams();
   const [item, setItem] = useState<InventoryItem | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
   const itemId = parseInt(params.id as string, 10);
 
   useEffect(() => {
@@ -57,6 +59,17 @@ export default function InventoryItemDetailPage() {
     );
   }
 
+  const productImages = item.product?.images || [];
+  const hasImages = productImages.length > 0;
+
+  const nextImage = () => {
+    setSelectedImageIndex((prev) => (prev + 1) % productImages.length);
+  };
+
+  const prevImage = () => {
+    setSelectedImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
+  };
+
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6 flex justify-between items-center">
@@ -77,8 +90,88 @@ export default function InventoryItemDetailPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Product Images Carousel - Left Side */}
+        <div className="lg:col-span-1">
+          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Imágenes del Producto</h2>
+            {hasImages ? (
+              <div className="space-y-4">
+                {/* Main Image */}
+                <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                  <Image
+                    src={productImages[selectedImageIndex].url}
+                    alt={`${item.product?.name} - ${selectedImageIndex + 1}`}
+                    fill
+                    className="object-cover"
+                  />
+                  {productImages.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevImage}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all hover:scale-110"
+                        style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.3)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.1)'}
+                        aria-label="Imagen anterior"
+                      >
+                        <ChevronLeft className="h-6 w-6" style={{ color: '#ffffff', stroke: '#ffffff', fill: 'none' }} />
+                      </button>
+                      <button
+                        onClick={nextImage}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all hover:scale-110"
+                        style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.3)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.1)'}
+                        aria-label="Imagen siguiente"
+                      >
+                        <ChevronRight className="h-6 w-6" style={{ color: '#ffffff', stroke: '#ffffff', fill: 'none' }} />
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Thumbnails */}
+                {productImages.length > 1 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {productImages.map((image, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`relative aspect-square rounded-md overflow-hidden border-2 transition-all ${
+                          index === selectedImageIndex
+                            ? 'border-primary'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-400'
+                        }`}
+                      >
+                        <Image
+                          src={image.url}
+                          alt={`Thumbnail ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+                  {productImages.length} {productImages.length === 1 ? 'imagen' : 'imágenes'}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="w-32 h-32 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center mb-4">
+                  <ImageIcon className="h-16 w-16 text-gray-400" />
+                </div>
+                <p className="text-gray-500 dark:text-gray-400">No hay imágenes disponibles</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Inventory Information - Right Side */}
+        <div className="lg:col-span-2 space-y-6">
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Información General</h2>
             <div className="space-y-4">
@@ -121,9 +214,7 @@ export default function InventoryItemDetailPage() {
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="md:col-span-2">
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Información del Producto</h2>
             {!item.product ? (

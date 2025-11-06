@@ -4,8 +4,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { InventoryItem } from '@/lib/types/inventory';
 import { InventoryService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -192,6 +193,12 @@ export default function InventoryItemsPage() {
               <tr>
                 <th
                   scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  Imagen
+                </th>
+                <th
+                  scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort('product.name')}
                 >
@@ -239,14 +246,33 @@ export default function InventoryItemsPage() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {paginatedItems.map((item) => (
-                <tr key={item.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                      {item.product?.name || 'N/A'}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {item.product?.code || 'Sin código'}
+              {paginatedItems.map((item) => {
+                const primaryImage = item.product?.images?.find(img => img.isPrimary) || item.product?.images?.[0];
+
+                return (
+                  <tr key={item.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="relative w-16 h-16 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600">
+                        {primaryImage ? (
+                          <Image
+                            src={primaryImage.url}
+                            alt={item.product?.name || 'Producto'}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                            <ImageIcon className="h-8 w-8 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {item.product?.name || 'N/A'}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {item.product?.code || 'Sin código'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
@@ -286,7 +312,8 @@ export default function InventoryItemsPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

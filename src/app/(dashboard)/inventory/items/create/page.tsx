@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { CreateInventoryItemDto, Product, Warehouse } from '@/lib/types/inventory';
 import { InventoryService, ProductService, WarehouseService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
+import { ArrowLeftIcon, SaveIcon, ImageIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -165,31 +166,114 @@ export default function CreateInventoryItemPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <Label htmlFor="productId">Producto <span className="text-red-500">*</span></Label>
-              <Select 
-                value={formData.productId ? formData.productId.toString() : undefined} 
+              <Select
+                value={formData.productId ? formData.productId.toString() : undefined}
                 onValueChange={(value) => handleSelectChange('productId', value)}
               >
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Seleccionar producto" />
+                  <SelectValue placeholder="Seleccionar producto">
+                    {formData.productId && (() => {
+                      const selectedProduct = products.find(p => p.id === formData.productId);
+                      const primaryImage = selectedProduct?.images?.find(img => img.isPrimary) || selectedProduct?.images?.[0];
+
+                      return selectedProduct && (
+                        <div className="flex items-center gap-2">
+                          <div className="relative w-6 h-6 flex-shrink-0 rounded overflow-hidden border border-gray-200">
+                            {primaryImage ? (
+                              <Image
+                                src={primaryImage.url}
+                                alt={selectedProduct.name}
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                <ImageIcon className="h-3 w-3 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                          <span className="truncate">{selectedProduct.name} ({selectedProduct.code})</span>
+                        </div>
+                      );
+                    })()}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {products.length === 0 ? (
                     <SelectItem value="no-products" disabled>No hay productos disponibles</SelectItem>
                   ) : (
-                    products.map(product => (
-                      <SelectItem key={product.id} value={product.id.toString()}>
-                        {product.name} ({product.code})
-                      </SelectItem>
-                    ))
+                    products.map(product => {
+                      const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+
+                      return (
+                        <SelectItem key={product.id} value={product.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <div className="relative w-8 h-8 flex-shrink-0 rounded overflow-hidden border border-gray-200">
+                              {primaryImage ? (
+                                <Image
+                                  src={primaryImage.url}
+                                  alt={product.name}
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                  <ImageIcon className="h-4 w-4 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+                            <span>{product.name} ({product.code})</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })
                   )}
                 </SelectContent>
               </Select>
               {errors.productId && <p className="text-red-500 text-xs mt-1">{errors.productId}</p>}
+
+              {/* Product Image Preview */}
+              {formData.productId && (() => {
+                const selectedProduct = products.find(p => p.id === formData.productId);
+                const primaryImage = selectedProduct?.images?.find(img => img.isPrimary) || selectedProduct?.images?.[0];
+
+                return selectedProduct && (
+                  <div className="mt-3 p-3 border border-gray-200 dark:border-gray-600 rounded-md">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600">
+                        {primaryImage ? (
+                          <Image
+                            src={primaryImage.url}
+                            alt={selectedProduct.name}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                            <ImageIcon className="h-8 w-8 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {selectedProduct.name}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Código: {selectedProduct.code}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Precio: ${selectedProduct.price}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
-            
+
             <div>
               <Label htmlFor="warehouseId">Almacén <span className="text-red-500">*</span></Label>
-              <Select 
+              <Select
                 value={formData.warehouseId ? formData.warehouseId.toString() : undefined} 
                 onValueChange={(value) => handleSelectChange('warehouseId', value)}
               >

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBranch } from '@/lib/contexts/BranchContext';
-import { PosService, ProductStock, InvoiceItem } from '@/lib/services/posService';
+import { PosService, ProductStock, InvoiceItem, Invoice } from '@/lib/services/posService';
 import { BranchService } from '@/lib/services/branchService';
 import { CashSessionService, CashSession } from '@/lib/services/cashSessionService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,6 +53,8 @@ import {
   XCircle,
   LogIn,
   LogOut,
+  Printer,
+  CheckCircle,
 } from 'lucide-react';
 
 interface CartItem extends ProductStock {
@@ -88,6 +90,13 @@ export default function PosPage() {
   const [showOpenSessionModal, setShowOpenSessionModal] = useState(false);
   const [showCloseSessionModal, setShowCloseSessionModal] = useState(false);
   const [loadingSession, setLoadingSession] = useState(false);
+
+  // Estados para modal de factura
+  const [completedInvoice, setCompletedInvoice] = useState<Invoice | null>(null);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+
+  // Estado para confirmación de pago
+  const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false);
 
   // Log inicial para debug
   useEffect(() => {
@@ -282,8 +291,8 @@ export default function PosPage() {
   const discount = 0; // Puedes agregar lógica de descuentos aquí
   const total = subtotal + tax - discount;
 
-  // Procesar pago
-  const processPayment = async () => {
+  // Validar y mostrar confirmación de pago
+  const handlePaymentClick = () => {
     if (!activeBranchId || !activeWarehouseId) {
       toast.error('Debe seleccionar una sucursal');
       return;
@@ -319,6 +328,13 @@ export default function PosPage() {
       return;
     }
 
+    // Si todas las validaciones pasan, mostrar confirmación
+    setShowPaymentConfirmation(true);
+  };
+
+  // Procesar pago (después de confirmación)
+  const processPayment = async () => {
+    setShowPaymentConfirmation(false);
     setProcessingPayment(true);
     try {
       const items: InvoiceItem[] = cart.map((item) => ({
@@ -340,7 +356,9 @@ export default function PosPage() {
         cashSessionId: currentSession.id,
       });
 
-      toast.success(`Factura ${invoice.invoiceNumber} creada exitosamente`);
+      // Mostrar modal de factura
+      setCompletedInvoice(invoice);
+      setShowInvoiceModal(true);
       clearCart();
     } catch (error: any) {
       console.error('Error processing payment:', error);
@@ -449,6 +467,161 @@ export default function PosPage() {
     console.log('💰 Sesión de caja cerrada');
   };
 
+  // Función para imprimir la factura
+  const handlePrintInvoice = () => {
+    if (!completedInvoice) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('No se pudo abrir la ventana de impresión. Por favor, permita las ventanas emergentes.');
+      return;
+    }
+
+    const paymentMethodLabels: Record<string, string> = {
+      CASH: 'Efectivo',
+      CARD: 'Tarjeta',
+      TRANSFER: 'Transferencia',
+      CHECK: 'Cheque',
+      CREDIT: 'Crédito',
+    };
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Factura ${completedInvoice.invoiceNumber}</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+              font-family: Arial, Helvetica, sans-serif;
+              padding: 30px;
+              font-size: 16pt;
+              line-height: 1.6;
+            }
+            .invoice-container { max-width: 210mm; margin: 0 auto; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #000; padding-bottom: 20px; }
+            .header h1 { font-size: 32pt; margin-bottom: 10px; font-weight: bold; }
+            .header p { font-size: 16pt; margin: 5px 0; }
+            .info-section { margin-bottom: 25px; font-size: 14pt; }
+            .info-section .row { display: flex; justify-content: space-between; margin-bottom: 8px; padding: 5px 0; }
+            .info-section .row span:first-child { font-weight: 600; }
+            .items-table { width: 100%; border-collapse: collapse; margin: 25px 0; }
+            .items-table th { text-align: left; border-bottom: 2px solid #000; padding: 12px 8px; font-size: 14pt; font-weight: bold; background-color: #f5f5f5; }
+            .items-table td { padding: 12px 8px; font-size: 14pt; }
+            .items-table .item-row { border-bottom: 1px solid #ddd; }
+            .items-table .item-row:hover { background-color: #f9f9f9; }
+            .items-table .product-name { font-weight: 600; margin-bottom: 4px; }
+            .items-table .product-code { font-size: 12pt; color: #666; }
+            .totals { margin-top: 25px; border-top: 3px solid #000; padding-top: 20px; }
+            .totals .row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 16pt; padding: 5px 0; }
+            .totals .total-row { font-weight: bold; font-size: 22pt; margin-top: 15px; padding-top: 15px; border-top: 2px solid #000; }
+            .footer { margin-top: 40px; text-align: center; font-size: 14pt; border-top: 2px solid #000; padding-top: 20px; }
+            .footer p { margin: 8px 0; }
+            @media print {
+              body { padding: 20px; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-container">
+            <div class="header">
+              <h1>FACTURA</h1>
+              <p>${completedInvoice.branch?.name || 'Xotica'}</p>
+              <p>Sucursal: ${completedInvoice.branch?.code || ''}</p>
+            </div>
+
+            <div class="info-section">
+              <div class="row">
+                <span>Factura No:</span>
+                <strong>${completedInvoice.invoiceNumber}</strong>
+              </div>
+              <div class="row">
+                <span>Fecha:</span>
+                <span>${new Date(completedInvoice.createdAt).toLocaleString('es-ES')}</span>
+              </div>
+              <div class="row">
+                <span>Atendido por:</span>
+                <span>${completedInvoice.user?.name || 'N/A'}</span>
+              </div>
+              <div class="row">
+                <span>Método de pago:</span>
+                <span>${paymentMethodLabels[completedInvoice.paymentMethod] || completedInvoice.paymentMethod}</span>
+              </div>
+              ${completedInvoice.paymentReference ? `
+              <div class="row">
+                <span>Referencia:</span>
+                <span>${completedInvoice.paymentReference}</span>
+              </div>
+              ` : ''}
+            </div>
+
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th style="text-align: center;">Cant.</th>
+                  <th style="text-align: right;">P. Unit.</th>
+                  <th style="text-align: right;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${completedInvoice.items.map(item => `
+                  <tr class="item-row">
+                    <td>
+                      <div class="product-name">${item.product.name}</div>
+                      <div class="product-code">${item.product.code}</div>
+                    </td>
+                    <td style="text-align: center;">${item.quantity}</td>
+                    <td style="text-align: right;">$${parseFloat(item.unitPrice).toFixed(2)}</td>
+                    <td style="text-align: right;">$${parseFloat(item.total).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+
+            <div class="totals">
+              <div class="row">
+                <span>Subtotal:</span>
+                <span>$${parseFloat(completedInvoice.subtotal).toFixed(2)}</span>
+              </div>
+              ${parseFloat(completedInvoice.tax) > 0 ? `
+              <div class="row">
+                <span>Impuesto:</span>
+                <span>$${parseFloat(completedInvoice.tax).toFixed(2)}</span>
+              </div>
+              ` : ''}
+              ${parseFloat(completedInvoice.discount) > 0 ? `
+              <div class="row">
+                <span>Descuento:</span>
+                <span>-$${parseFloat(completedInvoice.discount).toFixed(2)}</span>
+              </div>
+              ` : ''}
+              <div class="row total-row">
+                <span>TOTAL:</span>
+                <span>$${parseFloat(completedInvoice.total).toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div class="footer">
+              <p>¡Gracias por su compra!</p>
+              <p>Conserve este comprobante</p>
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+  };
+
   if (!activeBranchId) {
     return (
       <div className="container mx-auto py-8">
@@ -539,6 +712,16 @@ export default function PosPage() {
               </div>
 
               {/* Resultados de búsqueda */}
+              {searchQuery.trim() && !loading && searchResults.length === 0 && (
+                <div className="mt-4 border rounded-lg p-8 text-center">
+                  <Search className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-30" />
+                  <p className="text-muted-foreground font-medium">No se encontraron productos</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Intenta con otro término de búsqueda
+                  </p>
+                </div>
+              )}
+
               {searchResults.length > 0 && (
                 <div className="mt-4 border rounded-lg divide-y max-h-96 overflow-y-auto">
                   {searchResults.map((product) => (
@@ -757,7 +940,7 @@ export default function PosPage() {
                   <Button
                     className="w-full"
                     size="lg"
-                    onClick={processPayment}
+                    onClick={handlePaymentClick}
                     disabled={processingPayment}
                   >
                     {processingPayment ? (
@@ -893,6 +1076,86 @@ export default function PosPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Diálogo de confirmación de pago */}
+      <AlertDialog open={showPaymentConfirmation} onOpenChange={setShowPaymentConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-xl">
+              <DollarSign className="h-6 w-6 text-primary" />
+              ¿Confirmar procesamiento del pago?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Por favor, revise los detalles antes de confirmar la venta.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Método de pago */}
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <span className="text-sm font-medium text-muted-foreground">Método de pago:</span>
+              <Badge variant="secondary" className="text-base">
+                {paymentMethod === 'CASH' ? (
+                  <>
+                    <Banknote className="h-4 w-4 mr-1" />
+                    Efectivo
+                  </>
+                ) : paymentMethod === 'CARD' ? (
+                  <>
+                    <CreditCard className="h-4 w-4 mr-1" />
+                    Tarjeta
+                  </>
+                ) : (
+                  'Transferencia'
+                )}
+              </Badge>
+            </div>
+
+            {/* Referencia de pago si aplica */}
+            {paymentReference && (
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <span className="text-sm font-medium text-muted-foreground">Referencia:</span>
+                <span className="font-mono font-medium">{paymentReference}</span>
+              </div>
+            )}
+
+            {/* Cantidad de productos */}
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <span className="text-sm font-medium text-muted-foreground">Productos:</span>
+              <span className="font-medium">{cart.length} {cart.length === 1 ? 'artículo' : 'artículos'}</span>
+            </div>
+
+            {/* Total a cobrar */}
+            <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border-2 border-primary">
+              <span className="text-lg font-semibold">TOTAL A COBRAR:</span>
+              <span className="text-2xl font-bold text-primary">${total.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={processingPayment}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={processPayment}
+              disabled={processingPayment}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {processingPayment ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                  Procesando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Confirmar Pago
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Modales de sesión de caja */}
       {activeBranchId && (
         <OpenCashSessionModal
@@ -912,6 +1175,137 @@ export default function PosPage() {
         session={currentSession}
         onSuccess={handleSessionClosed}
       />
+
+      {/* Modal de factura completada */}
+      <Dialog open={showInvoiceModal} onOpenChange={setShowInvoiceModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <CheckCircle className="h-7 w-7 text-green-500" />
+              ¡Venta completada exitosamente!
+            </DialogTitle>
+            <DialogDescription>
+              Factura generada correctamente. Puede imprimirla o cerrar esta ventana.
+            </DialogDescription>
+          </DialogHeader>
+
+          {completedInvoice && (
+            <div className="space-y-4">
+              {/* Información de la factura */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Número de Factura:</span>
+                  <span className="font-bold text-lg">{completedInvoice.invoiceNumber}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Fecha:</span>
+                  <span className="font-medium">
+                    {new Date(completedInvoice.createdAt).toLocaleString('es-ES', {
+                      dateStyle: 'short',
+                      timeStyle: 'short'
+                    })}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Sucursal:</span>
+                  <span className="font-medium">{completedInvoice.branch?.name || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Atendido por:</span>
+                  <span className="font-medium">{completedInvoice.user?.name || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Método de pago:</span>
+                  <Badge variant="secondary">
+                    {completedInvoice.paymentMethod === 'CASH' ? (
+                      <>
+                        <Banknote className="h-3 w-3 mr-1" />
+                        Efectivo
+                      </>
+                    ) : completedInvoice.paymentMethod === 'CARD' ? (
+                      <>
+                        <CreditCard className="h-3 w-3 mr-1" />
+                        Tarjeta
+                      </>
+                    ) : (
+                      'Transferencia'
+                    )}
+                  </Badge>
+                </div>
+                {completedInvoice.paymentReference && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Referencia:</span>
+                    <span className="font-medium font-mono">{completedInvoice.paymentReference}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Items de la factura */}
+              <div>
+                <h4 className="font-semibold mb-3">Productos</h4>
+                <div className="border rounded-lg divide-y">
+                  {completedInvoice.items.map((item) => (
+                    <div key={item.id} className="p-3 flex justify-between items-start">
+                      <div className="flex-1">
+                        <p className="font-medium">{item.product.name}</p>
+                        <p className="text-sm text-muted-foreground">{item.product.code}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {item.quantity} x ${parseFloat(item.unitPrice).toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold">${parseFloat(item.total).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Totales */}
+              <div className="space-y-2 pt-2">
+                <Separator />
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span className="font-medium">${parseFloat(completedInvoice.subtotal).toFixed(2)}</span>
+                </div>
+                {parseFloat(completedInvoice.tax) > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Impuesto:</span>
+                    <span className="font-medium">${parseFloat(completedInvoice.tax).toFixed(2)}</span>
+                  </div>
+                )}
+                {parseFloat(completedInvoice.discount) > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Descuento:</span>
+                    <span className="font-medium text-green-600">-${parseFloat(completedInvoice.discount).toFixed(2)}</span>
+                  </div>
+                )}
+                <Separator />
+                <div className="flex justify-between text-lg font-bold">
+                  <span>TOTAL:</span>
+                  <span className="text-primary">${parseFloat(completedInvoice.total).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowInvoiceModal(false)}
+            >
+              Cerrar
+            </Button>
+            <Button
+              onClick={handlePrintInvoice}
+              className="gap-2"
+            >
+              <Printer className="h-4 w-4" />
+              Imprimir Factura
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

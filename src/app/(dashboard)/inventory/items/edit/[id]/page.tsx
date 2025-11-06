@@ -1,21 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { InventoryItem, UpdateInventoryItemDto, Product, Warehouse } from '@/lib/types/inventory';
-import { InventoryService, ProductService, WarehouseService } from '@/lib/services/inventoryService';
+import { InventoryItem, UpdateInventoryItemDto } from '@/lib/types/inventory';
+import { InventoryService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
+import { ArrowLeftIcon, SaveIcon, ImageIcon } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 export default function EditInventoryItemPage() {
   const params = useParams();
@@ -23,8 +17,6 @@ export default function EditInventoryItemPage() {
   const itemId = parseInt(params.id as string, 10);
 
   const [item, setItem] = useState<InventoryItem | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
 
@@ -60,13 +52,6 @@ export default function EditInventoryItemPage() {
           minStock: itemData.minStock,
           maxStock: itemData.maxStock
         });
-
-        // Cargar productos y almacenes para referencia
-        const productsData = await ProductService.getProducts();
-        const warehousesData = await WarehouseService.getWarehouses();
-
-        setProducts(productsData);
-        setWarehouses(warehousesData);
       } catch (error) {
         console.error('Error loading item data:', error);
         alert('Ocurrió un error al cargar los datos del item.');
@@ -185,6 +170,43 @@ export default function EditInventoryItemPage() {
                 className="mt-1 bg-gray-100 dark:bg-gray-700"
               />
               <p className="text-xs text-gray-500 mt-1">No se puede cambiar el producto</p>
+
+              {/* Product Image Preview */}
+              {item.product && (() => {
+                const primaryImage = item.product.images?.find(img => img.isPrimary) || item.product.images?.[0];
+
+                return (
+                  <div className="mt-3 p-3 border border-gray-200 dark:border-gray-600 rounded-md">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600">
+                        {primaryImage ? (
+                          <Image
+                            src={primaryImage.url}
+                            alt={item.product.name}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                            <ImageIcon className="h-8 w-8 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {item.product.name}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Código: {item.product.code}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Precio: ${item.product.price}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div>
