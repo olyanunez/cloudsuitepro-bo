@@ -7,6 +7,7 @@ import { useBranch } from '@/lib/contexts/BranchContext';
 import { PosService, ProductStock, InvoiceItem, Invoice } from '@/lib/services/posService';
 import { BranchService } from '@/lib/services/branchService';
 import { CashSessionService, CashSession } from '@/lib/services/cashSessionService';
+import { CustomerService, Customer } from '@/lib/services/customerService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -57,6 +58,8 @@ import {
   Printer,
   CheckCircle,
   ImageIcon,
+  User as UserIcon,
+  X,
 } from 'lucide-react';
 
 interface CartItem extends ProductStock {
@@ -99,6 +102,12 @@ export default function PosPage() {
 
   // Estado para confirmación de pago
   const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false);
+
+  // Estados para buscador de clientes
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerSearchResults, setCustomerSearchResults] = useState<Customer[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
 
   // Log inicial para debug
   useEffect(() => {
@@ -221,6 +230,34 @@ export default function PosPage() {
 
     return () => clearTimeout(handler);
   }, [searchQuery, activeWarehouseId, activeBranchId]);
+
+  // Búsqueda de clientes con debounce
+  useEffect(() => {
+    const searchCustomers = async () => {
+      if (!customerSearch.trim() || customerSearch.length < 2) {
+        setCustomerSearchResults([]);
+        return;
+      }
+
+      setLoadingCustomers(true);
+      try {
+        const results = await CustomerService.searchCustomers(customerSearch);
+        setCustomerSearchResults(results);
+      } catch (error) {
+        console.error('Error searching customers:', error);
+        toast.error('Error al buscar clientes');
+        setCustomerSearchResults([]);
+      } finally {
+        setLoadingCustomers(false);
+      }
+    };
+
+    const handler = setTimeout(() => {
+      searchCustomers();
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [customerSearch]);
 
   // Agregar producto al carrito
   const addToCart = (product: ProductStock) => {
@@ -346,6 +383,7 @@ export default function PosPage() {
       }));
 
       const invoice = await PosService.createInvoice({
+        customerId: selectedCustomer?.id,
         branchId: activeBranchId,
         warehouseId: activeWarehouseId,
         subtotal,
@@ -895,6 +933,69 @@ export default function PosPage() {
                       <span>Total:</span>
                       <span className="text-primary">${total.toFixed(2)}</span>
                     </div>
+                  </div>
+
+                  {/* Buscador de clientes (opcional) */}
+                  <div className="space-y-2">
+                    <Label>Cliente (Opcional)</Label>
+                    {selectedCustomer ? (
+                      <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
+                        <div className="flex items-center gap-2">
+                          <UserIcon className="h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium text-sm">{selectedCustomer.name}</p>
+                            <p className="text-xs text-muted-foreground">{selectedCustomer.code}</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedCustomer(null);
+                            setCustomerSearch('');
+                            setCustomerSearchResults([]);
+                          }}
+                          className="h-7 w-7 p-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <Input
+                          placeholder="Buscar cliente..."
+                          value={customerSearch}
+                          onChange={(e) => setCustomerSearch(e.target.value)}
+                          className="w-full"
+                        />
+                        {loadingCustomers && (
+                          <div className="absolute right-3 top-3">
+                            <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                          </div>
+                        )}
+                        {customerSearchResults.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 border rounded-md bg-background shadow-lg max-h-48 overflow-y-auto">
+                            {customerSearchResults.map((customer) => (
+                              <button
+                                key={customer.id}
+                                className="w-full px-3 py-2 text-left hover:bg-muted/50 flex items-center gap-2 border-b last:border-b-0"
+                                onClick={() => {
+                                  setSelectedCustomer(customer);
+                                  setCustomerSearch('');
+                                  setCustomerSearchResults([]);
+                                }}
+                              >
+                                <UserIcon className="h-4 w-4 text-muted-foreground" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm truncate">{customer.name}</p>
+                                  <p className="text-xs text-muted-foreground">{customer.code}</p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Método de pago */}
