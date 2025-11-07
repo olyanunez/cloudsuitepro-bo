@@ -66,7 +66,7 @@ export function Footer() {
             <h3 className="font-semibold text-white mb-4">Enlaces Rápidos</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <Link href="/welcome" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
                   Inicio
                 </Link>
               </li>

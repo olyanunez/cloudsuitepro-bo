@@ -11,7 +11,7 @@ export function LandingNavbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/welcome" className="flex items-center space-x-2">
               <Image
                 src="/xotica_logo.png"
                 alt="Xotica Business"
@@ -26,7 +26,7 @@ export function LandingNavbar() {
           {/* Navigation Links - Hidden on mobile, shown on larger screens */}
           <div className="hidden lg:flex items-center space-x-1">
             <Link
-              href="/"
+              href="/welcome"
               className="px-4 py-2 text-gray-700 hover:text-yellow-600 font-medium transition-colors"
             >
               Inicio

@@ -89,7 +89,9 @@ export interface InventoryMovement {
   productId: number;
   product?: Product;
   sourceWarehouseId?: number;
+  sourceWarehouse?: Warehouse;
   destinationWarehouseId?: number;
+  destinationWarehouse?: Warehouse;
   quantity: number;
   reference?: string;
   notes?: string;

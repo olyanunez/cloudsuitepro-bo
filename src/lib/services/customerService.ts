@@ -46,6 +46,14 @@ export interface PaginatedCustomers {
   totalPages: number;
 }
 
+export interface TopCustomer {
+  customerId: number;
+  customerName: string;
+  initials: string;
+  totalPurchases: number;
+  totalAmount: string;
+}
+
 export const CustomerService = {
   async getCustomers(page: number = 1, limit: number = 10, search?: string): Promise<PaginatedCustomers> {
     const params = new URLSearchParams({
@@ -88,5 +96,10 @@ export const CustomerService = {
   async generateNextCode(): Promise<string> {
     const response = await apiGet<{ code: string }>('/customers/next-code');
     return response.code;
+  },
+
+  async getTopCustomers(limit: number = 5): Promise<TopCustomer[]> {
+    const params = new URLSearchParams({ limit: limit.toString() });
+    return apiGet<TopCustomer[]>(`/customers/top-customers?${params.toString()}`);
   },
 };

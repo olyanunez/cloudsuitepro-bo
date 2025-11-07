@@ -259,7 +259,6 @@ export default function EditCustomerPage() {
             <Button
               type="submit"
               disabled={submitting}
-              className="bg-yellow-500 hover:bg-yellow-600"
             >
               <Save className="h-4 w-4 mr-2" />
               {submitting ? 'Guardando...' : 'Actualizar Cliente'}

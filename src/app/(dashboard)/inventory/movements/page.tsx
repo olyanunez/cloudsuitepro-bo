@@ -162,11 +162,12 @@ export default function MovementsPage() {
     }
   };
 
-  // Helper function to get warehouse name by ID
-  const getWarehouseName = (id?: number) => {
+  // Helper function to get warehouse name by ID or object
+  const getWarehouseName = (id?: number, warehouse?: any) => {
+    if (warehouse) return warehouse.name;
     if (!id) return 'N/A';
-    const warehouse = warehouses.find(w => w.id === id);
-    return warehouse?.name || `ID: ${id}`;
+    const found = warehouses.find(w => w.id === id);
+    return found?.name || `ID: ${id}`;
   };
 
   // Helper function to get movement type display text
@@ -405,13 +406,13 @@ export default function MovementsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                       {movement.type === MovementType.TRANSFERENCIA ? (
                         <>
-                          <div>De: {getWarehouseName(movement.sourceWarehouseId)}</div>
-                          <div>A: {getWarehouseName(movement.destinationWarehouseId)}</div>
+                          <div>De: {getWarehouseName(movement.sourceWarehouseId, movement.sourceWarehouse)}</div>
+                          <div>A: {getWarehouseName(movement.destinationWarehouseId, movement.destinationWarehouse)}</div>
                         </>
                       ) : movement.type === MovementType.ENTRADA ? (
-                        getWarehouseName(movement.destinationWarehouseId)
+                        getWarehouseName(movement.destinationWarehouseId, movement.destinationWarehouse)
                       ) : (
-                        getWarehouseName(movement.sourceWarehouseId)
+                        getWarehouseName(movement.sourceWarehouseId, movement.sourceWarehouse)
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
@@ -422,11 +423,16 @@ export default function MovementsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
-                        <Link href={`/inventory/movements/${movement.id}`}>
-                          <Button variant="outline" size="sm" className="px-2 py-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="px-2 py-1"
+                          asChild
+                        >
+                          <Link href={`/inventory/movements/${movement.id}`}>
                             <EyeIcon className="h-4 w-4" />
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                       </div>
                     </td>
                   </tr>
