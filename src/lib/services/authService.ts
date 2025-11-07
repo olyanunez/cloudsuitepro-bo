@@ -45,7 +45,19 @@ interface RegisterData {
   };
 }
 
-interface RegisterResponse extends LoginResponse {
+interface RegisterResponse {
+  message: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    roleId: number;
+    role: {
+      id: number;
+      name: string;
+    };
+    tenantId: number;
+  };
   tenant: {
     id: number;
     name: string;
@@ -119,7 +131,7 @@ export class AuthService {
   /**
    * Registrar empresa y usuario administrador
    * @param registerData Datos de registro
-   * @returns Respuesta con token y datos del usuario
+   * @returns Respuesta con mensaje de confirmación y datos del usuario y tenant creados
    */
   static async register(registerData: RegisterData): Promise<RegisterResponse> {
     try {
@@ -139,14 +151,8 @@ export class AuthService {
 
       const data = await response.json();
 
-      // Guardar el token en localStorage
-      localStorage.setItem('auth_token', data.access_token);
-      
-      // Guardar el tenantId en localStorage
-      if (data.user && data.user.tenantId) {
-        localStorage.setItem('tenant_id', data.user.tenantId.toString());
-        localStorage.setItem('tenant_name', data.tenant?.name || '');
-      }
+      // Ya no guardamos el token porque el registro no devuelve uno
+      // El usuario debe iniciar sesión después del registro
 
       return data;
     } catch (error) {

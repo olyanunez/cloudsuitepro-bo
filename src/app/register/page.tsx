@@ -137,10 +137,10 @@ export default function RegisterPage() {
       // Llamar al servicio de autenticación para registrar
       await AuthService.register(registerData);
 
-      toast.success('Registro exitoso. ¡Bienvenido! Tu empresa ha sido registrada correctamente.');
+      toast.success('Registro exitoso. Por favor inicia sesión con tus credenciales.');
 
-      // Redirigir al dashboard después del registro
-      router.push('/dashboard');
+      // Redirigir al login después del registro
+      router.push('/login');
     } catch (error) {
       console.error('Error en registro:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al registrar. Por favor intente nuevamente.';
