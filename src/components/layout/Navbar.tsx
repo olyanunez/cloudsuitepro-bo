@@ -67,7 +67,7 @@ const menuItems = [
     ]
   },
   { name: 'Órdenes', href: '/orders', icon: 'shopping-bag', screenCode: null },
-  { name: 'Clientes', href: '/customers', icon: 'users', screenCode: null },
+  { name: 'Clientes', href: '/customers', icon: 'users', screenCode: 'CUSTOMERS' },
   { name: 'Configuración', href: '/settings', icon: 'settings', screenCode: null },
 ]
 
