@@ -7,8 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { User, Mail, Save, ArrowLeft, Edit, X } from 'lucide-react';
 import ProfileService, { UserProfile, UpdateProfileDto } from '@/lib/services/profileService';
+import { PermissionService } from '@/lib/services/permissionService';
+import { AvatarUpload } from '@/components/users/AvatarUpload';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { toast } from 'sonner';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -21,7 +25,10 @@ export default function ProfilePage() {
     lastName: '',
     email: '',
   });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const canUpdateProfile = PermissionService.canUpdate('PROFILE');
 
   useEffect(() => {
     loadProfile();
@@ -57,6 +64,11 @@ export default function ProfilePage() {
     }
   };
 
+  const handleAvatarChange = (file: File | null, previewUrl: string | null) => {
+    setAvatarFile(file);
+    setAvatarPreview(previewUrl);
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -83,13 +95,19 @@ export default function ProfilePage() {
 
     try {
       setSaving(true);
-      const updatedProfile = await ProfileService.updateMyProfile(formData);
+      const updatedProfile = await ProfileService.updateMyProfile(formData, avatarFile);
       setProfile(updatedProfile);
+      setAvatarFile(null);
+      setAvatarPreview(null);
       setIsEditing(false);
-      alert('Perfil actualizado exitosamente');
+      toast.success('Perfil actualizado exitosamente', {
+        description: 'Tus cambios han sido guardados correctamente',
+      });
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      alert(error.message || 'Error al actualizar el perfil');
+      toast.error('Error al actualizar el perfil', {
+        description: error.message || 'Ocurrió un error al guardar los cambios',
+      });
     } finally {
       setSaving(false);
     }
@@ -109,6 +127,8 @@ export default function ProfilePage() {
         email: profile.email || '',
       });
     }
+    setAvatarFile(null);
+    setAvatarPreview(null);
     setErrors({});
   };
 
@@ -150,7 +170,7 @@ export default function ProfilePage() {
                   {isEditing ? 'Actualiza tu información personal' : 'Tu información personal'}
                 </CardDescription>
               </div>
-              {!isEditing && (
+              {!isEditing && canUpdateProfile && (
                 <Button onClick={handleEdit} variant="outline" size="sm">
                   <Edit className="h-4 w-4 mr-2" />
                   Editar
@@ -162,6 +182,26 @@ export default function ProfilePage() {
             {!isEditing ? (
               // Vista de solo lectura
               <div className="space-y-4">
+                <div>
+                  <Label className="text-muted-foreground">Foto de Perfil</Label>
+                  <div className="mt-2">
+                    {profile?.avatar ? (
+                      <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-200 dark:border-gray-700">
+                        <Image
+                          src={profile.avatar}
+                          alt="Avatar"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                        <User className="h-16 w-16 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div>
                   <Label className="text-muted-foreground">Nombre</Label>
                   <p className="font-medium text-lg">{profile?.name || '-'}</p>
@@ -180,6 +220,14 @@ export default function ProfilePage() {
             ) : (
               // Formulario editable
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Foto de Perfil</Label>
+                  <AvatarUpload
+                    currentAvatar={avatarPreview || profile?.avatar}
+                    onImageChange={handleAvatarChange}
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="name">
                     Nombre <span className="text-red-500">*</span>
@@ -288,11 +336,10 @@ export default function ProfilePage() {
               <Label className="text-muted-foreground">Estado</Label>
               <p>
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    profile?.isActive
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${profile?.isActive
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
-                  }`}
+                    }`}
                 >
                   {profile?.isActive ? 'Activo' : 'Inactivo'}
                 </span>
@@ -304,10 +351,10 @@ export default function ProfilePage() {
               <p className="font-medium">
                 {profile?.createdAt
                   ? new Date(profile.createdAt).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
                   : 'N/A'}
               </p>
             </div>
@@ -319,10 +366,10 @@ export default function ProfilePage() {
               <p className="font-medium">
                 {profile?.updatedAt
                   ? new Date(profile.updatedAt).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
                   : 'N/A'}
               </p>
             </div>

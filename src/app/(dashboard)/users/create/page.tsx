@@ -5,6 +5,7 @@ import { UserCreateInput } from '@/lib/types/user';
 import { UserService } from '@/lib/services/userService';
 import { RoleService } from '@/lib/services/roleService';
 import { Role } from '@/lib/types/role';
+import { AvatarUpload } from '@/components/users/AvatarUpload';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
@@ -23,6 +24,8 @@ export default function CreateUserPage() {
     roleId: '',
     avatar: ''
   });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<{
     name?: string;
     email?: string;
@@ -53,6 +56,11 @@ export default function CreateUserPage() {
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
+  };
+
+  const handleAvatarChange = (file: File | null, previewUrl: string | null) => {
+    setAvatarFile(file);
+    setAvatarPreview(previewUrl);
   };
 
   const validateForm = (): boolean => {
@@ -109,10 +117,10 @@ export default function CreateUserPage() {
       roleId: formData.roleId,
       avatar: formData.avatar
     };
-    
+
     try {
       setSaving(true);
-      await UserService.createUser(userData);
+      await UserService.createUser(userData, avatarFile);
       router.push('/users');
     } catch (error) {
       console.error('Error creating user:', error);
@@ -147,8 +155,18 @@ export default function CreateUserPage() {
           <div className="md:col-span-2">
             <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">Información del Usuario</h2>
-              
+
               <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Foto de Perfil
+                  </label>
+                  <AvatarUpload
+                    currentAvatar={avatarPreview}
+                    onImageChange={handleAvatarChange}
+                  />
+                </div>
+
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium mb-1">
                     Nombre Completo <span className="text-red-500">*</span>
@@ -219,21 +237,6 @@ export default function CreateUserPage() {
                     placeholder="Confirmar contraseña"
                   />
                   {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
-                </div>
-                
-                <div>
-                  <label htmlFor="avatar" className="block text-sm font-medium mb-1">
-                    URL de Avatar (opcional)
-                  </label>
-                  <input
-                    type="text"
-                    id="avatar"
-                    name="avatar"
-                    value={formData.avatar}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700"
-                    placeholder="https://ejemplo.com/avatar.jpg"
-                  />
                 </div>
               </div>
             </div>

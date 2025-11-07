@@ -1,5 +1,5 @@
 import { User, UserCreateInput, UserUpdateInput, AssignBranchesDto, UserBranch } from '../types/user';
-import { apiGet, apiPost, apiPatch, apiDelete } from './apiService';
+import { apiGet, apiPost, apiPatch, apiDelete, apiPostFormData, apiPatchFormData } from './apiService';
 
 // Ya no necesitamos definir estas funciones aquí, se obtienen del apiService
 
@@ -110,8 +110,10 @@ export class UserService {
   /**
    * Crear un nuevo usuario
    * Si no se proporciona un tenantId en userData, se usará el del localStorage
+   * @param userData Datos del usuario a crear
+   * @param avatarFile Archivo de imagen del avatar (opcional)
    */
-  static async createUser(userData: UserCreateInput): Promise<User> {
+  static async createUser(userData: UserCreateInput, avatarFile?: File | null): Promise<User> {
     try {
       // Si el usuario no tiene tenantId, usamos el del localStorage
       if (!userData.tenantId) {
@@ -120,7 +122,29 @@ export class UserService {
           userData = { ...userData, tenantId };
         }
       }
-      
+
+      // Si hay un archivo, usamos FormData
+      if (avatarFile) {
+        const formData = new FormData();
+
+        // Agregar todos los campos del usuario manteniendo sus tipos
+        Object.keys(userData).forEach(key => {
+          const value = userData[key as keyof UserCreateInput];
+          if (value !== undefined && value !== null) {
+            // Para roleId, convertir a string ya que FormData solo acepta strings o Blobs
+            // El backend debe manejarlo como string en este caso
+            formData.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
+          }
+        });
+
+        // Agregar archivo de avatar
+        formData.append('avatar', avatarFile);
+
+        const data = await apiPostFormData<UserDataFromBackend>('/users', formData);
+        return normalizeUserData(data);
+      }
+
+      // Si no hay archivo, usamos la petición normal
       const data = await apiPost<UserDataFromBackend>('/users', userData);
       return normalizeUserData(data);
     } catch (error) {
@@ -131,9 +155,32 @@ export class UserService {
 
   /**
    * Actualizar un usuario existente
+   * @param id ID del usuario a actualizar
+   * @param userData Datos del usuario a actualizar
+   * @param avatarFile Archivo de imagen del avatar (opcional)
    */
-  static async updateUser(id: number, userData: UserUpdateInput): Promise<User> {
+  static async updateUser(id: number, userData: UserUpdateInput, avatarFile?: File | null): Promise<User> {
     try {
+      // Si hay un archivo, usamos FormData
+      if (avatarFile) {
+        const formData = new FormData();
+
+        // Agregar todos los campos del usuario
+        Object.keys(userData).forEach(key => {
+          const value = userData[key as keyof UserUpdateInput];
+          if (value !== undefined && value !== null) {
+            formData.append(key, String(value));
+          }
+        });
+
+        // Agregar archivo de avatar
+        formData.append('avatar', avatarFile);
+
+        const data = await apiPatchFormData<UserDataFromBackend>(`/users/${id}`, formData);
+        return normalizeUserData(data);
+      }
+
+      // Si no hay archivo, usamos la petición normal
       const data = await apiPatch<UserDataFromBackend>(`/users/${id}`, userData);
       return normalizeUserData(data);
     } catch (error) {

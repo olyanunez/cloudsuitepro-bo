@@ -5,6 +5,7 @@ import { User, UserUpdateInput } from '@/lib/types/user';
 import { UserService } from '@/lib/services/userService';
 import { RoleService } from '@/lib/services/roleService';
 import { Role } from '@/lib/types/role';
+import { AvatarUpload } from '@/components/users/AvatarUpload';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
@@ -29,6 +30,8 @@ export default function EditUserPage() {
     avatar: '',
     isActive: true
   });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<{
     name?: string;
     email?: string;
@@ -92,17 +95,22 @@ export default function EditUserPage() {
     setChangePassword(isChecked);
     if (!isChecked) {
       // Clear password fields if user decides not to change password
-      setFormData(prev => ({ 
-        ...prev, 
-        password: undefined, 
-        confirmPassword: undefined 
+      setFormData(prev => ({
+        ...prev,
+        password: undefined,
+        confirmPassword: undefined
       }));
-      setErrors(prev => ({ 
-        ...prev, 
-        password: undefined, 
-        confirmPassword: undefined 
+      setErrors(prev => ({
+        ...prev,
+        password: undefined,
+        confirmPassword: undefined
       }));
     }
+  };
+
+  const handleAvatarChange = (file: File | null, previewUrl: string | null) => {
+    setAvatarFile(file);
+    setAvatarPreview(previewUrl);
   };
 
   const validateForm = (): boolean => {
@@ -171,7 +179,7 @@ export default function EditUserPage() {
     
     try {
       setSaving(true);
-      await UserService.updateUser(userId, userData);
+      await UserService.updateUser(userId, userData, avatarFile);
       router.push(`/users/${userId}`);
     } catch (error) {
       console.error('Error updating user:', error);
@@ -224,8 +232,18 @@ export default function EditUserPage() {
           <div className="md:col-span-2">
             <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">Información del Usuario</h2>
-              
+
               <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Foto de Perfil
+                  </label>
+                  <AvatarUpload
+                    currentAvatar={avatarPreview || user?.avatar}
+                    onImageChange={handleAvatarChange}
+                  />
+                </div>
+
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium mb-1">
                     Nombre Completo <span className="text-red-500">*</span>
@@ -315,22 +333,7 @@ export default function EditUserPage() {
                     </div>
                   </>
                 )}
-                
-                <div>
-                  <label htmlFor="avatar" className="block text-sm font-medium mb-1">
-                    URL de Avatar (opcional)
-                  </label>
-                  <input
-                    type="text"
-                    id="avatar"
-                    name="avatar"
-                    value={formData.avatar || ''}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700"
-                    placeholder="https://ejemplo.com/avatar.jpg"
-                  />
-                </div>
-                
+
                 <div className="pt-2">
                   <div className="flex items-center space-x-2">
                     <div className="relative inline-flex items-center">

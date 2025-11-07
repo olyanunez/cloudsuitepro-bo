@@ -209,8 +209,20 @@ export default function Navbar() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <UserIcon className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
+                  {userProfile?.avatar ? (
+                    <Image
+                      src={userProfile.avatar}
+                      alt="Foto de perfil"
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                      <UserIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    </div>
+                  )}
                   <span className="sr-only">Account menu</span>
                 </Button>
               </DropdownMenuTrigger>

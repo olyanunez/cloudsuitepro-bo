@@ -180,3 +180,63 @@ export const apiDelete = async <T>(endpoint: string): Promise<T> => {
 
   return response.json();
 };
+
+/**
+ * Función para construir los headers de la petición para FormData
+ * No incluye Content-Type para que el navegador lo establezca automáticamente con boundary
+ */
+const getFormDataHeaders = () => {
+  const headers: Record<string, string> = {};
+
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const tenantId = getTenantId();
+  if (tenantId) {
+    headers['x-tenant-id'] = tenantId;
+  }
+
+  return headers;
+};
+
+/**
+ * Realiza una petición POST a la API con FormData (para archivos)
+ * @param endpoint Endpoint de la API (sin la URL base)
+ * @param formData FormData a enviar
+ * @returns Promise con la respuesta
+ */
+export const apiPostFormData = async <T>(endpoint: string, formData: FormData): Promise<T> => {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    method: 'POST',
+    headers: getFormDataHeaders(),
+    body: formData,
+  });
+
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+
+  return response.json();
+};
+
+/**
+ * Realiza una petición PATCH a la API con FormData (para archivos)
+ * @param endpoint Endpoint de la API (sin la URL base)
+ * @param formData FormData a enviar
+ * @returns Promise con la respuesta
+ */
+export const apiPatchFormData = async <T>(endpoint: string, formData: FormData): Promise<T> => {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    method: 'PATCH',
+    headers: getFormDataHeaders(),
+    body: formData,
+  });
+
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+
+  return response.json();
+};
