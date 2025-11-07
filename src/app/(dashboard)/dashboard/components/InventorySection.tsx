@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, AlertTriangle, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/utils';
 
 interface InventorySectionProps {
   totalValue: number;
@@ -36,7 +37,7 @@ export function InventorySection({
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(totalValue)}</div>
             <p className="text-xs text-muted-foreground">{totalProducts} productos</p>
           </CardContent>
         </Card>
@@ -58,7 +59,7 @@ export function InventorySection({
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">${riskValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-red-600">{formatCurrency(riskValue)}</div>
             <p className="text-xs text-muted-foreground">Por stock bajo</p>
           </CardContent>
         </Card>

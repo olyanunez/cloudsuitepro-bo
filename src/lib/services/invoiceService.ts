@@ -232,9 +232,11 @@ export class InvoiceService {
    * @returns String con el formato de moneda
    */
   static formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('es-MX', {
+    return new Intl.NumberFormat('es-DO', {
       style: 'currency',
-      currency: 'MXN',
+      currency: 'DOP',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   }
 

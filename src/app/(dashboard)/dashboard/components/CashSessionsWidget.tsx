@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/utils';
 
 interface CashSessionsWidgetProps {
   openSessions: number;
@@ -48,7 +49,7 @@ export function CashSessionsWidget({
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">${totalCollected.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalCollected)}</div>
             <p className="text-xs text-muted-foreground">Hoy</p>
           </CardContent>
         </Card>
@@ -64,7 +65,7 @@ export function CashSessionsWidget({
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${totalDifference >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-              {totalDifference >= 0 ? '+' : ''}${totalDifference.toFixed(2)}
+              {totalDifference >= 0 ? '+' : ''}{formatCurrency(Math.abs(totalDifference))}
             </div>
             <p className="text-xs text-muted-foreground">
               {totalDifference >= 0 ? 'Sobrante' : 'Faltante'}
@@ -103,24 +104,24 @@ export function CashSessionsWidget({
                       </p>
                       <div className="flex items-center gap-3 mt-2 text-xs">
                         <span className="text-muted-foreground">
-                          💵 ${session.totalCash.toFixed(2)}
+                          💵 {formatCurrency(session.totalCash)}
                         </span>
                         <span className="text-muted-foreground">
-                          💳 ${session.totalCard.toFixed(2)}
+                          💳 {formatCurrency(session.totalCard)}
                         </span>
                         <span className="text-muted-foreground">
-                          🏦 ${session.totalTransfer.toFixed(2)}
+                          🏦 {formatCurrency(session.totalTransfer)}
                         </span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-sm">${totalSession.toFixed(2)}</p>
+                      <p className="font-bold text-sm">{formatCurrency(totalSession)}</p>
                       {session.status === 'CLOSED' && (
                         <p className={`text-xs font-medium ${
                           totalDiff === 0 ? 'text-green-600' :
                           totalDiff > 0 ? 'text-blue-600' : 'text-red-600'
                         }`}>
-                          {totalDiff === 0 ? '✓ Exacto' : `${totalDiff >= 0 ? '+' : ''}$${totalDiff.toFixed(2)}`}
+                          {totalDiff === 0 ? '✓ Exacto' : `${totalDiff >= 0 ? '+' : ''}${formatCurrency(Math.abs(totalDiff))}`}
                         </p>
                       )}
                     </div>

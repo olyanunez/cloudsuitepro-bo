@@ -10,6 +10,7 @@ import { ArrowLeft, Users, TrendingUp, Receipt, AlertTriangle } from 'lucide-rea
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { formatCurrency } from '@/lib/utils';
 
 export default function SalesByCashierReport() {
   const [data, setData] = useState<SalesByCashierItem[]>([]);
@@ -35,13 +36,6 @@ export default function SalesByCashierReport() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(amount);
-  };
 
   const getInitials = (name: string) => {
     return name

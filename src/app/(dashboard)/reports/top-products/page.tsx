@@ -9,6 +9,7 @@ import reportsService, { ReportPeriod, ReportFilters as ReportFiltersType, TopPr
 import { ArrowLeft, TrendingUp, Package } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/utils';
 
 export default function TopProductsReport() {
   const [data, setData] = useState<TopProductItem[]>([]);
@@ -35,13 +36,6 @@ export default function TopProductsReport() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(amount);
-  };
 
   const totalRevenue = data.reduce((sum, item) => sum + parseFloat(item.totalRevenue as any), 0);
   const totalQuantity = data.reduce((sum, item) => sum + item.quantitySold, 0);

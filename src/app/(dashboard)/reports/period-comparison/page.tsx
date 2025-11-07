@@ -8,6 +8,7 @@ import { ArrowLeft, TrendingUp, TrendingDown, Calendar, DollarSign, Receipt, Tic
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/utils';
 
 export default function PeriodComparisonReport() {
   const [data, setData] = useState<PeriodComparisonData | null>(null);
@@ -31,13 +32,6 @@ export default function PeriodComparisonReport() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(amount);
-  };
 
   const getChangeIndicator = (value: number, isPercentage: boolean = false) => {
     const isPositive = value > 0;

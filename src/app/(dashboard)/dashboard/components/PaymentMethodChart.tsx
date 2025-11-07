@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 
 interface PaymentMethodChartProps {
   data: Array<{
@@ -65,7 +66,7 @@ export function PaymentMethodChart({ data }: PaymentMethodChartProps) {
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '6px',
               }}
-              formatter={(value: number) => [`$${value.toFixed(2)}`, 'Total']}
+              formatter={(value: number) => [formatCurrency(value), 'Total']}
             />
             <Legend />
           </PieChart>
@@ -84,13 +85,13 @@ export function PaymentMethodChart({ data }: PaymentMethodChartProps) {
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-muted-foreground">{item.count} trans.</span>
-                <span className="font-medium">${item.value.toFixed(2)}</span>
+                <span className="font-medium">{formatCurrency(item.value)}</span>
               </div>
             </div>
           ))}
           <div className="flex items-center justify-between text-sm font-bold pt-2 border-t">
             <span>Total</span>
-            <span>${totalAmount.toFixed(2)}</span>
+            <span>{formatCurrency(totalAmount)}</span>
           </div>
         </div>
       </CardContent>

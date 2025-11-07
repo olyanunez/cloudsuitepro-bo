@@ -5,6 +5,7 @@ import { Card, Table, Select, Tabs, Statistic, Row, Col, Alert } from 'antd';
 import { WarningOutlined, DollarOutlined, InboxOutlined } from '@ant-design/icons';
 import { StockValuationReport, LowStockReport, Warehouse } from '@/lib/types/inventory';
 import { InventoryService, WarehouseService } from '@/lib/services/inventoryService';
+import { formatCurrency } from '@/lib/utils';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -20,7 +21,7 @@ export default function InventoryReportsPage() {
 
   const fetchWarehouses = async () => {
     try {
-      const data = await WarehouseService.getAll();
+      const data = await WarehouseService.getWarehouses();
       setWarehouses(data);
     } catch (error) {
       console.error('Error al cargar los almacenes:', error);
@@ -92,13 +93,13 @@ export default function InventoryReportsPage() {
       title: 'Costo Unitario',
       dataIndex: 'unitCost',
       key: 'unitCost',
-      render: (cost: number) => `$${cost.toFixed(2)}`,
+      render: (cost: number) => formatCurrency(cost),
     },
     {
       title: 'Valor Total',
       dataIndex: 'totalCost',
       key: 'totalCost',
-      render: (cost: number) => `$${cost.toFixed(2)}`,
+      render: (cost: number) => formatCurrency(cost),
     },
   ];
 

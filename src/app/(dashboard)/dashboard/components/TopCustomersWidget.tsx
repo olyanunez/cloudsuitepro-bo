@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, TrendingUp } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { formatCurrency } from '@/lib/utils';
 
 // Datos hardcoded mientras se desarrolla el módulo de clientes
 const MOCK_CUSTOMERS = [
@@ -86,7 +87,7 @@ export function TopCustomersWidget() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-bold text-sm">${customer.totalAmount.toFixed(2)}</p>
+                <p className="font-bold text-sm">{formatCurrency(customer.totalAmount)}</p>
                 <div className="flex items-center gap-1 text-xs text-green-600">
                   <TrendingUp className="h-3 w-3" />
                   <span>{customer.trend}</span>
@@ -100,7 +101,7 @@ export function TopCustomersWidget() {
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Total Top 5</span>
             <span className="font-bold">
-              ${MOCK_CUSTOMERS.reduce((sum, c) => sum + c.totalAmount, 0).toFixed(2)}
+              {formatCurrency(MOCK_CUSTOMERS.reduce((sum, c) => sum + c.totalAmount, 0))}
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">

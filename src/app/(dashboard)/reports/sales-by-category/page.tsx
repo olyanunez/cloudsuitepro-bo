@@ -10,6 +10,7 @@ import { ArrowLeft, Tag, TrendingUp, Package } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
@@ -35,13 +36,6 @@ export default function SalesByCategoryReport() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(amount);
-  };
 
   const totalRevenue = data.reduce((sum, item) => sum + parseFloat(item.totalRevenue as any), 0);
   const totalSales = data.reduce((sum, item) => sum + item.totalSales, 0);

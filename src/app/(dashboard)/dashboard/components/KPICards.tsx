@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, ShoppingCart, TrendingUp, Receipt } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface KPICardsProps {
   totalSales: number;
@@ -20,7 +21,7 @@ export function KPICards({ totalSales, transactionCount, avgTicket, growthRate }
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">${totalSales.toFixed(2)}</div>
+          <div className="text-2xl font-bold">{formatCurrency(totalSales)}</div>
           <p className="text-xs text-muted-foreground">Total facturado</p>
         </CardContent>
       </Card>
@@ -44,7 +45,7 @@ export function KPICards({ totalSales, transactionCount, avgTicket, growthRate }
           <ShoppingCart className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">${avgTicket.toFixed(2)}</div>
+          <div className="text-2xl font-bold">{formatCurrency(avgTicket)}</div>
           <p className="text-xs text-muted-foreground">Por transacción</p>
         </CardContent>
       </Card>

@@ -8,6 +8,7 @@ import { ArrowLeft, TrendingUp, Calendar, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 
 export default function SalesTrendReport() {
   const [data, setData] = useState<SalesTrendItem[]>([]);
@@ -31,13 +32,6 @@ export default function SalesTrendReport() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(amount);
-  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

@@ -61,6 +61,7 @@ import {
   User as UserIcon,
   X,
 } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface CartItem extends ProductStock {
   cartQuantity: number;
@@ -613,8 +614,8 @@ export default function PosPage() {
                       <div class="product-code">${item.product.code}</div>
                     </td>
                     <td style="text-align: center;">${item.quantity}</td>
-                    <td style="text-align: right;">$${parseFloat(item.unitPrice).toFixed(2)}</td>
-                    <td style="text-align: right;">$${parseFloat(item.total).toFixed(2)}</td>
+                    <td style="text-align: right;">${formatCurrency(item.unitPrice)}</td>
+                    <td style="text-align: right;">${formatCurrency(item.total)}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -623,23 +624,23 @@ export default function PosPage() {
             <div class="totals">
               <div class="row">
                 <span>Subtotal:</span>
-                <span>$${parseFloat(completedInvoice.subtotal).toFixed(2)}</span>
+                <span>${formatCurrency(completedInvoice.subtotal)}</span>
               </div>
               ${parseFloat(completedInvoice.tax) > 0 ? `
               <div class="row">
                 <span>Impuesto:</span>
-                <span>$${parseFloat(completedInvoice.tax).toFixed(2)}</span>
+                <span>${formatCurrency(completedInvoice.tax)}</span>
               </div>
               ` : ''}
               ${parseFloat(completedInvoice.discount) > 0 ? `
               <div class="row">
                 <span>Descuento:</span>
-                <span>-$${parseFloat(completedInvoice.discount).toFixed(2)}</span>
+                <span>-${formatCurrency(completedInvoice.discount).replace('RD$', '')}</span>
               </div>
               ` : ''}
               <div class="row total-row">
                 <span>TOTAL:</span>
-                <span>$${parseFloat(completedInvoice.total).toFixed(2)}</span>
+                <span>${formatCurrency(completedInvoice.total)}</span>
               </div>
             </div>
 
@@ -691,7 +692,7 @@ export default function PosPage() {
                 Sesión #{currentSession.sessionNumber} - Abierta
               </div>
               <span className="text-xs text-muted-foreground">
-                Apertura: ${parseFloat(currentSession.openingAmount).toFixed(2)}
+                Apertura: {formatCurrency(currentSession.openingAmount)}
               </span>
             </div>
           )}
@@ -812,7 +813,7 @@ export default function PosPage() {
                           {/* Precio */}
                           <div className="text-right flex-shrink-0">
                             <p className="text-lg font-bold text-primary">
-                              ${parseFloat(product.price).toFixed(2)}
+                              {formatCurrency(product.price)}
                             </p>
                           </div>
                         </div>
@@ -861,7 +862,7 @@ export default function PosPage() {
                           <div className="flex-1 min-w-0">
                             <p className="font-medium truncate">{item.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              ${parseFloat(item.price).toFixed(2)} c/u
+                              {formatCurrency(item.price)} c/u
                             </p>
                           </div>
                           <Button
@@ -896,10 +897,7 @@ export default function PosPage() {
                             </Button>
                           </div>
                           <p className="font-bold">
-                            $
-                            {(
-                              parseFloat(item.price) * item.cartQuantity
-                            ).toFixed(2)}
+                            {formatCurrency(parseFloat(item.price) * item.cartQuantity)}
                           </p>
                         </div>
                       </div>
@@ -912,26 +910,26 @@ export default function PosPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal:</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span>{formatCurrency(subtotal)}</span>
                     </div>
                     {tax > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Impuesto:</span>
-                        <span>${tax.toFixed(2)}</span>
+                        <span>{formatCurrency(tax)}</span>
                       </div>
                     )}
                     {discount > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Descuento:</span>
                         <span className="text-destructive">
-                          -${discount.toFixed(2)}
+                          -{formatCurrency(discount).replace('RD$', '')}
                         </span>
                       </div>
                     )}
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total:</span>
-                      <span className="text-primary">${total.toFixed(2)}</span>
+                      <span className="text-primary">{formatCurrency(total)}</span>
                     </div>
                   </div>
 
@@ -1077,7 +1075,7 @@ export default function PosPage() {
                     ) : (
                       <>
                         <DollarSign className="h-5 w-5 mr-2" />
-                        Procesar Pago (${total.toFixed(2)})
+                        Procesar Pago ({formatCurrency(total)})
                       </>
                     )}
                   </Button>
@@ -1162,7 +1160,7 @@ export default function PosPage() {
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Total:</span>
                   <span className="font-medium">
-                    ${parseFloat(invoiceToCancel.total).toFixed(2)}
+                    {formatCurrency(invoiceToCancel.total)}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -1253,7 +1251,7 @@ export default function PosPage() {
             {/* Total a cobrar */}
             <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border-2 border-primary">
               <span className="text-lg font-semibold">TOTAL A COBRAR:</span>
-              <span className="text-2xl font-bold text-primary">${total.toFixed(2)}</span>
+              <span className="text-2xl font-bold text-primary">{formatCurrency(total)}</span>
             </div>
           </div>
 
@@ -1376,11 +1374,11 @@ export default function PosPage() {
                         <p className="font-medium">{item.product.name}</p>
                         <p className="text-sm text-muted-foreground">{item.product.code}</p>
                         <p className="text-sm text-muted-foreground">
-                          {item.quantity} x ${parseFloat(item.unitPrice).toFixed(2)}
+                          {item.quantity} x {formatCurrency(item.unitPrice)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold">${parseFloat(item.total).toFixed(2)}</p>
+                        <p className="font-bold">{formatCurrency(item.total)}</p>
                       </div>
                     </div>
                   ))}
@@ -1392,24 +1390,24 @@ export default function PosPage() {
                 <Separator />
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal:</span>
-                  <span className="font-medium">${parseFloat(completedInvoice.subtotal).toFixed(2)}</span>
+                  <span className="font-medium">{formatCurrency(completedInvoice.subtotal)}</span>
                 </div>
                 {parseFloat(completedInvoice.tax) > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Impuesto:</span>
-                    <span className="font-medium">${parseFloat(completedInvoice.tax).toFixed(2)}</span>
+                    <span className="font-medium">{formatCurrency(completedInvoice.tax)}</span>
                   </div>
                 )}
                 {parseFloat(completedInvoice.discount) > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Descuento:</span>
-                    <span className="font-medium text-green-600">-${parseFloat(completedInvoice.discount).toFixed(2)}</span>
+                    <span className="font-medium text-green-600">-{formatCurrency(completedInvoice.discount).replace('RD$', '')}</span>
                   </div>
                 )}
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
                   <span>TOTAL:</span>
-                  <span className="text-primary">${parseFloat(completedInvoice.total).toFixed(2)}</span>
+                  <span className="text-primary">{formatCurrency(completedInvoice.total)}</span>
                 </div>
               </div>
             </div>

@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon, PencilIcon, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { formatCurrency } from '@/lib/utils';
 
 export default function InventoryItemDetailPage() {
   const params = useParams();
@@ -232,11 +233,11 @@ export default function InventoryItemDetailPage() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Precio</p>
-                    <p className="font-medium">${typeof item.product.price === 'number' ? item.product.price.toFixed(2) : item.product.price || '0.00'}</p>
+                    <p className="font-medium">{formatCurrency(typeof item.product.price === 'number' ? item.product.price : parseFloat(item.product.price || '0'))}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Costo</p>
-                    <p className="font-medium">${typeof item.product.cost === 'number' ? item.product.cost.toFixed(2) : item.product.cost || '0.00'}</p>
+                    <p className="font-medium">{formatCurrency(typeof item.product.cost === 'number' ? item.product.cost : parseFloat(item.product.cost || '0'))}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Categoría</p>

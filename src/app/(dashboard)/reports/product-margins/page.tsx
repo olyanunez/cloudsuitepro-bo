@@ -9,6 +9,7 @@ import reportsService, { ReportPeriod, ReportFilters as ReportFiltersType, Produ
 import { ArrowLeft, TrendingUp, DollarSign, Percent } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/utils';
 
 export default function ProductMarginsReport() {
   const [data, setData] = useState<ProductMarginItem[]>([]);
@@ -35,13 +36,6 @@ export default function ProductMarginsReport() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-    }).format(amount);
-  };
 
   const totalRevenue = data.reduce((sum, item) => sum + parseFloat(item.totalRevenue as any), 0);
   const totalProfit = data.reduce((sum, item) => sum + parseFloat(item.grossProfit as any), 0);
