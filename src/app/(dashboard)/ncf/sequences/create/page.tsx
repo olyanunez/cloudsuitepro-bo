@@ -37,16 +37,14 @@ const formSchema = z.object({
   ncfType: z.nativeEnum(NcfType, {
     required_error: 'Debes seleccionar un tipo de NCF',
   }),
-  series: z
+  comprobanteLetter: z
     .string()
-    .min(1, 'La serie es requerida')
-    .max(10, 'La serie no puede tener más de 10 caracteres')
-    .regex(/^[A-Z0-9]+$/, 'La serie solo puede contener letras mayúsculas y números'),
-  prefix: z
+    .length(1, 'Debe ser una sola letra')
+    .regex(/^[A-E]$/, 'Solo letras A, B, C, D o E'),
+  serieNumber: z
     .string()
-    .min(1, 'El prefijo es requerido')
-    .max(5, 'El prefijo no puede tener más de 5 caracteres')
-    .default('E'),
+    .length(2, 'Debe ser un número de 2 dígitos')
+    .regex(/^\d{2}$/, 'Solo números de 00 a 99'),
   rangeStart: z.coerce
     .number()
     .min(1, 'El rango inicial debe ser mayor a 0')
@@ -75,8 +73,8 @@ export default function CreateNcfSequencePage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      prefix: 'E',
-      series: '',
+      comprobanteLetter: 'E',
+      serieNumber: '01',
       rangeStart: 1,
       rangeEnd: 1000,
       description: '',
@@ -86,10 +84,17 @@ export default function CreateNcfSequencePage() {
   const onSubmit = async (data: FormValues) => {
     try {
       setLoading(true);
+
+      // Construir el prefix y series correctamente según DGII
+      // Ejemplo: E + 01 = E01 (prefix)
+      // Ejemplo: E + 01 + 00000001 = E0100000001 (series)
+      const prefix = `${data.comprobanteLetter}${data.serieNumber}`;
+      const series = `${prefix}${data.rangeStart.toString().padStart(8, '0')}`;
+
       const createDto: CreateNcfSequenceDto = {
         ncfType: data.ncfType,
-        series: data.series,
-        prefix: data.prefix,
+        series: series,
+        prefix: prefix,
         rangeStart: data.rangeStart,
         rangeEnd: data.rangeEnd,
         validFrom: data.validFrom,
@@ -97,6 +102,7 @@ export default function CreateNcfSequencePage() {
         description: data.description,
       };
 
+      console.log('📝 Creando secuencia con:', createDto);
       await ncfService.createSequence(createDto);
       toast.success('Secuencia NCF creada exitosamente');
       router.push('/ncf/sequences');
@@ -111,17 +117,16 @@ export default function CreateNcfSequencePage() {
   };
 
   const generatePreview = () => {
-    const prefix = form.watch('prefix') || 'E';
-    const ncfType = form.watch('ncfType');
-    const series = form.watch('series') || 'XXXXXXXX';
-    const rangeStart = form.watch('rangeStart') || 0;
+    const comprobanteLetter = form.watch('comprobanteLetter') || 'E';
+    const serieNumber = form.watch('serieNumber') || '01';
+    const rangeStart = form.watch('rangeStart') || 1;
 
-    if (!ncfType) return 'Selecciona un tipo de NCF para ver vista previa';
-
-    const typeNumber = ncfType.replace('B', '');
+    // Formato DGII: Letra + Serie (2 dígitos) + Número (8 dígitos)
+    // Ejemplo: E0100000001
+    const prefix = `${comprobanteLetter}${serieNumber}`;
     const number = rangeStart.toString().padStart(8, '0');
 
-    return `${prefix}${typeNumber}${series}${number}`;
+    return `${prefix}${number}`;
   };
 
   return (
@@ -197,42 +202,19 @@ export default function CreateNcfSequencePage() {
                 )}
               />
 
-              {/* Prefijo y Serie */}
-              <div className="grid grid-cols-3 gap-4">
+              {/* Letra de Comprobante y Número de Serie */}
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="prefix"
+                  name="comprobanteLetter"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Prefijo *</FormLabel>
+                      <FormLabel>Letra de Comprobante *</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           placeholder="E"
-                          maxLength={5}
-                          className="uppercase"
-                          onChange={(e) =>
-                            field.onChange(e.target.value.toUpperCase())
-                          }
-                        />
-                      </FormControl>
-                      <FormDescription>Ej: E</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="series"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>Serie *</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="01"
-                          maxLength={10}
+                          maxLength={1}
                           className="uppercase"
                           onChange={(e) =>
                             field.onChange(e.target.value.toUpperCase())
@@ -240,7 +222,33 @@ export default function CreateNcfSequencePage() {
                         />
                       </FormControl>
                       <FormDescription>
-                        Serie autorizada por DGII
+                        A, B, C, D o E (solo 1 letra)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="serieNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número de Serie *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="01"
+                          maxLength={2}
+                          onChange={(e) => {
+                            // Solo permitir números
+                            const value = e.target.value.replace(/\D/g, '');
+                            field.onChange(value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        2 dígitos (01-99)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

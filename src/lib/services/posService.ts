@@ -55,6 +55,8 @@ export interface Invoice {
   id: number;
   invoiceNumber: string;
   ncf: string | null;
+  ncfType: string | null;
+  ncfValidUntil: string | null;
   customerId: number | null;
   customerName: string | null;
   customerRnc: string | null;

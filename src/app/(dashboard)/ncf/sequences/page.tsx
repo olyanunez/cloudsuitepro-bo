@@ -197,9 +197,10 @@ export default function NcfSequencesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Tipo NCF</TableHead>
-                <TableHead>Serie</TableHead>
+                <TableHead>Prefijo</TableHead>
                 <TableHead>Rango</TableHead>
                 <TableHead>Actual</TableHead>
+                <TableHead>Próximo NCF</TableHead>
                 <TableHead>Uso</TableHead>
                 <TableHead>Vigencia</TableHead>
                 <TableHead>Estado</TableHead>
@@ -210,13 +211,13 @@ export default function NcfSequencesPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8">
+                  <TableCell colSpan={10} className="text-center py-8">
                     Cargando secuencias...
                   </TableCell>
                 </TableRow>
               ) : filteredSequences.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8">
+                  <TableCell colSpan={10} className="text-center py-8">
                     No hay secuencias NCF registradas
                   </TableCell>
                 </TableRow>
@@ -231,18 +232,21 @@ export default function NcfSequencesPage() {
                         {ncfTypeLabels[sequence.ncfType]}
                       </TableCell>
                       <TableCell>
-                        <code className="text-xs bg-muted px-2 py-1 rounded">
+                        <code className="text-xs bg-muted px-2 py-1 rounded font-semibold">
                           {sequence.prefix}
-                          {sequence.series}
                         </code>
                       </TableCell>
                       <TableCell className="text-sm">
-                        {sequence.rangeStart.toString().padStart(8, '0')} -{' '}
-                        {sequence.rangeEnd.toString().padStart(8, '0')}
+                        {sequence.rangeStart.toLocaleString()} - {sequence.rangeEnd.toLocaleString()}
                       </TableCell>
                       <TableCell>
                         <code className="text-xs">
-                          {sequence.currentNumber.toString().padStart(8, '0')}
+                          {sequence.currentNumber.toLocaleString()}
+                        </code>
+                      </TableCell>
+                      <TableCell>
+                        <code className="text-xs bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded font-mono">
+                          {sequence.prefix}{(sequence.currentNumber + 1).toString().padStart(8, '0')}
                         </code>
                       </TableCell>
                       <TableCell>

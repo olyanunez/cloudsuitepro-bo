@@ -8,7 +8,9 @@ import { PosService, ProductStock, InvoiceItem, Invoice } from '@/lib/services/p
 import { BranchService } from '@/lib/services/branchService';
 import { CashSessionService, CashSession } from '@/lib/services/cashSessionService';
 import { CustomerService, Customer } from '@/lib/services/customerService';
-import ncfService, { NcfConfiguration } from '@/lib/services/ncfService';
+import ncfService, { NcfConfiguration, ncfTypeLabels, NcfType } from '@/lib/services/ncfService';
+import { TenantService, Tenant } from '@/lib/services/tenantService';
+import { printInvoice } from '@/lib/utils/invoicePrint';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -116,6 +118,10 @@ export default function PosPage() {
   const [manualNcf, setManualNcf] = useState('');
   const [manualCustomerRnc, setManualCustomerRnc] = useState('');
   const [manualCustomerName, setManualCustomerName] = useState('');
+  const [sellAsFinalConsumer, setSellAsFinalConsumer] = useState(false);
+
+  // Estado para información de la empresa (tenant)
+  const [tenantInfo, setTenantInfo] = useState<Tenant | null>(null);
 
   // Log inicial para debug
   useEffect(() => {
@@ -138,6 +144,24 @@ export default function PosPage() {
     };
 
     loadNcfConfig();
+  }, []);
+
+  // Cargar información de la empresa (tenant)
+  useEffect(() => {
+    const loadTenantInfo = async () => {
+      try {
+        const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenant_id') : null;
+        if (tenantId) {
+          const tenant = await TenantService.getTenantById(tenantId);
+          setTenantInfo(tenant);
+          console.log('🏢 Tenant Information loaded:', tenant);
+        }
+      } catch (error) {
+        console.error('Error loading tenant information:', error);
+      }
+    };
+
+    loadTenantInfo();
   }, []);
 
   // Cargar el warehouse de la sucursal activa
@@ -347,6 +371,7 @@ export default function PosPage() {
     setManualCustomerRnc('');
     setManualCustomerName('');
     setSelectedCustomer(null);
+    setSellAsFinalConsumer(false);
   };
 
   // Calcular totales
@@ -421,9 +446,15 @@ export default function PosPage() {
         paymentMethod,
         paymentReference: paymentReference.trim() || undefined,
         manualNcf: manualNcf.trim() || undefined,
-        // Usar RNC manual solo si no hay cliente seleccionado
-        customerRnc: selectedCustomer?.rnc || (manualCustomerRnc.trim() || undefined),
-        customerName: selectedCustomer ? undefined : (manualCustomerName.trim() || undefined),
+        // Si está marcado como consumidor final, NO enviar RNC (para generar B02 en lugar de B01)
+        customerRnc: sellAsFinalConsumer
+          ? undefined
+          : (selectedCustomer?.taxId || (manualCustomerRnc.trim() || undefined)),
+        customerName: sellAsFinalConsumer
+          ? undefined
+          : (selectedCustomer
+              ? `${selectedCustomer.name}${selectedCustomer.lastName ? ` ${selectedCustomer.lastName}` : ''}`
+              : (manualCustomerName.trim() || undefined)),
         items,
         cashSessionId: currentSession.id,
       });
@@ -543,6 +574,21 @@ export default function PosPage() {
   const handlePrintInvoice = () => {
     if (!completedInvoice) return;
 
+    try {
+      printInvoice({
+        invoice: completedInvoice,
+        tenantInfo,
+        itbisRate: ncfConfig?.itbisRate || 18,
+      });
+    } catch (error: any) {
+      toast.error(error.message || 'Error al imprimir la factura');
+    }
+  };
+
+  // Función temporal para mantener el código antiguo (borrar después)
+  const handlePrintInvoice_OLD = () => {
+    if (!completedInvoice) return;
+
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       toast.error('No se pudo abrir la ventana de impresión. Por favor, permita las ventanas emergentes.');
@@ -557,7 +603,7 @@ export default function PosPage() {
       CREDIT: 'Crédito',
     };
 
-    const printContent = `
+    const printContent_OLD = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -566,136 +612,369 @@ export default function PosPage() {
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body {
               font-family: Arial, Helvetica, sans-serif;
-              padding: 30px;
-              font-size: 16pt;
-              line-height: 1.6;
+              padding: 20px;
+              font-size: 11pt;
+              line-height: 1.4;
             }
             .invoice-container { max-width: 210mm; margin: 0 auto; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #000; padding-bottom: 20px; }
-            .header h1 { font-size: 32pt; margin-bottom: 10px; font-weight: bold; }
-            .header p { font-size: 16pt; margin: 5px 0; }
-            .info-section { margin-bottom: 25px; font-size: 14pt; }
-            .info-section .row { display: flex; justify-content: space-between; margin-bottom: 8px; padding: 5px 0; }
-            .info-section .row span:first-child { font-weight: 600; }
-            .items-table { width: 100%; border-collapse: collapse; margin: 25px 0; }
-            .items-table th { text-align: left; border-bottom: 2px solid #000; padding: 12px 8px; font-size: 14pt; font-weight: bold; background-color: #f5f5f5; }
-            .items-table td { padding: 12px 8px; font-size: 14pt; }
-            .items-table .item-row { border-bottom: 1px solid #ddd; }
-            .items-table .item-row:hover { background-color: #f9f9f9; }
-            .items-table .product-name { font-weight: 600; margin-bottom: 4px; }
-            .items-table .product-code { font-size: 12pt; color: #666; }
-            .totals { margin-top: 25px; border-top: 3px solid #000; padding-top: 20px; }
-            .totals .row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 16pt; padding: 5px 0; }
-            .totals .total-row { font-weight: bold; font-size: 22pt; margin-top: 15px; padding-top: 15px; border-top: 2px solid #000; }
-            .footer { margin-top: 40px; text-align: center; font-size: 14pt; border-top: 2px solid #000; padding-top: 20px; }
-            .footer p { margin: 8px 0; }
+
+            /* Header - Información de la empresa */
+            .company-header {
+              text-align: center;
+              margin-bottom: 20px;
+              border-bottom: 2px solid #000;
+              padding-bottom: 15px;
+            }
+            .company-header h1 {
+              font-size: 24pt;
+              margin-bottom: 8px;
+              font-weight: bold;
+              text-transform: uppercase;
+            }
+            .company-header .company-info {
+              font-size: 10pt;
+              margin: 3px 0;
+              color: #333;
+            }
+            .company-header .rnc {
+              font-weight: 600;
+              font-size: 11pt;
+              margin-top: 5px;
+            }
+
+            /* Sección de información fiscal (NCF) */
+            .fiscal-section {
+              background-color: #f8f8f8;
+              border: 2px solid #000;
+              padding: 15px;
+              margin-bottom: 20px;
+            }
+            .fiscal-section .ncf-row {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 8px;
+              padding: 5px 0;
+            }
+            .fiscal-section .ncf-row:last-child {
+              margin-bottom: 0;
+            }
+            .fiscal-section .ncf-label {
+              font-weight: 600;
+              font-size: 11pt;
+            }
+            .fiscal-section .ncf-value {
+              font-family: 'Courier New', monospace;
+              font-size: 13pt;
+              font-weight: bold;
+              letter-spacing: 1px;
+            }
+            .fiscal-section .ncf-type {
+              font-size: 10pt;
+              color: #555;
+              font-style: italic;
+            }
+            .fiscal-section .ncf-validity {
+              font-size: 9pt;
+              color: #666;
+            }
+
+            /* Información de la factura */
+            .invoice-info {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 10px;
+              margin-bottom: 20px;
+              font-size: 10pt;
+            }
+            .invoice-info .info-group {
+              padding: 10px;
+              background-color: #fafafa;
+              border-radius: 4px;
+            }
+            .invoice-info .row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 5px;
+              padding: 2px 0;
+            }
+            .invoice-info .row:last-child {
+              margin-bottom: 0;
+            }
+            .invoice-info .row .label {
+              font-weight: 600;
+              color: #555;
+            }
+            .invoice-info .row .value {
+              font-weight: 500;
+            }
+
+            /* Tabla de productos */
+            .items-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 20px 0;
+            }
+            .items-table th {
+              text-align: left;
+              border-bottom: 2px solid #000;
+              padding: 10px 6px;
+              font-size: 10pt;
+              font-weight: bold;
+              background-color: #e8e8e8;
+            }
+            .items-table td {
+              padding: 8px 6px;
+              font-size: 10pt;
+              border-bottom: 1px solid #ddd;
+            }
+            .items-table .product-name {
+              font-weight: 600;
+              margin-bottom: 2px;
+            }
+            .items-table .product-code {
+              font-size: 9pt;
+              color: #666;
+            }
+            .items-table .text-right {
+              text-align: right;
+            }
+            .items-table .text-center {
+              text-align: center;
+            }
+
+            /* Sección de totales */
+            .totals {
+              margin-top: 20px;
+              border-top: 2px solid #000;
+              padding-top: 15px;
+            }
+            .totals .row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 8px;
+              font-size: 11pt;
+              padding: 3px 0;
+            }
+            .totals .row .label {
+              font-weight: 500;
+            }
+            .totals .row .value {
+              font-weight: 600;
+              min-width: 120px;
+              text-align: right;
+            }
+            .totals .itbis-row {
+              background-color: #f0f0f0;
+              padding: 8px;
+              margin: 5px 0;
+              border-radius: 4px;
+            }
+            .totals .total-row {
+              font-weight: bold;
+              font-size: 16pt;
+              margin-top: 12px;
+              padding-top: 12px;
+              border-top: 2px solid #000;
+              background-color: #f5f5f5;
+              padding: 12px 8px;
+            }
+            .totals .total-row .label {
+              font-size: 14pt;
+            }
+            .totals .total-row .value {
+              font-size: 18pt;
+            }
+
+            /* Footer */
+            .footer {
+              margin-top: 30px;
+              text-align: center;
+              font-size: 10pt;
+              border-top: 1px solid #000;
+              padding-top: 15px;
+            }
+            .footer p {
+              margin: 5px 0;
+            }
+            .footer .legal {
+              font-size: 8pt;
+              color: #666;
+              margin-top: 10px;
+            }
+
             @media print {
-              body { padding: 20px; }
+              body { padding: 10px; }
               .no-print { display: none; }
             }
           </style>
         </head>
         <body>
           <div class="invoice-container">
-            <div class="header">
-              <h1>FACTURA</h1>
-              <p>${completedInvoice.branch?.name || 'Xotica'}</p>
-              <p>Sucursal: ${completedInvoice.branch?.code || ''}</p>
+            <!-- Header con información de la empresa -->
+            <div class="company-header">
+              <h1>${tenantInfo?.name || 'Xotica'}</h1>
+              ${tenantInfo?.address ? `<p class="company-info">${tenantInfo.address}</p>` : ''}
+              ${tenantInfo?.phone ? `<p class="company-info">Tel: ${tenantInfo.phone}</p>` : ''}
+              ${tenantInfo?.email ? `<p class="company-info">Email: ${tenantInfo.email}</p>` : ''}
+              ${tenantInfo?.taxId ? `<p class="rnc">RNC: ${tenantInfo.taxId}</p>` : ''}
             </div>
 
-            <div class="info-section">
-              <div class="row">
-                <span>Factura No:</span>
-                <strong>${completedInvoice.invoiceNumber}</strong>
+            <!-- Sección de información fiscal (NCF) -->
+            ${completedInvoice.ncf ? `
+            <div class="fiscal-section">
+              <div class="ncf-row">
+                <span class="ncf-label">Comprobante Fiscal (NCF):</span>
+                <span class="ncf-value">${completedInvoice.ncf}</span>
               </div>
-              ${completedInvoice.ncf ? `
-              <div class="row">
-                <span>NCF:</span>
-                <strong style="color: #000; font-size: 16pt; letter-spacing: 1px;">${completedInvoice.ncf}</strong>
-              </div>
-              ` : ''}
-              ${completedInvoice.customerName ? `
-              <div class="row">
-                <span>Cliente:</span>
-                <span>${completedInvoice.customerName}</span>
+              ${ncfTypeLabel ? `
+              <div class="ncf-row">
+                <span class="ncf-label">Tipo:</span>
+                <span class="ncf-type">${ncfTypeLabel}</span>
               </div>
               ` : ''}
-              ${completedInvoice.customerRnc ? `
-              <div class="row">
-                <span>RNC/Cédula:</span>
-                <span>${completedInvoice.customerRnc}</span>
-              </div>
-              ` : ''}
-              <div class="row">
-                <span>Fecha:</span>
-                <span>${new Date(completedInvoice.createdAt).toLocaleString('es-ES')}</span>
-              </div>
-              <div class="row">
-                <span>Atendido por:</span>
-                <span>${completedInvoice.user?.name || 'N/A'}</span>
-              </div>
-              <div class="row">
-                <span>Método de pago:</span>
-                <span>${paymentMethodLabels[completedInvoice.paymentMethod] || completedInvoice.paymentMethod}</span>
-              </div>
-              ${completedInvoice.paymentReference ? `
-              <div class="row">
-                <span>Referencia:</span>
-                <span>${completedInvoice.paymentReference}</span>
+              ${completedInvoice.ncfValidUntil ? `
+              <div class="ncf-row">
+                <span class="ncf-label">NCF Válido hasta:</span>
+                <span class="ncf-validity">${new Date(completedInvoice.ncfValidUntil).toLocaleDateString('es-DO', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</span>
               </div>
               ` : ''}
             </div>
+            ` : ''}
 
+            <!-- Información de la factura -->
+            <div class="invoice-info">
+              <div class="info-group">
+                <div class="row">
+                  <span class="label">Factura No:</span>
+                  <span class="value">${completedInvoice.invoiceNumber}</span>
+                </div>
+                <div class="row">
+                  <span class="label">Fecha:</span>
+                  <span class="value">${new Date(completedInvoice.createdAt).toLocaleString('es-DO', {
+                    dateStyle: 'short',
+                    timeStyle: 'short'
+                  })}</span>
+                </div>
+                <div class="row">
+                  <span class="label">Sucursal:</span>
+                  <span class="value">${completedInvoice.branch?.name || 'N/A'}</span>
+                </div>
+                <div class="row">
+                  <span class="label">Cajero:</span>
+                  <span class="value">${completedInvoice.user?.name || 'N/A'}</span>
+                </div>
+              </div>
+
+              <div class="info-group">
+                ${completedInvoice.customerName || completedInvoice.customerRnc ? `
+                <div class="row">
+                  <span class="label">Cliente:</span>
+                  <span class="value">${completedInvoice.customerName || 'N/A'}</span>
+                </div>
+                ${completedInvoice.customerRnc ? `
+                <div class="row">
+                  <span class="label">RNC/Cédula:</span>
+                  <span class="value">${completedInvoice.customerRnc}</span>
+                </div>
+                ` : ''}
+                ` : `
+                <div class="row">
+                  <span class="label">Cliente:</span>
+                  <span class="value">Consumidor Final</span>
+                </div>
+                `}
+                <div class="row">
+                  <span class="label">Pago:</span>
+                  <span class="value">${paymentMethodLabels[completedInvoice.paymentMethod] || completedInvoice.paymentMethod}</span>
+                </div>
+                ${completedInvoice.paymentReference ? `
+                <div class="row">
+                  <span class="label">Ref. Pago:</span>
+                  <span class="value">${completedInvoice.paymentReference}</span>
+                </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Tabla de productos -->
             <table class="items-table">
               <thead>
                 <tr>
                   <th>Producto</th>
-                  <th style="text-align: center;">Cant.</th>
-                  <th style="text-align: right;">P. Unit.</th>
-                  <th style="text-align: right;">Total</th>
+                  <th class="text-center">Cant.</th>
+                  <th class="text-right">Precio</th>
+                  <th class="text-right">ITBIS</th>
+                  <th class="text-right">Total</th>
                 </tr>
               </thead>
               <tbody>
-                ${completedInvoice.items.map(item => `
-                  <tr class="item-row">
+                ${completedInvoice.items.map(item => {
+                  // Calcular ITBIS por item (precio incluye ITBIS)
+                  const totalWithItbis = parseFloat(item.total.toString());
+                  const itbisAmount = totalWithItbis * (itbisRate / (100 + itbisRate));
+                  const subtotalItem = totalWithItbis - itbisAmount;
+
+                  return `
+                  <tr>
                     <td>
                       <div class="product-name">${item.product.name}</div>
-                      <div class="product-code">${item.product.code}</div>
+                      <div class="product-code">Cód: ${item.product.code}</div>
                     </td>
-                    <td style="text-align: center;">${item.quantity}</td>
-                    <td style="text-align: right;">${formatCurrency(item.unitPrice)}</td>
-                    <td style="text-align: right;">${formatCurrency(item.total)}</td>
+                    <td class="text-center">${item.quantity}</td>
+                    <td class="text-right">${formatCurrency(item.unitPrice)}</td>
+                    <td class="text-right">${formatCurrency(itbisAmount)}</td>
+                    <td class="text-right">${formatCurrency(item.total)}</td>
                   </tr>
-                `).join('')}
+                  `;
+                }).join('')}
               </tbody>
             </table>
 
+            <!-- Totales con desglose de ITBIS -->
             <div class="totals">
-              <div class="row">
-                <span>Subtotal:</span>
-                <span>${formatCurrency(completedInvoice.subtotal)}</span>
-              </div>
-              ${parseFloat(completedInvoice.tax) > 0 ? `
-              <div class="row">
-                <span>Impuesto:</span>
-                <span>${formatCurrency(completedInvoice.tax)}</span>
-              </div>
-              ` : ''}
-              ${parseFloat(completedInvoice.discount) > 0 ? `
-              <div class="row">
-                <span>Descuento:</span>
-                <span>-${formatCurrency(completedInvoice.discount).replace('RD$', '')}</span>
-              </div>
-              ` : ''}
-              <div class="row total-row">
-                <span>TOTAL:</span>
-                <span>${formatCurrency(completedInvoice.total)}</span>
-              </div>
+              ${(() => {
+                // Calcular totales con ITBIS
+                const totalWithItbis = parseFloat(completedInvoice.total.toString());
+                const totalItbis = totalWithItbis * (itbisRate / (100 + itbisRate));
+                const subtotalWithoutItbis = totalWithItbis - totalItbis;
+
+                return `
+                  <div class="row">
+                    <span class="label">Subtotal (sin ITBIS):</span>
+                    <span class="value">${formatCurrency(subtotalWithoutItbis)}</span>
+                  </div>
+                  <div class="row itbis-row">
+                    <span class="label">ITBIS (${itbisRate}%):</span>
+                    <span class="value">${formatCurrency(totalItbis)}</span>
+                  </div>
+                  ${parseFloat(completedInvoice.discount) > 0 ? `
+                  <div class="row">
+                    <span class="label">Descuento:</span>
+                    <span class="value">-${formatCurrency(completedInvoice.discount).replace('RD$', 'RD$ ')}</span>
+                  </div>
+                  ` : ''}
+                  <div class="row total-row">
+                    <span class="label">TOTAL A PAGAR:</span>
+                    <span class="value">${formatCurrency(completedInvoice.total)}</span>
+                  </div>
+                `;
+              })()}
             </div>
 
+            <!-- Footer -->
             <div class="footer">
-              <p>¡Gracias por su compra!</p>
-              <p>Conserve este comprobante</p>
+              <p><strong>¡Gracias por su preferencia!</strong></p>
+              <p>Conserve este comprobante para fines fiscales</p>
+              ${completedInvoice.ncf ? `
+              <p class="legal">
+                Este documento es válido como comprobante fiscal según la Norma 06-18 de la DGII
+              </p>
+              ` : ''}
             </div>
           </div>
 
@@ -990,7 +1269,9 @@ export default function PosPage() {
                         <div className="flex items-center gap-2">
                           <UserIcon className="h-4 w-4 text-muted-foreground" />
                           <div>
-                            <p className="font-medium text-sm">{selectedCustomer.name}</p>
+                            <p className="font-medium text-sm">
+                              {selectedCustomer.name}{selectedCustomer.lastName ? ` ${selectedCustomer.lastName}` : ''}
+                            </p>
                             <p className="text-xs text-muted-foreground">{selectedCustomer.code}</p>
                           </div>
                         </div>
@@ -1001,6 +1282,7 @@ export default function PosPage() {
                             setSelectedCustomer(null);
                             setCustomerSearch('');
                             setCustomerSearchResults([]);
+                            setSellAsFinalConsumer(false);
                           }}
                           className="h-7 w-7 p-0"
                         >
@@ -1034,7 +1316,9 @@ export default function PosPage() {
                               >
                                 <UserIcon className="h-4 w-4 text-muted-foreground" />
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm truncate">{customer.name}</p>
+                                  <p className="font-medium text-sm truncate">
+                                    {customer.name}{customer.lastName ? ` ${customer.lastName}` : ''}
+                                  </p>
                                   <p className="text-xs text-muted-foreground">{customer.code}</p>
                                 </div>
                               </button>
@@ -1044,6 +1328,22 @@ export default function PosPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Checkbox para vender como consumidor final */}
+                  {selectedCustomer && selectedCustomer.taxId && (
+                    <div className="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                      <input
+                        type="checkbox"
+                        id="sellAsFinalConsumer"
+                        checked={sellAsFinalConsumer}
+                        onChange={(e) => setSellAsFinalConsumer(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor="sellAsFinalConsumer" className="cursor-pointer text-sm font-medium">
+                        Vender como consumidor final (sin NCF B01)
+                      </Label>
+                    </div>
+                  )}
 
                   {/* Campos para cliente no registrado (solo si no hay cliente seleccionado) */}
                   {!selectedCustomer && (
@@ -1427,10 +1727,30 @@ export default function PosPage() {
                   <span className="font-bold text-lg">{completedInvoice.invoiceNumber}</span>
                 </div>
                 {completedInvoice.ncf && (
-                  <div className="flex justify-between items-center bg-yellow-50 dark:bg-yellow-900/20 -mx-4 px-4 py-2">
-                    <span className="text-sm font-semibold">NCF:</span>
-                    <span className="font-bold text-lg font-mono tracking-wider">{completedInvoice.ncf}</span>
-                  </div>
+                  <>
+                    <div className="flex justify-between items-center bg-yellow-50 dark:bg-yellow-900/20 -mx-4 px-4 py-2">
+                      <span className="text-sm font-semibold">NCF:</span>
+                      <span className="font-bold text-lg font-mono tracking-wider">{completedInvoice.ncf}</span>
+                    </div>
+                    {completedInvoice.ncfType && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Tipo de NCF:</span>
+                        <span className="font-medium text-sm">{ncfTypeLabels[completedInvoice.ncfType as NcfType]}</span>
+                      </div>
+                    )}
+                    {completedInvoice.ncfValidUntil && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">NCF Válido hasta:</span>
+                        <span className="font-medium text-sm">
+                          {new Date(completedInvoice.ncfValidUntil).toLocaleDateString('es-DO', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                    )}
+                  </>
                 )}
                 {completedInvoice.customerName && (
                   <div className="flex justify-between items-center">

@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Invoice, InvoiceService } from '@/lib/services/invoiceService';
+import { TenantService, Tenant } from '@/lib/services/tenantService';
+import ncfService, { NcfConfiguration } from '@/lib/services/ncfService';
+import { printInvoice } from '@/lib/utils/invoicePrint';
 import { toast } from 'sonner';
 import {
   ArrowLeftIcon,
@@ -45,9 +48,13 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
   const [loading, setLoading] = useState(true);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [tenantInfo, setTenantInfo] = useState<Tenant | null>(null);
+  const [ncfConfig, setNcfConfig] = useState<NcfConfiguration | null>(null);
 
   useEffect(() => {
     loadInvoice();
+    loadTenantInfo();
+    loadNcfConfig();
   }, [invoiceId]);
 
   const loadInvoice = async () => {
@@ -65,6 +72,27 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
     }
   };
 
+  const loadTenantInfo = async () => {
+    try {
+      const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenant_id') : null;
+      if (tenantId) {
+        const tenant = await TenantService.getTenantById(tenantId);
+        setTenantInfo(tenant);
+      }
+    } catch (error) {
+      console.error('Error loading tenant information:', error);
+    }
+  };
+
+  const loadNcfConfig = async () => {
+    try {
+      const config = await ncfService.getConfiguration();
+      setNcfConfig(config);
+    } catch (error) {
+      console.error('Error loading NCF configuration:', error);
+    }
+  };
+
   const handleCancelInvoice = async () => {
     try {
       await InvoiceService.cancelInvoice(invoiceId);
@@ -78,7 +106,17 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
   };
 
   const handlePrint = () => {
-    window.print();
+    if (!invoice) return;
+
+    try {
+      printInvoice({
+        invoice,
+        tenantInfo,
+        itbisRate: ncfConfig?.itbisRate || 18,
+      });
+    } catch (error: any) {
+      toast.error(error.message || 'Error al imprimir la factura');
+    }
   };
 
   if (loading) {
