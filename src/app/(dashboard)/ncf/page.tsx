@@ -64,7 +64,7 @@ export default function NcfDashboardPage() {
 
   const getUsagePercentage = (sequence: NcfSequence): number => {
     const total = sequence.rangeEnd - sequence.rangeStart + 1;
-    const used = sequence.currentNumber - sequence.rangeStart;
+    const used = Math.max(0, sequence.currentNumber - sequence.rangeStart + 1);
     return Math.round((used / total) * 100);
   };
 

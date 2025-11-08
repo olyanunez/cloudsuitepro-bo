@@ -114,6 +114,8 @@ export default function PosPage() {
   // Estados para NCF
   const [ncfConfig, setNcfConfig] = useState<NcfConfiguration | null>(null);
   const [manualNcf, setManualNcf] = useState('');
+  const [manualCustomerRnc, setManualCustomerRnc] = useState('');
+  const [manualCustomerName, setManualCustomerName] = useState('');
 
   // Log inicial para debug
   useEffect(() => {
@@ -342,6 +344,8 @@ export default function PosPage() {
     setPaymentMethod('CASH');
     setPaymentReference('');
     setManualNcf('');
+    setManualCustomerRnc('');
+    setManualCustomerName('');
     setSelectedCustomer(null);
   };
 
@@ -417,6 +421,9 @@ export default function PosPage() {
         paymentMethod,
         paymentReference: paymentReference.trim() || undefined,
         manualNcf: manualNcf.trim() || undefined,
+        // Usar RNC manual solo si no hay cliente seleccionado
+        customerRnc: selectedCustomer?.rnc || (manualCustomerRnc.trim() || undefined),
+        customerName: selectedCustomer ? undefined : (manualCustomerName.trim() || undefined),
         items,
         cashSessionId: currentSession.id,
       });
@@ -1037,6 +1044,42 @@ export default function PosPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Campos para cliente no registrado (solo si no hay cliente seleccionado) */}
+                  {!selectedCustomer && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="manualCustomerRnc">
+                          RNC / Cédula (Opcional)
+                        </Label>
+                        <Input
+                          id="manualCustomerRnc"
+                          placeholder="Ej: 131793916 o 00112345678"
+                          value={manualCustomerRnc}
+                          onChange={(e) => setManualCustomerRnc(e.target.value)}
+                          maxLength={11}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Ingrese RNC (9 dígitos) o Cédula (11 dígitos) para generar NCF tipo B01
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="manualCustomerName">
+                          Nombre del Cliente (Opcional)
+                        </Label>
+                        <Input
+                          id="manualCustomerName"
+                          placeholder="Ej: Juan Pérez"
+                          value={manualCustomerName}
+                          onChange={(e) => setManualCustomerName(e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Nombre para incluir en el comprobante fiscal
+                        </p>
+                      </div>
+                    </>
+                  )}
 
                   {/* Campo de NCF manual (solo si está permitido) */}
                   {ncfConfig?.allowManualNcf && (

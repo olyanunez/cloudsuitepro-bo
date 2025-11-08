@@ -206,6 +206,23 @@ export const BarChart3Icon: React.FC<IconWithClassProps> = ({ className }) => (
   </svg>
 )
 
+export const HashIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <line x1="4" y1="9" x2="20" y2="9"></line>
+    <line x1="4" y1="15" x2="20" y2="15"></line>
+    <line x1="10" y1="3" x2="8" y2="21"></line>
+    <line x1="16" y1="3" x2="14" y2="21"></line>
+  </svg>
+)
+
+export const FileCheckIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+    <polyline points="14 2 14 8 20 8"></polyline>
+    <polyline points="9 15 11 17 15 13"></polyline>
+  </svg>
+)
+
 interface IconProps {
   name: string;
   className?: string;
@@ -222,6 +239,7 @@ export const Icon: React.FC<IconProps> = ({ name, className }) => {
     'shopping-bag': getIconWithClass(ShoppingBagIcon as React.FC<IconWithClassProps>),
     'shopping-cart': getIconWithClass(ShoppingCartIcon as React.FC<IconWithClassProps>),
     'file-text': getIconWithClass(FileTextIcon as React.FC<IconWithClassProps>),
+    'file-check': getIconWithClass(FileCheckIcon as React.FC<IconWithClassProps>),
     'users': getIconWithClass(UsersIcon as React.FC<IconWithClassProps>),
     'settings': getIconWithClass(SettingsIcon as React.FC<IconWithClassProps>),
     'user-cog': getIconWithClass(UserCogIcon as React.FC<IconWithClassProps>),
@@ -238,6 +256,7 @@ export const Icon: React.FC<IconProps> = ({ name, className }) => {
     'dollar-sign': getIconWithClass(DollarSignIcon as React.FC<IconWithClassProps>),
     'calendar': getIconWithClass(CalendarIcon as React.FC<IconWithClassProps>),
     'git-compare': getIconWithClass(GitCompareIcon as React.FC<IconWithClassProps>),
+    'hash': getIconWithClass(HashIcon as React.FC<IconWithClassProps>),
   }
 
   return <>{icons[name] || null}</>

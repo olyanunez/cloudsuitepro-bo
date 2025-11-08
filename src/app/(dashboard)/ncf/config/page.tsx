@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Settings, Save, Info } from 'lucide-react';
+import PageHeader from '@/components/layout/PageHeader';
 import { toast } from 'sonner';
 import ncfService, {
   NcfConfiguration,
@@ -126,15 +127,11 @@ export default function NcfConfigPage() {
   return (
     <div className="container mx-auto py-6 max-w-3xl space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Settings className="h-8 w-8" />
-        <div>
-          <h1 className="text-3xl font-bold">Configuración NCF</h1>
-          <p className="text-muted-foreground">
-            Ajustes del sistema de Números de Comprobante Fiscal
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Configuración NCF"
+        icon="settings"
+        description="Ajustes del sistema de Números de Comprobante Fiscal"
+      />
 
       {/* Alerta informativa */}
       <Alert>

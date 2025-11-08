@@ -22,6 +22,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Plus, AlertTriangle, Edit, RefreshCw } from 'lucide-react';
+import PageHeader from '@/components/layout/PageHeader';
 import ncfService, {
   NcfSequence,
   ncfTypeLabels,
@@ -68,7 +69,7 @@ export default function NcfSequencesPage() {
 
   const getUsagePercentage = (sequence: NcfSequence): number => {
     const total = sequence.rangeEnd - sequence.rangeStart + 1;
-    const used = sequence.currentNumber - sequence.rangeStart;
+    const used = Math.max(0, sequence.currentNumber - sequence.rangeStart + 1);
     return Math.round((used / total) * 100);
   };
 
@@ -93,18 +94,16 @@ export default function NcfSequencesPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Secuencias NCF</h1>
-          <p className="text-muted-foreground">
-            Gestión de Números de Comprobante Fiscal
-          </p>
-        </div>
+      <PageHeader
+        title="Secuencias NCF"
+        icon="hash"
+        description="Gestión de Números de Comprobante Fiscal"
+      >
         <Button onClick={() => router.push('/ncf/sequences/create')}>
           <Plus className="mr-2 h-4 w-4" />
           Nueva Secuencia
         </Button>
-      </div>
+      </PageHeader>
 
       {/* Alertas de secuencias próximas a vencer */}
       {expiringSequences.length > 0 && (

@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Download, FileText, Info } from 'lucide-react';
+import PageHeader from '@/components/layout/PageHeader';
 import { toast } from 'sonner';
 import ncfService, {
   DgiiReportType,
@@ -104,13 +105,11 @@ export default function DgiiReportsPage() {
   return (
     <div className="container mx-auto py-6 max-w-4xl space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Reportes DGII</h1>
-        <p className="text-muted-foreground">
-          Generación de reportes fiscales para la Dirección General de Impuestos
-          Internos
-        </p>
-      </div>
+      <PageHeader
+        title="Reportes DGII"
+        icon="file-text"
+        description="Generación de reportes fiscales para la Dirección General de Impuestos Internos"
+      />
 
       {/* Información sobre reportes */}
       <div className="grid gap-4 md:grid-cols-2">
