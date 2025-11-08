@@ -48,11 +48,12 @@ export interface PaginatedCustomers {
 }
 
 export interface TopCustomer {
-  customerId: number;
-  customerName: string;
+  id: number;
+  code: string;
+  name: string;
   initials: string;
   totalPurchases: number;
-  totalAmount: string;
+  totalAmount: number;
 }
 
 export const CustomerService = {

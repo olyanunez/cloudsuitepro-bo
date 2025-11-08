@@ -101,6 +101,50 @@ export interface GenerateDgiiReportDto {
   endDate: string;
 }
 
+export interface ExpiringSequence {
+  id: number;
+  ncfType: NcfType;
+  prefix: string;
+  series: string;
+  currentNumber: number;
+  rangeEnd: number;
+  validUntil: string;
+  branchName: string;
+  daysUntilExpiry: number;
+  available: number;
+}
+
+export interface CriticalSequence {
+  id: number;
+  ncfType: NcfType;
+  prefix: string;
+  available: number;
+  total: number;
+  percentAvailable: number;
+  branchName: string;
+}
+
+export interface DashboardStats {
+  expiringSequences: ExpiringSequence[];
+  criticalSequences: CriticalSequence[];
+  totalActiveSequences: number;
+  expiringCount: number;
+  criticalCount: number;
+  ncfUsageByMonth: Array<{
+    ncfType: NcfType;
+    _count: { id: number };
+  }>;
+}
+
+export interface NcfUsageByMonth {
+  month: string;
+  B01?: number;
+  B02?: number;
+  B03?: number;
+  B04?: number;
+  total: number;
+}
+
 // Helper para obtener headers de autenticación
 const getAuthHeaders = () => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
@@ -224,6 +268,22 @@ const ncfService = {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+  },
+
+  // ===== ESTADÍSTICAS PARA DASHBOARD =====
+
+  /**
+   * Obtener estadísticas de NCF para el dashboard
+   */
+  getDashboardStats: async (): Promise<DashboardStats> => {
+    return apiGet<DashboardStats>('/ncf/dashboard/stats');
+  },
+
+  /**
+   * Obtener uso de NCF agrupado por mes
+   */
+  getNcfUsageByMonth: async (months: number = 6): Promise<NcfUsageByMonth[]> => {
+    return apiGet<NcfUsageByMonth[]>(`/ncf/dashboard/usage-by-month?months=${months}`);
   },
 };
 

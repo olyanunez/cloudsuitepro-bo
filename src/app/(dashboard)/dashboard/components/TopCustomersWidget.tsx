@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatCurrency } from '@/lib/utils';
 import { CustomerService, TopCustomer } from '@/lib/services/customerService';
 import { toast } from 'sonner';
@@ -50,35 +49,45 @@ export function TopCustomersWidget() {
           </div>
         ) : (
           <>
-            <div className="space-y-4">
-              {customers.map((customer, index) => (
-                <div
-                  key={customer.customerId}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-muted-foreground w-6">
+            <div className="space-y-3">
+              {customers.map((customer, index) => {
+                // Obtener colores diferentes para cada posición
+                const rankColors = [
+                  'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+                  'bg-slate-500/10 text-slate-700 dark:text-slate-400',
+                  'bg-orange-500/10 text-orange-700 dark:text-orange-400',
+                  'bg-blue-500/10 text-blue-700 dark:text-blue-400',
+                  'bg-purple-500/10 text-purple-700 dark:text-purple-400',
+                ];
+
+                return (
+                  <div
+                    key={customer.id}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:shadow-sm transition-all"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div
+                        className={`flex items-center justify-center h-8 w-8 rounded-full font-bold text-sm ${rankColors[index] || 'bg-muted text-muted-foreground'}`}
+                      >
                         #{index + 1}
-                      </span>
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                          {customer.initials}
-                        </AvatarFallback>
-                      </Avatar>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate" title={customer.name}>
+                          {customer.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {customer.totalPurchases} {customer.totalPurchases === 1 ? 'compra' : 'compras'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-sm">{customer.customerName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {customer.totalPurchases} {customer.totalPurchases === 1 ? 'compra' : 'compras'}
+                    <div className="text-right ml-2">
+                      <p className="font-bold text-sm whitespace-nowrap">
+                        {formatCurrency(customer.totalAmount)}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-sm">{formatCurrency(parseFloat(customer.totalAmount))}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="mt-4 pt-4 border-t">

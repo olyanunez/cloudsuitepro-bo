@@ -10,11 +10,15 @@ import { PaymentMethodChart } from './components/PaymentMethodChart';
 import { InventorySection } from './components/InventorySection';
 import { TopCustomersWidget } from './components/TopCustomersWidget';
 import { CashSessionsWidget } from './components/CashSessionsWidget';
+import { NcfAlertsWidget } from './components/NcfAlertsWidget';
+import { NcfUsageChart } from './components/NcfUsageChart';
+import { NcfComplianceWidget } from './components/NcfComplianceWidget';
 import PageHeader from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import ncfService from '@/lib/services/ncfService';
 
 export default function DashboardPage() {
   const { activeBranchId } = useBranch();
@@ -28,6 +32,8 @@ export default function DashboardPage() {
   const [inventoryData, setInventoryData] = useState<any>(null);
   const [lowStockData, setLowStockData] = useState<any>(null);
   const [cashSessions, setCashSessions] = useState<any[]>([]);
+  const [ncfStats, setNcfStats] = useState<any>(null);
+  const [ncfUsageData, setNcfUsageData] = useState<any[]>([]);
 
   // Cargar todos los datos
   const loadDashboardData = async () => {
@@ -40,7 +46,7 @@ export default function DashboardPage() {
       const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
       // Cargar datos en paralelo
-      const [stats, trend, growth, inventory, lowStock, sessions] = await Promise.all([
+      const [stats, trend, growth, inventory, lowStock, sessions, ncfStatsData, ncfUsage] = await Promise.all([
         // Estadísticas de ventas de hoy
         DashboardService.getSalesStats({
           branchId: activeBranchId || undefined,
@@ -70,6 +76,12 @@ export default function DashboardPage() {
           startDate: startOfDay.toISOString().split('T')[0],
           endDate: endOfDay.toISOString().split('T')[0],
         }),
+
+        // Estadísticas de NCF
+        ncfService.getDashboardStats().catch(() => null),
+
+        // Uso de NCF por mes
+        ncfService.getNcfUsageByMonth(6).catch(() => []),
       ]);
 
       setSalesStats(stats);
@@ -78,6 +90,8 @@ export default function DashboardPage() {
       setInventoryData(inventory);
       setLowStockData(lowStock);
       setCashSessions(sessions);
+      setNcfStats(ncfStatsData);
+      setNcfUsageData(ncfUsage);
     } catch (error: any) {
       console.error('Error loading dashboard data:', error);
       toast.error('Error al cargar los datos del dashboard');
@@ -189,6 +203,30 @@ export default function DashboardPage() {
 
         <TopCustomersWidget />
       </div>
+
+      {/* Sección de NCF / Cumplimiento Fiscal */}
+      {ncfStats && (
+        <>
+          <div className="grid gap-4 md:grid-cols-3">
+            <NcfUsageChart data={ncfUsageData} />
+            <NcfComplianceWidget
+              totalActiveSequences={ncfStats.totalActiveSequences || 0}
+              expiringCount={ncfStats.expiringCount || 0}
+              criticalCount={ncfStats.criticalCount || 0}
+              totalNcfUsed={ncfUsageData.reduce((sum, item) => sum + (item.total || 0), 0)}
+            />
+          </div>
+
+          {(ncfStats.expiringSequences?.length > 0 || ncfStats.criticalSequences?.length > 0) && (
+            <NcfAlertsWidget
+              expiringSequences={ncfStats.expiringSequences || []}
+              criticalSequences={ncfStats.criticalSequences || []}
+              expiringCount={ncfStats.expiringCount || 0}
+              criticalCount={ncfStats.criticalCount || 0}
+            />
+          )}
+        </>
+      )}
 
       {/* Footer informativo */}
       <Card>
