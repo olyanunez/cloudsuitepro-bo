@@ -8,6 +8,7 @@ import { PosService, ProductStock, InvoiceItem, Invoice } from '@/lib/services/p
 import { BranchService } from '@/lib/services/branchService';
 import { CashSessionService, CashSession } from '@/lib/services/cashSessionService';
 import { CustomerService, Customer } from '@/lib/services/customerService';
+import ncfService, { NcfConfiguration } from '@/lib/services/ncfService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -110,11 +111,31 @@ export default function PosPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
 
+  // Estados para NCF
+  const [ncfConfig, setNcfConfig] = useState<NcfConfiguration | null>(null);
+  const [manualNcf, setManualNcf] = useState('');
+
   // Log inicial para debug
   useEffect(() => {
     console.log('🎯 POS Page Mounted');
     console.log('🎯 Active Branch ID:', activeBranchId);
     console.log('🎯 User Branches:', userBranches);
+  }, []);
+
+  // Cargar configuración NCF
+  useEffect(() => {
+    const loadNcfConfig = async () => {
+      try {
+        const config = await ncfService.getConfiguration();
+        setNcfConfig(config);
+        console.log('📄 NCF Configuration loaded:', config);
+      } catch (error) {
+        console.error('Error loading NCF configuration:', error);
+        // Si no hay configuración, es opcional, no mostrar error
+      }
+    };
+
+    loadNcfConfig();
   }, []);
 
   // Cargar el warehouse de la sucursal activa
@@ -320,6 +341,8 @@ export default function PosPage() {
     setCart([]);
     setPaymentMethod('CASH');
     setPaymentReference('');
+    setManualNcf('');
+    setSelectedCustomer(null);
   };
 
   // Calcular totales
@@ -393,6 +416,7 @@ export default function PosPage() {
         total,
         paymentMethod,
         paymentReference: paymentReference.trim() || undefined,
+        manualNcf: manualNcf.trim() || undefined,
         items,
         cashSessionId: currentSession.id,
       });
@@ -577,6 +601,24 @@ export default function PosPage() {
                 <span>Factura No:</span>
                 <strong>${completedInvoice.invoiceNumber}</strong>
               </div>
+              ${completedInvoice.ncf ? `
+              <div class="row">
+                <span>NCF:</span>
+                <strong style="color: #000; font-size: 16pt; letter-spacing: 1px;">${completedInvoice.ncf}</strong>
+              </div>
+              ` : ''}
+              ${completedInvoice.customerName ? `
+              <div class="row">
+                <span>Cliente:</span>
+                <span>${completedInvoice.customerName}</span>
+              </div>
+              ` : ''}
+              ${completedInvoice.customerRnc ? `
+              <div class="row">
+                <span>RNC/Cédula:</span>
+                <span>${completedInvoice.customerRnc}</span>
+              </div>
+              ` : ''}
               <div class="row">
                 <span>Fecha:</span>
                 <span>${new Date(completedInvoice.createdAt).toLocaleString('es-ES')}</span>
@@ -996,6 +1038,26 @@ export default function PosPage() {
                     )}
                   </div>
 
+                  {/* Campo de NCF manual (solo si está permitido) */}
+                  {ncfConfig?.allowManualNcf && (
+                    <div className="space-y-2">
+                      <Label htmlFor="manualNcf">
+                        NCF Manual {ncfConfig?.requireNcfForInvoice && !ncfConfig?.autoAssignNcf ? '*' : '(Opcional)'}
+                      </Label>
+                      <Input
+                        id="manualNcf"
+                        placeholder="Ej: E01000000123"
+                        value={manualNcf}
+                        onChange={(e) => setManualNcf(e.target.value.toUpperCase())}
+                        className="font-mono"
+                        maxLength={13}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Formato: E + 2 dígitos de tipo + 8 dígitos de secuencia
+                      </p>
+                    </div>
+                  )}
+
                   {/* Método de pago */}
                   <div className="space-y-2">
                     <Label>Método de Pago</Label>
@@ -1321,6 +1383,24 @@ export default function PosPage() {
                   <span className="text-sm text-muted-foreground">Número de Factura:</span>
                   <span className="font-bold text-lg">{completedInvoice.invoiceNumber}</span>
                 </div>
+                {completedInvoice.ncf && (
+                  <div className="flex justify-between items-center bg-yellow-50 dark:bg-yellow-900/20 -mx-4 px-4 py-2">
+                    <span className="text-sm font-semibold">NCF:</span>
+                    <span className="font-bold text-lg font-mono tracking-wider">{completedInvoice.ncf}</span>
+                  </div>
+                )}
+                {completedInvoice.customerName && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Cliente:</span>
+                    <span className="font-medium">{completedInvoice.customerName}</span>
+                  </div>
+                )}
+                {completedInvoice.customerRnc && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">RNC/Cédula:</span>
+                    <span className="font-medium font-mono">{completedInvoice.customerRnc}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Fecha:</span>
                   <span className="font-medium">

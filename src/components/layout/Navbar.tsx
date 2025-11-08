@@ -37,6 +37,17 @@ const menuItems = [
   { name: 'Punto de Venta', href: '/pos', icon: 'shopping-cart', screenCode: 'POS' },
   { name: 'Facturas', href: '/invoices', icon: 'file-text', screenCode: 'INVOICE' },
   {
+    name: 'NCF y Fiscalización',
+    href: '/ncf',
+    icon: 'file-check',
+    screenCode: null, // Este es un contenedor, no requiere permisos
+    submenu: [
+      { name: 'Secuencias NCF', href: '/ncf/sequences', icon: 'hash', screenCode: 'NCF' },
+      { name: 'Reportes DGII', href: '/ncf/reports', icon: 'file-text', screenCode: 'DGII' },
+      { name: 'Configuración NCF', href: '/ncf/config', icon: 'settings', screenCode: 'NCF' },
+    ]
+  },
+  {
     name: 'Inventario',
     href: '/inventory',
     icon: 'archive',

@@ -351,3 +351,12 @@ textarea:focus {
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilos para el Switch component */
+button[role="switch"][data-state="unchecked"] {
+  background-color: #64748b !important; /* slate-500 */
+}
+
+button[role="switch"][data-state="checked"] {
+  background-color: #fcd34d !important; /* amber-300 - primary */
+}

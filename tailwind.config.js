@@ -5,6 +5,10 @@ module.exports = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  safelist: [
+    'data-[state=checked]:bg-primary',
+    'data-[state=unchecked]:bg-gray-500',
+  ],
   theme: {
     extend: {
       colors: {

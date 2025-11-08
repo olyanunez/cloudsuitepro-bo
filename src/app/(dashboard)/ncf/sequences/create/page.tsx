@@ -1,0 +1,371 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
+import { ArrowLeft } from 'lucide-react';
+import ncfService, {
+  NcfType,
+  ncfTypeLabels,
+  CreateNcfSequenceDto,
+} from '@/lib/services/ncfService';
+
+const formSchema = z.object({
+  ncfType: z.nativeEnum(NcfType, {
+    required_error: 'Debes seleccionar un tipo de NCF',
+  }),
+  series: z
+    .string()
+    .min(1, 'La serie es requerida')
+    .max(10, 'La serie no puede tener más de 10 caracteres')
+    .regex(/^[A-Z0-9]+$/, 'La serie solo puede contener letras mayúsculas y números'),
+  prefix: z
+    .string()
+    .min(1, 'El prefijo es requerido')
+    .max(5, 'El prefijo no puede tener más de 5 caracteres')
+    .default('E'),
+  rangeStart: z.coerce
+    .number()
+    .min(1, 'El rango inicial debe ser mayor a 0')
+    .max(99999999, 'El rango inicial no puede ser mayor a 99999999'),
+  rangeEnd: z.coerce
+    .number()
+    .min(1, 'El rango final debe ser mayor a 0')
+    .max(99999999, 'El rango final no puede ser mayor a 99999999'),
+  validFrom: z.string().min(1, 'La fecha de inicio es requerida'),
+  validUntil: z.string().min(1, 'La fecha de fin es requerida'),
+  description: z.string().optional(),
+}).refine(
+  (data) => data.rangeEnd > data.rangeStart,
+  {
+    message: 'El rango final debe ser mayor al rango inicial',
+    path: ['rangeEnd'],
+  }
+);
+
+type FormValues = z.infer<typeof formSchema>;
+
+export default function CreateNcfSequencePage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      prefix: 'E',
+      series: '',
+      rangeStart: 1,
+      rangeEnd: 1000,
+      description: '',
+    },
+  });
+
+  const onSubmit = async (data: FormValues) => {
+    try {
+      setLoading(true);
+      const createDto: CreateNcfSequenceDto = {
+        ncfType: data.ncfType,
+        series: data.series,
+        prefix: data.prefix,
+        rangeStart: data.rangeStart,
+        rangeEnd: data.rangeEnd,
+        validFrom: data.validFrom,
+        validUntil: data.validUntil,
+        description: data.description,
+      };
+
+      await ncfService.createSequence(createDto);
+      toast.success('Secuencia NCF creada exitosamente');
+      router.push('/ncf/sequences');
+    } catch (error: any) {
+      console.error('Error creando secuencia:', error);
+      toast.error(
+        error.response?.data?.message || 'Error al crear la secuencia NCF'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generatePreview = () => {
+    const prefix = form.watch('prefix') || 'E';
+    const ncfType = form.watch('ncfType');
+    const series = form.watch('series') || 'XXXXXXXX';
+    const rangeStart = form.watch('rangeStart') || 0;
+
+    if (!ncfType) return 'Selecciona un tipo de NCF para ver vista previa';
+
+    const typeNumber = ncfType.replace('B', '');
+    const number = rangeStart.toString().padStart(8, '0');
+
+    return `${prefix}${typeNumber}${series}${number}`;
+  };
+
+  return (
+    <div className="container mx-auto py-6 max-w-3xl space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.push('/ncf/sequences')}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold">Nueva Secuencia NCF</h1>
+          <p className="text-muted-foreground">
+            Crear una nueva secuencia de Números de Comprobante Fiscal
+          </p>
+        </div>
+      </div>
+
+      {/* Vista previa */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">
+            Vista Previa del NCF
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <code className="text-lg font-mono bg-muted px-4 py-2 rounded">
+            {generatePreview()}
+          </code>
+        </CardContent>
+      </Card>
+
+      {/* Formulario */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Información de la Secuencia</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Tipo de NCF */}
+              <FormField
+                control={form.control}
+                name="ncfType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de NCF *</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona el tipo de NCF" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(NcfType).map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {ncfTypeLabels[type]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Tipo de comprobante según DGII
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Prefijo y Serie */}
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="prefix"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prefijo *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="E"
+                          maxLength={5}
+                          className="uppercase"
+                          onChange={(e) =>
+                            field.onChange(e.target.value.toUpperCase())
+                          }
+                        />
+                      </FormControl>
+                      <FormDescription>Ej: E</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="series"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Serie *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="01"
+                          maxLength={10}
+                          className="uppercase"
+                          onChange={(e) =>
+                            field.onChange(e.target.value.toUpperCase())
+                          }
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Serie autorizada por DGII
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Rango */}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="rangeStart"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rango Inicial *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="number"
+                          min={1}
+                          max={99999999}
+                          placeholder="1"
+                        />
+                      </FormControl>
+                      <FormDescription>Número inicial</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="rangeEnd"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rango Final *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="number"
+                          min={1}
+                          max={99999999}
+                          placeholder="1000"
+                        />
+                      </FormControl>
+                      <FormDescription>Número final</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Vigencia */}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="validFrom"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Válido Desde *</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" />
+                      </FormControl>
+                      <FormDescription>Fecha de inicio</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="validUntil"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Válido Hasta *</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" />
+                      </FormControl>
+                      <FormDescription>Fecha de vencimiento</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Descripción */}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descripción</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Descripción opcional de la secuencia..."
+                        rows={3}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Información adicional sobre esta secuencia
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Botones */}
+              <div className="flex gap-4 justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push('/ncf/sequences')}
+                  disabled={loading}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? 'Creando...' : 'Crear Secuencia'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -47,13 +47,17 @@ export interface CreateInvoicePayload {
   paymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | 'CHECK' | 'CREDIT';
   notes?: string;
   paymentReference?: string; // Voucher de tarjeta o referencia de transferencia
+  manualNcf?: string; // NCF manual (solo si está permitido en configuración)
   items: InvoiceItem[];
 }
 
 export interface Invoice {
   id: number;
   invoiceNumber: string;
+  ncf: string | null;
   customerId: number | null;
+  customerName: string | null;
+  customerRnc: string | null;
   branchId: number;
   warehouseId: number;
   userId: number;
