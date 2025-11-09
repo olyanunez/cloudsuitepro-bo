@@ -20,6 +20,7 @@ export default function CreateProductPage() {
     name: '',
     code: '',
     description: '',
+    barcode: '',
     price: 0,
     cost: 0,
     categoryId: 0
@@ -200,6 +201,25 @@ export default function CreateProductPage() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700"
                   placeholder="Descripción del producto"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Código de Barras
+                </label>
+                <input
+                  type="text"
+                  id="barcode"
+                  name="barcode"
+                  value={formData.barcode}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700"
+                  placeholder="Escanea o ingresa el código de barras"
+                  maxLength={50}
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Opcional. Puedes escanear el código de barras o ingresarlo manualmente.
+                </p>
               </div>
 
               <div>

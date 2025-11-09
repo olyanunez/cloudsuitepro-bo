@@ -25,6 +25,7 @@ export interface Product {
   code: string;
   name: string;
   description?: string;
+  barcode?: string;
   price: number;
   cost: number;
   categoryId: number;
@@ -117,6 +118,7 @@ export interface CreateProductDto {
   code: string;
   name: string;
   description?: string;
+  barcode?: string;
   price: number;
   cost: number;
   categoryId: number;
@@ -126,6 +128,7 @@ export interface UpdateProductDto {
   code?: string;
   name?: string;
   description?: string;
+  barcode?: string;
   price?: number;
   cost?: number;
   categoryId?: number;

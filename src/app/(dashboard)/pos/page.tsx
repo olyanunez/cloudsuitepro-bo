@@ -11,6 +11,11 @@ import { CustomerService, Customer } from '@/lib/services/customerService';
 import ncfService, { NcfConfiguration, ncfTypeLabels, NcfType } from '@/lib/services/ncfService';
 import { TenantService, Tenant } from '@/lib/services/tenantService';
 import { printInvoice } from '@/lib/utils/invoicePrint';
+import {
+  playSuccessBeepIfEnabled,
+  playErrorBeepIfEnabled,
+  initAudioContext
+} from '@/lib/utils/sounds';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -86,6 +91,11 @@ export default function PosPage() {
   const [activeWarehouseName, setActiveWarehouseName] = useState<string | null>(null);
   const [loadingWarehouse, setLoadingWarehouse] = useState(false);
 
+  // Estados para detección de escáner de código de barras
+  const [scanBuffer, setScanBuffer] = useState('');
+  const [scanTimestamp, setScanTimestamp] = useState<number>(0);
+  const [isScannerDetected, setIsScannerDetected] = useState(false);
+
   // Estados para cancelar factura
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelInvoiceNumber, setCancelInvoiceNumber] = useState('');
@@ -123,11 +133,15 @@ export default function PosPage() {
   // Estado para información de la empresa (tenant)
   const [tenantInfo, setTenantInfo] = useState<Tenant | null>(null);
 
-  // Log inicial para debug
+  // Log inicial para debug e inicializar audio
   useEffect(() => {
     console.log('🎯 POS Page Mounted');
     console.log('🎯 Active Branch ID:', activeBranchId);
     console.log('🎯 User Branches:', userBranches);
+
+    // Inicializar contexto de audio después de interacción del usuario
+    // Esto es necesario por la política de autoplay de los navegadores
+    initAudioContext();
   }, []);
 
   // Cargar configuración NCF
@@ -262,19 +276,54 @@ export default function PosPage() {
         });
         console.log('✅ Search results:', results);
         setSearchResults(results);
+
+        // 🔥 DETECCIÓN DE ESCÁNER: Si solo hay 1 resultado y la búsqueda parece ser un código de barras
+        // (8-13 caracteres numéricos), agregar automáticamente al carrito
+        if (results.length === 1 && searchQuery.length >= 8 && /^[0-9]+$/.test(searchQuery)) {
+          console.log('🎯 Código de barras detectado - Agregando al carrito automáticamente');
+          setIsScannerDetected(true);
+
+          const product = results[0];
+          addToCart(product);
+
+          // 🔊 Reproducir beep de éxito
+          playSuccessBeepIfEnabled();
+
+          // Limpiar búsqueda y resultados
+          setSearchQuery('');
+          setSearchResults([]);
+
+          // Mostrar feedback visual
+          toast.success(`✓ ${product.name} agregado al carrito`, {
+            duration: 2000,
+          });
+
+          // Reset scanner detection después de un momento
+          setTimeout(() => setIsScannerDetected(false), 1000);
+        } else if (results.length === 0 && searchQuery.length >= 8 && /^[0-9]+$/.test(searchQuery)) {
+          // 🔊 Beep de error si parece código de barras pero no se encontró
+          playErrorBeepIfEnabled();
+        }
       } catch (error) {
         console.error('❌ Error searching products:', error);
         toast.error('Error al buscar productos');
         setSearchResults([]);
+
+        // 🔊 Beep de error en caso de fallo
+        playErrorBeepIfEnabled();
       } finally {
         setLoading(false);
       }
     };
 
+    // Usar debounce más corto para códigos de barras (parecen numéricos y largos)
+    const isBarcodePattern = searchQuery.length >= 8 && /^[0-9]+$/.test(searchQuery);
+    const debounceTime = isBarcodePattern ? 100 : 300; // Más rápido para códigos de barras
+
     const handler = setTimeout(() => {
       console.log("BUSCARRRRRR")
       searchProducts();
-    }, 300);
+    }, debounceTime);
 
     return () => clearTimeout(handler);
   }, [searchQuery, activeWarehouseId, activeBranchId]);
@@ -1068,14 +1117,24 @@ export default function PosPage() {
             <CardContent>
               <div className="relative">
                 <Input
-                  placeholder="Buscar por código, nombre o categoría..."
+                  placeholder="Buscar o escanear código de barras..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full"
+                  className={`w-full ${isScannerDetected ? 'ring-2 ring-green-500' : ''}`}
+                  autoFocus
                 />
                 {loading && (
                   <div className="absolute right-3 top-3">
                     <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                  </div>
+                )}
+                {isScannerDetected && (
+                  <div className="absolute right-3 top-3">
+                    <div className="h-4 w-4 bg-green-500 rounded-full flex items-center justify-center">
+                      <svg className="h-3 w-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M5 13l4 4L19 7"></path>
+                      </svg>
+                    </div>
                   </div>
                 )}
               </div>
