@@ -14,7 +14,9 @@ import { printInvoice } from '@/lib/utils/invoicePrint';
 import {
   playSuccessBeepIfEnabled,
   playErrorBeepIfEnabled,
-  initAudioContext
+  initAudioContext,
+  isSoundEnabled,
+  setSoundEnabled
 } from '@/lib/utils/sounds';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -68,6 +70,8 @@ import {
   ImageIcon,
   User as UserIcon,
   X,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -95,6 +99,9 @@ export default function PosPage() {
   const [scanBuffer, setScanBuffer] = useState('');
   const [scanTimestamp, setScanTimestamp] = useState<number>(0);
   const [isScannerDetected, setIsScannerDetected] = useState(false);
+
+  // Estado para control de sonidos
+  const [soundEnabled, setSoundEnabledState] = useState(isSoundEnabled());
 
   // Estados para cancelar factura
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -619,6 +626,18 @@ export default function PosPage() {
     console.log('💰 Sesión de caja cerrada');
   };
 
+  // Función para toggle de sonidos
+  const handleToggleSound = () => {
+    const newState = !soundEnabled;
+    setSoundEnabledState(newState);
+    setSoundEnabled(newState);
+
+    toast.success(
+      newState ? '🔊 Sonidos activados' : '🔇 Sonidos silenciados',
+      { duration: 1500 }
+    );
+  };
+
   // Función para imprimir la factura
   const handlePrintInvoice = () => {
     if (!completedInvoice) return;
@@ -1074,6 +1093,21 @@ export default function PosPage() {
             </div>
           )}
           <div className="flex gap-2">
+          {/* Botón de toggle de sonidos */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleToggleSound}
+            className="shadow-sm"
+            title={soundEnabled ? 'Silenciar sonidos' : 'Activar sonidos'}
+          >
+            {soundEnabled ? (
+              <Volume2 className="h-4 w-4" />
+            ) : (
+              <VolumeX className="h-4 w-4 text-muted-foreground" />
+            )}
+          </Button>
+
           {!currentSession ? (
             <Button
               onClick={handleOpenSession}
