@@ -283,3 +283,14 @@ export class InvoiceService {
     return colors[status] || 'bg-gray-100 text-gray-800';
   }
 }
+
+/**
+ * Instancia del servicio de facturas para uso directo
+ */
+export const invoiceService = {
+  getAll: (params?: InvoiceQueryParams) => InvoiceService.getInvoices(params),
+  getById: (id: number) => InvoiceService.getInvoice(id),
+  cancel: (id: number) => InvoiceService.cancelInvoice(id),
+  getStats: (branchId?: number, startDate?: string, endDate?: string) =>
+    InvoiceService.getStats(branchId, startDate, endDate),
+};

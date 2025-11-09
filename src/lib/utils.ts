@@ -32,3 +32,31 @@ export function formatCurrency(amount: string | number | null | undefined): stri
     maximumFractionDigits: 2,
   }).format(numericAmount);
 }
+
+/**
+ * Formatea una fecha a formato legible
+ * @param date - La fecha a formatear (string o Date)
+ * @returns Fecha formateada como "DD/MM/YYYY HH:mm"
+ *
+ * @example
+ * formatDate("2024-01-15T10:30:00") // "15/01/2024 10:30"
+ * formatDate(new Date()) // "15/01/2024 10:30"
+ */
+export function formatDate(date: string | Date | null | undefined): string {
+  if (!date) return 'N/A';
+
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+  if (isNaN(dateObj.getTime())) {
+    return 'N/A';
+  }
+
+  return new Intl.DateTimeFormat('es-DO', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(dateObj);
+}

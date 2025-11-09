@@ -36,6 +36,7 @@ const menuItems = [
   { name: 'Roles', href: '/roles', icon: 'shield', screenCode: 'ROLE' },
   { name: 'Punto de Venta', href: '/pos', icon: 'shopping-cart', screenCode: 'POS' },
   { name: 'Facturas', href: '/invoices', icon: 'file-text', screenCode: 'INVOICE' },
+  { name: 'Notas de Crédito', href: '/credit-notes', icon: 'undo-2', screenCode: 'CREDIT_NOTE' },
   {
     name: 'NCF y Fiscalización',
     href: '/ncf',
