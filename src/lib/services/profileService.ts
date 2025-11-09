@@ -1,4 +1,4 @@
-import { apiGet, apiPatch, apiPatchFormData } from './apiService';
+import { apiGet, apiPatch, apiPatchFormData, apiPost } from './apiService';
 
 export interface UserProfile {
   id: number;
@@ -56,6 +56,18 @@ class ProfileService {
 
     // Si no hay archivo, usamos la petición normal
     return await apiPatch<UserProfile>('/users/me', data);
+  }
+
+  /**
+   * Cambiar contraseña del usuario autenticado
+   * @param currentPassword Contraseña actual
+   * @param newPassword Nueva contraseña
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    return await apiPost<{ message: string }>('/users/me/change-password', {
+      currentPassword,
+      newPassword,
+    });
   }
 }
 
