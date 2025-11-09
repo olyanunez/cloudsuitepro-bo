@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,10 +65,10 @@ export default function TenantsPage() {
     setDeleteDialogOpen(true);
   };
 
-  const handleToggleStatus = async (id: string, active: boolean) => {
+  const handleToggleStatus = async (id: string, isActive: boolean) => {
     try {
-      const updatedTenant = await TenantService.toggleTenantStatus(id, !active);
-      setTenants(tenants.map(tenant => 
+      const updatedTenant = await TenantService.toggleTenantStatus(id, !isActive);
+      setTenants(tenants.map(tenant =>
         tenant.id === id ? updatedTenant : tenant
       ));
     } catch (err) {
@@ -128,8 +127,8 @@ export default function TenantsPage() {
                       {tenant.phone && <div>{tenant.phone}</div>}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={tenant.active ? "success" : "destructive"}>
-                        {tenant.active ? 'Activa' : 'Inactiva'}
+                      <Badge variant={tenant.isActive ? "success" : "destructive"}>
+                        {tenant.isActive ? 'Activa' : 'Inactiva'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -142,12 +141,12 @@ export default function TenantsPage() {
                           Editar
                         </Button>
                         <Button
-                          variant={tenant.active ? "destructive" : "outline"}
+                          variant={tenant.isActive ? "destructive" : "outline"}
                           size="sm"
-                          onClick={() => handleToggleStatus(tenant.id, tenant.active)}
+                          onClick={() => handleToggleStatus(tenant.id, tenant.isActive)}
                           disabled={tenant.id === currentTenantId}
                         >
-                          {tenant.active ? 'Desactivar' : 'Activar'}
+                          {tenant.isActive ? 'Desactivar' : 'Activar'}
                         </Button>
                         <Button
                           variant="destructive"

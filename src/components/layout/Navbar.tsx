@@ -66,10 +66,11 @@ const menuItems = [
   },
   {
     name: 'Reportes',
-    href: '/reports',
+    href: '#',
     icon: 'bar-chart-3',
-    screenCode: 'REPORTS',
+    screenCode: null,
     submenu: [
+      { name: 'Reportes', href: '/reports', icon: 'bar-chart-3', screenCode: 'REPORTS' },
       { name: 'Productos Más Vendidos', href: '/reports/top-products', icon: 'trending-up', screenCode: 'REPORTS' },
       { name: 'Márgenes de Productos', href: '/reports/product-margins', icon: 'dollar-sign', screenCode: 'REPORTS' },
       { name: 'Ventas por Categoría', href: '/reports/sales-by-category', icon: 'tag', screenCode: 'REPORTS' },
@@ -288,7 +289,17 @@ export default function Navbar() {
           <nav className="flex flex-col gap-4 mt-8 overflow-y-auto flex-1 pr-2">
             {filteredMenuItems.map((item) => {
               if (!item) return null;
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+
+              // Determinar si el ítem está activo
+              let isActive = pathname === item.href || (item.href !== '#' && pathname.startsWith(item.href + '/'));
+
+              // Si tiene submenú, verificar si algún subitem está activo
+              if (item.submenu) {
+                isActive = item.submenu.some(subItem =>
+                  pathname === subItem.href || pathname.startsWith(subItem.href + '/')
+                );
+              }
+
               const isSubmenuOpen = !!openSubmenus[item.href];
               return (
                 <div key={item.href} className="flex flex-col">

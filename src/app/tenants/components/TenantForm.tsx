@@ -27,7 +27,7 @@ export function TenantForm({ initialData, onSubmit, isEditing = false }: TenantF
     email: initialData?.email || '',
     taxId: initialData?.taxId || '',
     logo: initialData?.logo || '',
-    active: initialData?.active !== undefined ? initialData?.active : true,
+    isActive: initialData?.isActive !== undefined ? initialData?.isActive : true,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -36,7 +36,7 @@ export function TenantForm({ initialData, onSubmit, isEditing = false }: TenantF
   };
 
   const handleSwitchChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, active: checked }));
+    setFormData(prev => ({ ...prev, isActive: checked }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -147,12 +147,12 @@ export function TenantForm({ initialData, onSubmit, isEditing = false }: TenantF
 
           {isEditing && (
             <div className="flex items-center space-x-2">
-              <Switch 
-                id="active"
-                checked={formData.active}
+              <Switch
+                id="isActive"
+                checked={formData.isActive}
                 onCheckedChange={handleSwitchChange}
               />
-              <Label htmlFor="active">Empresa Activa</Label>
+              <Label htmlFor="isActive">Empresa Activa</Label>
             </div>
           )}
         </CardContent>

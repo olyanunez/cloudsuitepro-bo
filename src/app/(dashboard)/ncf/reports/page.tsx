@@ -49,6 +49,18 @@ const formSchema = z.object({
     message: 'La fecha final debe ser mayor o igual a la fecha inicial',
     path: ['endDate'],
   }
+).refine(
+  (data) => {
+    const end = new Date(data.endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    return end <= today;
+  },
+  {
+    message: 'La fecha final no puede ser mayor a la fecha actual',
+    path: ['endDate'],
+  }
 );
 
 type FormValues = z.infer<typeof formSchema>;
@@ -253,7 +265,11 @@ export default function DgiiReportsPage() {
                       <FormItem>
                         <FormLabel>Fecha Final *</FormLabel>
                         <FormControl>
-                          <Input {...field} type="date" />
+                          <Input
+                            {...field}
+                            type="date"
+                            max={new Date().toISOString().split('T')[0]}
+                          />
                         </FormControl>
                         <FormDescription>Hasta</FormDescription>
                         <FormMessage />

@@ -15,7 +15,7 @@ export interface Tenant {
   email?: string;
   taxId?: string;
   logo?: string;
-  active: boolean;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -40,7 +40,7 @@ export interface UpdateTenantDto {
   email?: string;
   taxId?: string;
   logo?: string;
-  active?: boolean;
+  isActive?: boolean;
 }
 
 /**
@@ -56,7 +56,7 @@ const normalizeTenantData = (tenant: Partial<Tenant>): Tenant => {
     email: tenant.email || '',
     taxId: tenant.taxId || '',
     logo: tenant.logo || '',
-    active: tenant.active !== undefined ? tenant.active : true,
+    isActive: tenant.isActive !== undefined ? tenant.isActive : true,
     createdAt: tenant.createdAt || new Date().toISOString(),
     updatedAt: tenant.updatedAt || new Date().toISOString(),
   };
@@ -133,9 +133,9 @@ export class TenantService {
   /**
    * Activa o desactiva una empresa
    */
-  static async toggleTenantStatus(id: string, active: boolean): Promise<Tenant> {
+  static async toggleTenantStatus(id: string, isActive: boolean): Promise<Tenant> {
     try {
-      const response = await apiPatch<Partial<Tenant>>(`/tenants/${id}/status`, { active });
+      const response = await apiPatch<Partial<Tenant>>(`/tenants/${id}/status`, { isActive });
       return normalizeTenantData(response);
     } catch (error) {
       console.error(`Error al cambiar estado de empresa con ID ${id}:`, error);

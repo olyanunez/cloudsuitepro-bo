@@ -47,7 +47,7 @@ export default function EditTenantPage() {
       email: data.email,
       taxId: data.taxId,
       logo: data.logo,
-      active: data.active
+      isActive: data.isActive
     };
     if (!id) return;
     
