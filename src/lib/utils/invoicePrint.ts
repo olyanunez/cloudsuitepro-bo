@@ -7,9 +7,19 @@ interface PrintInvoiceOptions {
   invoice: Invoice;
   tenantInfo: Tenant | null;
   itbisRate: number;
+  includeLogo?: boolean;
+  invoiceFooter?: string;
+  termsAndConditions?: string;
 }
 
-export function printInvoice({ invoice, tenantInfo, itbisRate }: PrintInvoiceOptions) {
+export function printInvoice({
+  invoice,
+  tenantInfo,
+  itbisRate,
+  includeLogo = true,
+  invoiceFooter,
+  termsAndConditions
+}: PrintInvoiceOptions) {
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
     throw new Error('No se pudo abrir la ventana de impresión. Por favor, permita las ventanas emergentes.');
@@ -49,6 +59,12 @@ export function printInvoice({ invoice, tenantInfo, itbisRate }: PrintInvoiceOpt
             margin-bottom: 20px;
             border-bottom: 2px solid #000;
             padding-bottom: 15px;
+          }
+          .company-header .logo {
+            max-width: 150px;
+            max-height: 80px;
+            margin: 0 auto 15px;
+            display: block;
           }
           .company-header h1 {
             font-size: 24pt;
@@ -238,6 +254,7 @@ export function printInvoice({ invoice, tenantInfo, itbisRate }: PrintInvoiceOpt
         <div class="invoice-container">
           <!-- Header con información de la empresa -->
           <div class="company-header">
+            ${includeLogo && tenantInfo?.logo ? `<img src="${tenantInfo.logo}" alt="Logo" class="logo" />` : ''}
             <h1>${tenantInfo?.name || 'Xotica'}</h1>
             ${tenantInfo?.address ? `<p class="company-info">${tenantInfo.address}</p>` : ''}
             ${tenantInfo?.phone ? `<p class="company-info">Tel: ${tenantInfo.phone}</p>` : ''}
@@ -390,9 +407,21 @@ export function printInvoice({ invoice, tenantInfo, itbisRate }: PrintInvoiceOpt
             })()}
           </div>
 
+          ${termsAndConditions ? `
+          <!-- Términos y Condiciones -->
+          <div style="margin-top: 25px; padding: 15px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
+            <h3 style="font-size: 11pt; margin-bottom: 8px; font-weight: bold;">Términos y Condiciones</h3>
+            <p style="font-size: 9pt; line-height: 1.4; white-space: pre-wrap; margin: 0;">${termsAndConditions}</p>
+          </div>
+          ` : ''}
+
           <!-- Footer -->
           <div class="footer">
-            <p><strong>¡Gracias por su preferencia!</strong></p>
+            ${invoiceFooter ? `
+              <p><strong>${invoiceFooter}</strong></p>
+            ` : `
+              <p><strong>¡Gracias por su preferencia!</strong></p>
+            `}
             <p>Conserve este comprobante para fines fiscales</p>
             ${invoice.ncf ? `
             <p class="legal">

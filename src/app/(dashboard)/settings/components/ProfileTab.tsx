@@ -330,7 +330,7 @@ export default function ProfileTab() {
                       onClick={() =>
                         setShowPasswords((prev) => ({ ...prev, current: !prev.current }))
                       }
-                      className="absolute right-3 top-3 text-muted-foreground"
+                      className="absolute right-3 top-3 !bg-transparent text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {showPasswords.current ? (
                         <EyeOff className="h-4 w-4" />
@@ -360,7 +360,7 @@ export default function ProfileTab() {
                       onClick={() =>
                         setShowPasswords((prev) => ({ ...prev, new: !prev.new }))
                       }
-                      className="absolute right-3 top-3 text-muted-foreground"
+                      className="absolute right-3 top-3 !bg-transparent text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {showPasswords.new ? (
                         <EyeOff className="h-4 w-4" />
@@ -390,7 +390,7 @@ export default function ProfileTab() {
                       onClick={() =>
                         setShowPasswords((prev) => ({ ...prev, confirm: !prev.confirm }))
                       }
-                      className="absolute right-3 top-3 text-muted-foreground"
+                      className="absolute right-3 top-3 !bg-transparent text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {showPasswords.confirm ? (
                         <EyeOff className="h-4 w-4" />

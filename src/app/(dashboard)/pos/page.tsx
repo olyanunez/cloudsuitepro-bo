@@ -191,6 +191,15 @@ export default function PosPage() {
         const settings = await TenantSettingsService.getSettings();
         setTenantSettings(settings);
         console.log('⚙️ Tenant Settings loaded:', settings);
+
+        // Sincronizar la preferencia de sonidos con localStorage
+        setSoundEnabled(settings.enableSounds);
+        setSoundEnabledState(settings.enableSounds);
+
+        // Establecer el método de pago predeterminado
+        if (settings.defaultPaymentMethod) {
+          setPaymentMethod(settings.defaultPaymentMethod as 'CASH' | 'CARD' | 'TRANSFER');
+        }
       } catch (error) {
         console.error('Error loading tenant settings:', error);
       }
@@ -436,7 +445,8 @@ export default function PosPage() {
   // Limpiar carrito
   const clearCart = () => {
     setCart([]);
-    setPaymentMethod('CASH');
+    // Resetear al método de pago predeterminado de la configuración
+    setPaymentMethod((tenantSettings?.defaultPaymentMethod as 'CASH' | 'CARD' | 'TRANSFER') || 'CASH');
     setPaymentReference('');
     setManualNcf('');
     setManualCustomerRnc('');
@@ -488,6 +498,12 @@ export default function PosPage() {
           ? 'Debe ingresar el número de voucher de la tarjeta'
           : 'Debe ingresar la referencia de la transferencia'
       );
+      return;
+    }
+
+    // Validar que se haya seleccionado un cliente si la configuración lo requiere
+    if (tenantSettings?.askForCustomer && !selectedCustomer && !sellAsFinalConsumer && !manualCustomerName.trim()) {
+      toast.error('Debe seleccionar un cliente o marcar como consumidor final');
       return;
     }
 
@@ -548,6 +564,9 @@ export default function PosPage() {
             invoice,
             tenantInfo,
             itbisRate: ncfConfig?.itbisRate || 18,
+            includeLogo: tenantSettings?.includeLogo ?? true,
+            invoiceFooter: tenantSettings?.invoiceFooter || undefined,
+            termsAndConditions: tenantSettings?.termsAndConditions || undefined,
           });
         } catch (error) {
           console.error('Error auto-printing receipt:', error);
@@ -664,15 +683,33 @@ export default function PosPage() {
   };
 
   // Función para toggle de sonidos
-  const handleToggleSound = () => {
+  const handleToggleSound = async () => {
     const newState = !soundEnabled;
     setSoundEnabledState(newState);
     setSoundEnabled(newState);
 
-    toast.success(
-      newState ? '🔊 Sonidos activados' : '🔇 Sonidos silenciados',
-      { duration: 1500 }
-    );
+    // Guardar en la base de datos también
+    try {
+      await TenantSettingsService.updateSettings({
+        enableSounds: newState,
+      });
+
+      // Actualizar el estado local de tenantSettings
+      if (tenantSettings) {
+        setTenantSettings({ ...tenantSettings, enableSounds: newState });
+      }
+
+      toast.success(
+        newState ? '🔊 Sonidos activados' : '🔇 Sonidos silenciados',
+        { duration: 1500 }
+      );
+    } catch (error) {
+      console.error('Error updating sound preference:', error);
+      // Revertir el cambio si falla
+      setSoundEnabledState(!newState);
+      setSoundEnabled(!newState);
+      toast.error('Error al guardar la preferencia de sonidos');
+    }
   };
 
   // Función para imprimir la factura
@@ -684,6 +721,9 @@ export default function PosPage() {
         invoice: completedInvoice,
         tenantInfo,
         itbisRate: ncfConfig?.itbisRate || 18,
+        includeLogo: tenantSettings?.includeLogo ?? true,
+        invoiceFooter: tenantSettings?.invoiceFooter || undefined,
+        termsAndConditions: tenantSettings?.termsAndConditions || undefined,
       });
     } catch (error: any) {
       toast.error(error.message || 'Error al imprimir la factura');
@@ -1391,9 +1431,9 @@ export default function PosPage() {
                     </div>
                   </div>
 
-                  {/* Buscador de clientes (opcional) */}
+                  {/* Buscador de clientes */}
                   <div className="space-y-2">
-                    <Label>Cliente (Opcional)</Label>
+                    <Label>Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}</Label>
                     {selectedCustomer ? (
                       <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
                         <div className="flex items-center gap-2">
@@ -1496,7 +1536,7 @@ export default function PosPage() {
 
                       <div className="space-y-2">
                         <Label htmlFor="manualCustomerName">
-                          Nombre del Cliente (Opcional)
+                          Nombre del Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}
                         </Label>
                         <Input
                           id="manualCustomerName"

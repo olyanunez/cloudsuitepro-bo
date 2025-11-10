@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Invoice, InvoiceService } from '@/lib/services/invoiceService';
 import { TenantService, Tenant } from '@/lib/services/tenantService';
+import TenantSettingsService, { TenantSettings } from '@/lib/services/tenantSettingsService';
 import ncfService, { NcfConfiguration } from '@/lib/services/ncfService';
 import { printInvoice } from '@/lib/utils/invoicePrint';
 import { toast } from 'sonner';
@@ -49,11 +50,13 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [tenantInfo, setTenantInfo] = useState<Tenant | null>(null);
+  const [tenantSettings, setTenantSettings] = useState<TenantSettings | null>(null);
   const [ncfConfig, setNcfConfig] = useState<NcfConfiguration | null>(null);
 
   useEffect(() => {
     loadInvoice();
     loadTenantInfo();
+    loadTenantSettings();
     loadNcfConfig();
   }, [invoiceId]);
 
@@ -81,6 +84,15 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
       }
     } catch (error) {
       console.error('Error loading tenant information:', error);
+    }
+  };
+
+  const loadTenantSettings = async () => {
+    try {
+      const settings = await TenantSettingsService.getSettings();
+      setTenantSettings(settings);
+    } catch (error) {
+      console.error('Error loading tenant settings:', error);
     }
   };
 
@@ -113,6 +125,9 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
         invoice,
         tenantInfo,
         itbisRate: ncfConfig?.itbisRate || 18,
+        includeLogo: tenantSettings?.includeLogo ?? true,
+        invoiceFooter: tenantSettings?.invoiceFooter || undefined,
+        termsAndConditions: tenantSettings?.termsAndConditions || undefined,
       });
     } catch (error: any) {
       toast.error(error.message || 'Error al imprimir la factura');
