@@ -10,6 +10,7 @@ import { CashSessionService, CashSession } from '@/lib/services/cashSessionServi
 import { CustomerService, Customer } from '@/lib/services/customerService';
 import ncfService, { NcfConfiguration, ncfTypeLabels, NcfType } from '@/lib/services/ncfService';
 import { TenantService, Tenant } from '@/lib/services/tenantService';
+import TenantSettingsService, { TenantSettings } from '@/lib/services/tenantSettingsService';
 import { printInvoice } from '@/lib/utils/invoicePrint';
 import {
   playSuccessBeepIfEnabled,
@@ -140,6 +141,9 @@ export default function PosPage() {
   // Estado para información de la empresa (tenant)
   const [tenantInfo, setTenantInfo] = useState<Tenant | null>(null);
 
+  // Estado para configuración del tenant
+  const [tenantSettings, setTenantSettings] = useState<TenantSettings | null>(null);
+
   // Log inicial para debug e inicializar audio
   useEffect(() => {
     console.log('🎯 POS Page Mounted');
@@ -167,7 +171,7 @@ export default function PosPage() {
     loadNcfConfig();
   }, []);
 
-  // Cargar información de la empresa (tenant)
+  // Cargar información de la empresa (tenant) y configuraciones
   useEffect(() => {
     const loadTenantInfo = async () => {
       try {
@@ -182,7 +186,18 @@ export default function PosPage() {
       }
     };
 
+    const loadTenantSettings = async () => {
+      try {
+        const settings = await TenantSettingsService.getSettings();
+        setTenantSettings(settings);
+        console.log('⚙️ Tenant Settings loaded:', settings);
+      } catch (error) {
+        console.error('Error loading tenant settings:', error);
+      }
+    };
+
     loadTenantInfo();
+    loadTenantSettings();
   }, []);
 
   // Cargar el warehouse de la sucursal activa
@@ -519,6 +534,28 @@ export default function PosPage() {
       setCompletedInvoice(invoice);
       setShowInvoiceModal(true);
       clearCart();
+
+      // Auto-imprimir recibo si está configurado
+      console.log('🖨️ Checking auto-print settings:', {
+        tenantSettings,
+        autoPrintReceipts: tenantSettings?.autoPrintReceipts,
+      });
+
+      if (tenantSettings?.autoPrintReceipts) {
+        try {
+          console.log('🖨️ Auto-printing receipt (autoPrintReceipts is enabled)');
+          printInvoice({
+            invoice,
+            tenantInfo,
+            itbisRate: ncfConfig?.itbisRate || 18,
+          });
+        } catch (error) {
+          console.error('Error auto-printing receipt:', error);
+          // No mostramos toast de error para no interrumpir el flujo
+        }
+      } else {
+        console.log('🖨️ Auto-print is disabled, skipping automatic print');
+      }
     } catch (error: any) {
       console.error('Error processing payment:', error);
       toast.error(error?.message || 'Error al procesar el pago');

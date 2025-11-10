@@ -43,10 +43,9 @@ export default function ProductsPage() {
 
   // Helper function for compact view classes
   const getTableCellClass = (baseClass: string) => {
-    if (compactView) {
-      return baseClass.replace('py-4', 'py-2').replace('py-3', 'py-1.5');
-    }
-    return baseClass;
+    return compactView
+      ? baseClass.replace('py-4', 'py-2').replace('py-3', 'py-1.5')
+      : baseClass;
   };
 
   // Image carousel state
