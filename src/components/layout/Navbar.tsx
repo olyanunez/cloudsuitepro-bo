@@ -27,6 +27,7 @@ import { BuildingIcon, MenuIcon, UserIcon, LogOut, Settings } from 'lucide-react
 import { LogoutIcon, NotificationIcon, Icon } from './Icons'
 import BranchSwitcher from './BranchSwitcher'
 import ProfileService from '@/lib/services/profileService'
+import UserPreferencesService from '@/lib/services/userPreferencesService'
 
 // Definición de los elementos del menú
 // screenCode: código de la pantalla para validar permisos (null = sin permisos requeridos)
@@ -103,6 +104,22 @@ export default function Navbar() {
       }
     }
     loadProfile()
+  }, [])
+
+  // Cargar preferencia de sidebar expandido
+  React.useEffect(() => {
+    async function loadSidebarPreference() {
+      try {
+        const preferences = await UserPreferencesService.getPreferences()
+        // Solo abrir automáticamente en pantallas grandes (md y arriba)
+        if (preferences.sidebarExpanded && window.innerWidth >= 768) {
+          setOpen(true)
+        }
+      } catch (error) {
+        console.error('Error loading sidebar preference:', error)
+      }
+    }
+    loadSidebarPreference()
   }, [])
 
   // Función para verificar si un item debe ser visible

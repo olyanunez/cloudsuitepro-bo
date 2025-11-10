@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -13,49 +14,87 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { FileText, Receipt, ShoppingCart, ExternalLink } from 'lucide-react';
+import { FileText, ShoppingCart, ExternalLink, Save } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
 import { toast } from 'sonner';
+import TenantSettingsService, { TenantSettings } from '@/lib/services/tenantSettingsService';
 
 export default function BusinessTab() {
-  // TODO: Cargar desde backend cuando se implemente la tabla de configuraciones
-  const [invoiceSettings, setInvoiceSettings] = useState({
-    invoicePrefix: 'INV',
-    autoprint: false,
-    includeLogo: true,
-    footerText: '',
-    termsAndConditions: '',
-  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [settings, setSettings] = useState<TenantSettings | null>(null);
 
-  const [posSettings, setPosSettings] = useState({
-    defaultPaymentMethod: 'CASH',
-    enableSounds: true,
-    autoprintReceipts: false,
-    askForCustomer: true,
-  });
+  useEffect(() => {
+    loadSettings();
+  }, []);
 
-  const handleInvoiceChange = (field: string, value: any) => {
-    setInvoiceSettings((prev) => ({ ...prev, [field]: value }));
+  const loadSettings = async () => {
+    try {
+      setLoading(true);
+      const data = await TenantSettingsService.getSettings();
+      setSettings(data);
+    } catch (error: any) {
+      console.error('Error loading settings:', error);
+      toast.error('Error al cargar configuraciones');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePosChange = (field: string, value: any) => {
-    setPosSettings((prev) => ({ ...prev, [field]: value }));
+  const handleChange = (field: keyof TenantSettings, value: any) => {
+    if (settings) {
+      setSettings({ ...settings, [field]: value });
+    }
   };
 
-  const handleSaveInvoiceSettings = () => {
-    // TODO: Implementar guardado en backend
-    toast.warning('Guardado de configuraciones en desarrollo', {
-      description: 'Esta funcionalidad estará disponible próximamente',
-    });
+  const handleSaveSettings = async () => {
+    if (!settings) return;
+
+    try {
+      setSaving(true);
+      await TenantSettingsService.updateSettings({
+        invoicePrefix: settings.invoicePrefix,
+        autoPrintInvoices: settings.autoPrintInvoices,
+        includeLogo: settings.includeLogo,
+        invoiceFooter: settings.invoiceFooter || undefined,
+        termsAndConditions: settings.termsAndConditions || undefined,
+        defaultPaymentMethod: settings.defaultPaymentMethod,
+        enableSounds: settings.enableSounds,
+        autoPrintReceipts: settings.autoPrintReceipts,
+        askForCustomer: settings.askForCustomer,
+      });
+      toast.success('Configuraciones guardadas correctamente');
+    } catch (error: any) {
+      console.error('Error saving settings:', error);
+      toast.error(error.message || 'Error al guardar configuraciones');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleSavePosSettings = () => {
-    // TODO: Implementar guardado en backend
-    toast.warning('Guardado de configuraciones en desarrollo', {
-      description: 'Esta funcionalidad estará disponible próximamente',
-    });
-  };
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center py-8">
+            <div className="text-muted-foreground">Cargando configuraciones...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!settings) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center py-8">
+            <div className="text-muted-foreground">No se pudieron cargar las configuraciones</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -120,8 +159,8 @@ export default function BusinessTab() {
               <Label htmlFor="invoicePrefix">Prefijo de Facturas</Label>
               <Input
                 id="invoicePrefix"
-                value={invoiceSettings.invoicePrefix}
-                onChange={(e) => handleInvoiceChange('invoicePrefix', e.target.value)}
+                value={settings.invoicePrefix}
+                onChange={(e) => handleChange('invoicePrefix', e.target.value)}
                 placeholder="INV"
                 maxLength={10}
               />
@@ -140,8 +179,8 @@ export default function BusinessTab() {
                   </p>
                 </div>
                 <Switch
-                  checked={invoiceSettings.autoprint}
-                  onCheckedChange={(checked) => handleInvoiceChange('autoprint', checked)}
+                  checked={settings.autoPrintInvoices}
+                  onCheckedChange={(checked) => handleChange('autoPrintInvoices', checked)}
                 />
               </div>
 
@@ -153,8 +192,8 @@ export default function BusinessTab() {
                   </p>
                 </div>
                 <Switch
-                  checked={invoiceSettings.includeLogo}
-                  onCheckedChange={(checked) => handleInvoiceChange('includeLogo', checked)}
+                  checked={settings.includeLogo}
+                  onCheckedChange={(checked) => handleChange('includeLogo', checked)}
                 />
               </div>
             </div>
@@ -164,8 +203,8 @@ export default function BusinessTab() {
               <Label htmlFor="footerText">Texto de Pie de Página</Label>
               <Textarea
                 id="footerText"
-                value={invoiceSettings.footerText}
-                onChange={(e) => handleInvoiceChange('footerText', e.target.value)}
+                value={settings.invoiceFooter || ''}
+                onChange={(e) => handleChange('invoiceFooter', e.target.value)}
                 placeholder="Ej: ¡Gracias por su compra!"
                 rows={2}
               />
@@ -179,16 +218,12 @@ export default function BusinessTab() {
               <Label htmlFor="termsAndConditions">Términos y Condiciones</Label>
               <Textarea
                 id="termsAndConditions"
-                value={invoiceSettings.termsAndConditions}
-                onChange={(e) => handleInvoiceChange('termsAndConditions', e.target.value)}
+                value={settings.termsAndConditions || ''}
+                onChange={(e) => handleChange('termsAndConditions', e.target.value)}
                 placeholder="Términos de venta, políticas de devolución, etc."
                 rows={3}
               />
             </div>
-
-            <Button onClick={handleSaveInvoiceSettings} className="w-full">
-              Guardar Configuración de Facturas
-            </Button>
           </CardContent>
         </Card>
 
@@ -206,8 +241,8 @@ export default function BusinessTab() {
             <div className="space-y-2">
               <Label htmlFor="defaultPayment">Método de Pago Predeterminado</Label>
               <Select
-                value={posSettings.defaultPaymentMethod}
-                onValueChange={(value) => handlePosChange('defaultPaymentMethod', value)}
+                value={settings.defaultPaymentMethod}
+                onValueChange={(value) => handleChange('defaultPaymentMethod', value)}
               >
                 <SelectTrigger id="defaultPayment">
                   <SelectValue />
@@ -231,8 +266,8 @@ export default function BusinessTab() {
                   </p>
                 </div>
                 <Switch
-                  checked={posSettings.enableSounds}
-                  onCheckedChange={(checked) => handlePosChange('enableSounds', checked)}
+                  checked={settings.enableSounds}
+                  onCheckedChange={(checked) => handleChange('enableSounds', checked)}
                 />
               </div>
 
@@ -244,8 +279,8 @@ export default function BusinessTab() {
                   </p>
                 </div>
                 <Switch
-                  checked={posSettings.autoprintReceipts}
-                  onCheckedChange={(checked) => handlePosChange('autoprintReceipts', checked)}
+                  checked={settings.autoPrintReceipts}
+                  onCheckedChange={(checked) => handleChange('autoPrintReceipts', checked)}
                 />
               </div>
 
@@ -257,17 +292,21 @@ export default function BusinessTab() {
                   </p>
                 </div>
                 <Switch
-                  checked={posSettings.askForCustomer}
-                  onCheckedChange={(checked) => handlePosChange('askForCustomer', checked)}
+                  checked={settings.askForCustomer}
+                  onCheckedChange={(checked) => handleChange('askForCustomer', checked)}
                 />
               </div>
             </div>
-
-            <Button onClick={handleSavePosSettings} className="w-full">
-              Guardar Configuración de POS
-            </Button>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Botón de Guardar - Ancho completo */}
+      <div className="flex justify-end">
+        <Button onClick={handleSaveSettings} disabled={saving} size="lg">
+          <Save className="mr-2 h-4 w-4" />
+          {saving ? 'Guardando...' : 'Guardar Todas las Configuraciones'}
+        </Button>
       </div>
     </div>
   );

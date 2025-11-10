@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -11,76 +12,103 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Monitor, Bell, Globe } from 'lucide-react';
+import { Monitor, Bell, Globe, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import UserPreferencesService, { UserPreferences } from '@/lib/services/userPreferencesService';
+import { applyTheme } from '@/components/providers/ThemeProvider';
 
 export default function SystemTab() {
-  const [displaySettings, setDisplaySettings] = useState({
-    theme: 'auto',
-    sidebarExpanded: true,
-    compactView: false,
-    itemsPerPage: '25',
-  });
-
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    lowStockAlerts: true,
-    ncfExpirationAlerts: true,
-    dailySalesSummary: false,
-    ncfExpirationDays: '30',
-  });
-
-  const [regionalSettings, setRegionalSettings] = useState({
-    currency: 'DOP',
-    timezone: 'America/Santo_Domingo',
-    firstDayOfWeek: 'sunday',
-    dateFormat: 'DD/MM/YYYY',
-    timeFormat: '12h',
-  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [preferences, setPreferences] = useState<UserPreferences | null>(null);
 
   useEffect(() => {
-    // Cargar preferencias desde localStorage
-    const savedTheme = localStorage.getItem('theme') || 'auto';
-    setDisplaySettings((prev) => ({ ...prev, theme: savedTheme }));
+    loadPreferences();
   }, []);
 
-  const handleThemeChange = (theme: string) => {
-    setDisplaySettings((prev) => ({ ...prev, theme }));
-    localStorage.setItem('theme', theme);
+  const loadPreferences = async () => {
+    try {
+      setLoading(true);
+      const data = await UserPreferencesService.getPreferences();
+      setPreferences(data);
 
-    // Aplicar tema
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else if (theme === 'light') {
-      root.classList.remove('dark');
-    } else {
-      // Auto - usar preferencia del sistema
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (isDark) {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
+      // Aplicar tema inmediatamente
+      applyTheme(data.theme);
+    } catch (error: any) {
+      console.error('Error loading preferences:', error);
+      toast.error('Error al cargar preferencias');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (field: keyof UserPreferences, value: any) => {
+    if (preferences) {
+      const newPreferences = { ...preferences, [field]: value };
+      setPreferences(newPreferences);
+
+      // Aplicar tema inmediatamente si cambia
+      if (field === 'theme') {
+        applyTheme(value);
+        // Emitir evento para que otros componentes se enteren del cambio
+        window.dispatchEvent(new CustomEvent('themeChange', { detail: { theme: value } }));
       }
     }
-
-    toast.success(`Tema cambiado a: ${theme === 'auto' ? 'Automático' : theme === 'dark' ? 'Oscuro' : 'Claro'}`);
   };
 
-  const handleDisplayChange = (field: string, value: any) => {
-    setDisplaySettings((prev) => ({ ...prev, [field]: value }));
-    toast.success('Preferencia guardada');
+  const handleSavePreferences = async () => {
+    if (!preferences) return;
+
+    try {
+      setSaving(true);
+      await UserPreferencesService.updatePreferences({
+        theme: preferences.theme,
+        sidebarExpanded: preferences.sidebarExpanded,
+        compactView: preferences.compactView,
+        itemsPerPage: preferences.itemsPerPage,
+        emailNotifications: preferences.emailNotifications,
+        lowStockAlerts: preferences.lowStockAlerts,
+        ncfExpirationAlerts: preferences.ncfExpirationAlerts,
+        dailySalesSummary: preferences.dailySalesSummary,
+        ncfExpirationDays: preferences.ncfExpirationDays,
+        currency: preferences.currency,
+        timezone: preferences.timezone,
+        dateFormat: preferences.dateFormat,
+        timeFormat: preferences.timeFormat,
+        firstDayOfWeek: preferences.firstDayOfWeek,
+      });
+      toast.success('Preferencias guardadas correctamente');
+    } catch (error: any) {
+      console.error('Error saving preferences:', error);
+      toast.error(error.message || 'Error al guardar preferencias');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleNotificationChange = (field: string, value: any) => {
-    setNotificationSettings((prev) => ({ ...prev, [field]: value }));
-    toast.success('Preferencia de notificación guardada');
-  };
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center py-8">
+            <div className="text-muted-foreground">Cargando preferencias...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  const handleRegionalChange = (field: string, value: any) => {
-    setRegionalSettings((prev) => ({ ...prev, [field]: value }));
-    toast.success('Configuración regional guardada');
-  };
+  if (!preferences) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center py-8">
+            <div className="text-muted-foreground">No se pudieron cargar las preferencias</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -99,7 +127,10 @@ export default function SystemTab() {
             {/* Tema */}
             <div className="space-y-2">
               <Label htmlFor="theme">Tema</Label>
-              <Select value={displaySettings.theme} onValueChange={handleThemeChange}>
+              <Select
+                value={preferences.theme}
+                onValueChange={(value) => handleChange('theme', value)}
+              >
                 <SelectTrigger id="theme">
                   <SelectValue />
                 </SelectTrigger>
@@ -115,8 +146,8 @@ export default function SystemTab() {
             <div className="space-y-2">
               <Label htmlFor="itemsPerPage">Elementos por página (tablas)</Label>
               <Select
-                value={displaySettings.itemsPerPage}
-                onValueChange={(value) => handleDisplayChange('itemsPerPage', value)}
+                value={preferences.itemsPerPage.toString()}
+                onValueChange={(value) => handleChange('itemsPerPage', parseInt(value))}
               >
                 <SelectTrigger id="itemsPerPage">
                   <SelectValue />
@@ -140,8 +171,8 @@ export default function SystemTab() {
                   </p>
                 </div>
                 <Switch
-                  checked={displaySettings.sidebarExpanded}
-                  onCheckedChange={(checked) => handleDisplayChange('sidebarExpanded', checked)}
+                  checked={preferences.sidebarExpanded}
+                  onCheckedChange={(checked) => handleChange('sidebarExpanded', checked)}
                 />
               </div>
 
@@ -153,8 +184,8 @@ export default function SystemTab() {
                   </p>
                 </div>
                 <Switch
-                  checked={displaySettings.compactView}
-                  onCheckedChange={(checked) => handleDisplayChange('compactView', checked)}
+                  checked={preferences.compactView}
+                  onCheckedChange={(checked) => handleChange('compactView', checked)}
                 />
               </div>
             </div>
@@ -180,8 +211,8 @@ export default function SystemTab() {
                   </p>
                 </div>
                 <Switch
-                  checked={notificationSettings.emailNotifications}
-                  onCheckedChange={(checked) => handleNotificationChange('emailNotifications', checked)}
+                  checked={preferences.emailNotifications}
+                  onCheckedChange={(checked) => handleChange('emailNotifications', checked)}
                 />
               </div>
 
@@ -193,8 +224,8 @@ export default function SystemTab() {
                   </p>
                 </div>
                 <Switch
-                  checked={notificationSettings.lowStockAlerts}
-                  onCheckedChange={(checked) => handleNotificationChange('lowStockAlerts', checked)}
+                  checked={preferences.lowStockAlerts}
+                  onCheckedChange={(checked) => handleChange('lowStockAlerts', checked)}
                 />
               </div>
 
@@ -206,10 +237,8 @@ export default function SystemTab() {
                   </p>
                 </div>
                 <Switch
-                  checked={notificationSettings.ncfExpirationAlerts}
-                  onCheckedChange={(checked) =>
-                    handleNotificationChange('ncfExpirationAlerts', checked)
-                  }
+                  checked={preferences.ncfExpirationAlerts}
+                  onCheckedChange={(checked) => handleChange('ncfExpirationAlerts', checked)}
                 />
               </div>
 
@@ -221,8 +250,8 @@ export default function SystemTab() {
                   </p>
                 </div>
                 <Switch
-                  checked={notificationSettings.dailySalesSummary}
-                  onCheckedChange={(checked) => handleNotificationChange('dailySalesSummary', checked)}
+                  checked={preferences.dailySalesSummary}
+                  onCheckedChange={(checked) => handleChange('dailySalesSummary', checked)}
                 />
               </div>
             </div>
@@ -233,8 +262,8 @@ export default function SystemTab() {
                 Alertar con cuántos días de anticipación (NCF)
               </Label>
               <Select
-                value={notificationSettings.ncfExpirationDays}
-                onValueChange={(value) => handleNotificationChange('ncfExpirationDays', value)}
+                value={preferences.ncfExpirationDays.toString()}
+                onValueChange={(value) => handleChange('ncfExpirationDays', parseInt(value))}
               >
                 <SelectTrigger id="ncfExpirationDays">
                   <SelectValue />
@@ -266,8 +295,8 @@ export default function SystemTab() {
             <div className="space-y-2">
               <Label htmlFor="currency">Moneda</Label>
               <Select
-                value={regionalSettings.currency}
-                onValueChange={(value) => handleRegionalChange('currency', value)}
+                value={preferences.currency}
+                onValueChange={(value) => handleChange('currency', value)}
               >
                 <SelectTrigger id="currency">
                   <SelectValue />
@@ -284,8 +313,8 @@ export default function SystemTab() {
             <div className="space-y-2">
               <Label htmlFor="timezone">Zona Horaria</Label>
               <Select
-                value={regionalSettings.timezone}
-                onValueChange={(value) => handleRegionalChange('timezone', value)}
+                value={preferences.timezone}
+                onValueChange={(value) => handleChange('timezone', value)}
               >
                 <SelectTrigger id="timezone">
                   <SelectValue />
@@ -305,8 +334,8 @@ export default function SystemTab() {
             <div className="space-y-2">
               <Label htmlFor="dateFormat">Formato de Fecha</Label>
               <Select
-                value={regionalSettings.dateFormat}
-                onValueChange={(value) => handleRegionalChange('dateFormat', value)}
+                value={preferences.dateFormat}
+                onValueChange={(value) => handleChange('dateFormat', value)}
               >
                 <SelectTrigger id="dateFormat">
                   <SelectValue />
@@ -323,8 +352,8 @@ export default function SystemTab() {
             <div className="space-y-2">
               <Label htmlFor="timeFormat">Formato de Hora</Label>
               <Select
-                value={regionalSettings.timeFormat}
-                onValueChange={(value) => handleRegionalChange('timeFormat', value)}
+                value={preferences.timeFormat}
+                onValueChange={(value) => handleChange('timeFormat', value)}
               >
                 <SelectTrigger id="timeFormat">
                   <SelectValue />
@@ -340,8 +369,8 @@ export default function SystemTab() {
             <div className="space-y-2">
               <Label htmlFor="firstDayOfWeek">Primer día de la semana</Label>
               <Select
-                value={regionalSettings.firstDayOfWeek}
-                onValueChange={(value) => handleRegionalChange('firstDayOfWeek', value)}
+                value={preferences.firstDayOfWeek}
+                onValueChange={(value) => handleChange('firstDayOfWeek', value)}
               >
                 <SelectTrigger id="firstDayOfWeek">
                   <SelectValue />
@@ -355,6 +384,14 @@ export default function SystemTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Botón de Guardar - Ancho completo */}
+      <div className="flex justify-end">
+        <Button onClick={handleSavePreferences} disabled={saving} size="lg">
+          <Save className="mr-2 h-4 w-4" />
+          {saving ? 'Guardando...' : 'Guardar Todas las Preferencias'}
+        </Button>
+      </div>
     </div>
   );
 }
