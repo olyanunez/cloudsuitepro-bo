@@ -177,7 +177,7 @@ export interface CreateInventoryItemDto {
 }
 
 export interface UpdateInventoryItemDto {
-  quantity?: number;
+  // quantity no se puede editar directamente - solo mediante movimientos de inventario
   minStock?: number;
   maxStock?: number;
 }

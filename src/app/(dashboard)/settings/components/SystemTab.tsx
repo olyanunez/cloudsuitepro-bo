@@ -53,6 +53,11 @@ export default function SystemTab() {
         // Emitir evento para que otros componentes se enteren del cambio
         window.dispatchEvent(new CustomEvent('themeChange', { detail: { theme: value } }));
       }
+
+      // Emitir evento cuando cambia la vista compacta
+      if (field === 'compactView') {
+        window.dispatchEvent(new CustomEvent('preferencesChanged', { detail: { compactView: value } }));
+      }
     }
   };
 

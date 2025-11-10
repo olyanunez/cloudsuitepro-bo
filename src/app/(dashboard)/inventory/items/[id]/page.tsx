@@ -110,23 +110,19 @@ export default function InventoryItemDetailPage() {
                     <>
                       <button
                         onClick={prevImage}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all hover:scale-110"
+                        className="outline absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all hover:scale-110"
                         style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.3)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.1)'}
                         aria-label="Imagen anterior"
                       >
-                        <ChevronLeft className="h-6 w-6" style={{ color: '#ffffff', stroke: '#ffffff', fill: 'none' }} />
+                        <ChevronLeft className="h-6 w-6" />
                       </button>
                       <button
                         onClick={nextImage}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all hover:scale-110"
+                        className="outline absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all hover:scale-110"
                         style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.3)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.1)'}
                         aria-label="Imagen siguiente"
                       >
-                        <ChevronRight className="h-6 w-6" style={{ color: '#ffffff', stroke: '#ffffff', fill: 'none' }} />
+                        <ChevronRight className="h-6 w-6" />
                       </button>
                     </>
                   )}

@@ -6,7 +6,7 @@ import { InventoryService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
+import { PencilIcon, TrashIcon, EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -138,14 +138,8 @@ export default function InventoryItemsPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold">Gestión de Inventario</h1>
-        <Link href="/inventory/items/create">
-          <Button className="bg-primary hover:bg-primary-600">
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Nuevo Item
-          </Button>
-        </Link>
       </div>
 
       {/* Search and filter controls */}

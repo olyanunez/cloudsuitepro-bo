@@ -28,6 +28,8 @@ import { LogoutIcon, NotificationIcon, Icon } from './Icons'
 import BranchSwitcher from './BranchSwitcher'
 import ProfileService from '@/lib/services/profileService'
 import UserPreferencesService from '@/lib/services/userPreferencesService'
+import LowStockService, { LowStockItem } from '@/lib/services/lowStockService'
+import { Bell, AlertTriangle, ArrowRight } from 'lucide-react'
 
 // Definición de los elementos del menú
 // screenCode: código de la pantalla para validar permisos (null = sin permisos requeridos)
@@ -92,6 +94,9 @@ export default function Navbar() {
   const router = useRouter()
   const { tenantId, tenantName } = useTenant()
   const [userProfile, setUserProfile] = useState<any>(null)
+  const [lowStockCount, setLowStockCount] = useState(0)
+  const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([])
+  const [lowStockDropdownOpen, setLowStockDropdownOpen] = useState(false)
 
   // Cargar perfil del usuario
   React.useEffect(() => {
@@ -120,6 +125,36 @@ export default function Navbar() {
       }
     }
     loadSidebarPreference()
+  }, [])
+
+  // Cargar alertas de stock bajo
+  React.useEffect(() => {
+    async function loadLowStockAlerts() {
+      try {
+        // Verificar si el usuario tiene activadas las alertas
+        const preferences = await UserPreferencesService.getPreferences()
+        if (!preferences.lowStockAlerts) {
+          return // No cargar si no está activado
+        }
+
+        // Cargar contador
+        const countData = await LowStockService.getLowStockCount()
+        setLowStockCount(countData.count)
+
+        // Si hay productos, cargar los primeros 5 para el dropdown
+        if (countData.count > 0) {
+          const report = await LowStockService.getLowStockItems()
+          setLowStockItems(report.items.slice(0, 5))
+        }
+      } catch (error) {
+        console.error('Error loading low stock alerts:', error)
+      }
+    }
+    loadLowStockAlerts()
+
+    // Actualizar cada 5 minutos
+    const interval = setInterval(loadLowStockAlerts, 5 * 60 * 1000)
+    return () => clearInterval(interval)
   }, [])
 
   // Función para verificar si un item debe ser visible
@@ -232,10 +267,63 @@ export default function Navbar() {
                 <BranchSwitcher />
               </div>
             )}
-            <Button variant="ghost" size="icon">
-              <NotificationIcon />
-              <span className="sr-only">Notifications</span>
-            </Button>
+            {/* Dropdown de Alertas de Stock Bajo */}
+            <DropdownMenu open={lowStockDropdownOpen} onOpenChange={setLowStockDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  {lowStockCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white font-semibold">
+                      {lowStockCount > 9 ? '9+' : lowStockCount}
+                    </span>
+                  )}
+                  <span className="sr-only">Alertas</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <span>Stock Bajo</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {lowStockCount === 0 ? (
+                  <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                    No hay productos con stock bajo
+                  </div>
+                ) : (
+                  <>
+                    <div className="max-h-64 overflow-y-auto">
+                      {lowStockItems.map((item) => (
+                        <DropdownMenuItem
+                          key={item.id}
+                          onClick={() => {
+                            router.push(`/inventory/products/${item.productId}`)
+                            setLowStockDropdownOpen(false)
+                          }}
+                          className="cursor-pointer flex-col items-start px-4 py-2"
+                        >
+                          <div className="font-medium text-sm">{item.productName}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {item.warehouseName} • Stock: {item.quantity}/{item.minStock}
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        router.push('/inventory/low-stock')
+                        setLowStockDropdownOpen(false)
+                      }}
+                      className="cursor-pointer text-primary-600 dark:text-primary-400"
+                    >
+                      <span>Ver todos ({lowStockCount})</span>
+                      <ArrowRight className="ml-auto h-4 w-4" />
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

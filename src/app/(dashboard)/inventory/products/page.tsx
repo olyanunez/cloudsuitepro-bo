@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Product } from '@/lib/types/inventory';
 import { ProductService } from '@/lib/services/inventoryService';
+import { useCompactView } from '@/lib/hooks/useCompactView';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -34,10 +35,19 @@ import {
 // Importaciones de utilidades
 
 export default function ProductsPage() {
+  const { compactView } = useCompactView();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+
+  // Helper function for compact view classes
+  const getTableCellClass = (baseClass: string) => {
+    if (compactView) {
+      return baseClass.replace('py-4', 'py-2').replace('py-3', 'py-1.5');
+    }
+    return baseClass;
+  };
 
   // Image carousel state
   const [isCarouselOpen, setIsCarouselOpen] = useState(false);
@@ -244,13 +254,13 @@ export default function ProductsPage() {
               <tr>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  className={getTableCellClass("px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider")}
                 >
                   Imagen
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                  className={getTableCellClass("px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer")}
                   onClick={() => handleSort('code')}
                 >
                   <div className="flex items-center">
@@ -260,7 +270,7 @@ export default function ProductsPage() {
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                  className={getTableCellClass("px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer")}
                   onClick={() => handleSort('name')}
                 >
                   <div className="flex items-center">
@@ -270,7 +280,7 @@ export default function ProductsPage() {
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                  className={getTableCellClass("px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer")}
                   onClick={() => handleSort('price')}
                 >
                   <div className="flex items-center">
@@ -280,7 +290,7 @@ export default function ProductsPage() {
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  className={getTableCellClass("px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider")}
                 >
                   <div className="flex items-center">
                     Categoría
@@ -288,7 +298,7 @@ export default function ProductsPage() {
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                  className={getTableCellClass("px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer")}
                   onClick={() => handleSort('isActive')}
                 >
                   <div className="flex items-center">
@@ -298,7 +308,7 @@ export default function ProductsPage() {
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                  className={getTableCellClass("px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer")}
                   onClick={() => handleSort('createdAt')}
                 >
                   <div className="flex items-center">
@@ -306,7 +316,7 @@ export default function ProductsPage() {
                     <ArrowUpDown className="ml-1 h-4 w-4" />
                   </div>
                 </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                <th scope="col" className={getTableCellClass("px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider")}>
                   Acciones
                 </th>
               </tr>
@@ -317,9 +327,9 @@ export default function ProductsPage() {
 
                 return (
                   <tr key={product.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className={getTableCellClass("px-6 py-4 whitespace-nowrap")}>
                       <div
-                        className="relative w-16 h-16 cursor-pointer rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 hover:border-primary transition-colors"
+                        className={`relative ${compactView ? 'w-12 h-12' : 'w-16 h-16'} cursor-pointer rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 hover:border-primary transition-colors`}
                         onClick={() => openImageCarousel(product, 0)}
                       >
                         {primaryImage ? (
@@ -331,36 +341,36 @@ export default function ProductsPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
-                            <ImageIcon className="h-8 w-8 text-gray-400" />
+                            <ImageIcon className={`${compactView ? 'h-6 w-6' : 'h-8 w-8'} text-gray-400`} />
                           </div>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className={getTableCellClass("px-6 py-4 whitespace-nowrap")}>
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {product.code}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className={getTableCellClass("px-6 py-4 whitespace-nowrap")}>
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {product.name}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    <td className={getTableCellClass("px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300")}>
                       {formatCurrency(product.price)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    <td className={getTableCellClass("px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300")}>
                       {product.category?.name || `Categoría #${product.categoryId}`}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className={getTableCellClass("px-6 py-4 whitespace-nowrap")}>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${product.isActive ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'}`}>
                         {product.isActive ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    <td className={getTableCellClass("px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300")}>
                       {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className={getTableCellClass("px-6 py-4 whitespace-nowrap text-right text-sm font-medium")}>
                       <div className="flex justify-end space-x-2">
                         <Link href={`/inventory/products/${product.id}`}>
                           <Button variant="outline" size="sm" className="px-2 py-1">

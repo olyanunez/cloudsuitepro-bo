@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useBranch } from '@/lib/contexts/BranchContext';
 import { DashboardService } from '@/lib/services/dashboardService';
 import { CashSessionService } from '@/lib/services/cashSessionService';
+import UserPreferencesService from '@/lib/services/userPreferencesService';
 import { KPICards } from './components/KPICards';
 import { SalesTrendChart } from './components/SalesTrendChart';
 import { PaymentMethodChart } from './components/PaymentMethodChart';
@@ -34,6 +35,9 @@ export default function DashboardPage() {
   const [cashSessions, setCashSessions] = useState<any[]>([]);
   const [ncfStats, setNcfStats] = useState<any>(null);
   const [ncfUsageData, setNcfUsageData] = useState<any[]>([]);
+
+  // Estado para preferencias de usuario
+  const [showNcfAlerts, setShowNcfAlerts] = useState<boolean>(false);
 
   // Cargar todos los datos
   const loadDashboardData = async () => {
@@ -104,6 +108,21 @@ export default function DashboardPage() {
   useEffect(() => {
     loadDashboardData();
   }, [activeBranchId]);
+
+  // Cargar preferencias del usuario
+  useEffect(() => {
+    async function loadPreferences() {
+      try {
+        const preferences = await UserPreferencesService.getPreferences();
+        setShowNcfAlerts(preferences.ncfExpirationAlerts);
+      } catch (error) {
+        console.error('Error loading user preferences:', error);
+        // Por defecto, no mostrar alertas si hay error
+        setShowNcfAlerts(false);
+      }
+    }
+    loadPreferences();
+  }, []);
 
   // Calcular métricas - convertir a número explícitamente
   const totalSales = parseFloat(salesStats?.totalAmount || 0);
@@ -217,7 +236,7 @@ export default function DashboardPage() {
             />
           </div>
 
-          {(ncfStats.expiringSequences?.length > 0 || ncfStats.criticalSequences?.length > 0) && (
+          {showNcfAlerts && (ncfStats.expiringSequences?.length > 0 || ncfStats.criticalSequences?.length > 0) && (
             <NcfAlertsWidget
               expiringSequences={ncfStats.expiringSequences || []}
               criticalSequences={ncfStats.criticalSequences || []}

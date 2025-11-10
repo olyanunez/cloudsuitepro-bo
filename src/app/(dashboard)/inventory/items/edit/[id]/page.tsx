@@ -21,13 +21,11 @@ export default function EditInventoryItemPage() {
   const [saving, setSaving] = useState<boolean>(false);
 
   const [formData, setFormData] = useState<UpdateInventoryItemDto>({
-    quantity: 0,
     minStock: 0,
     maxStock: undefined
   });
 
   const [errors, setErrors] = useState<{
-    quantity?: string;
     minStock?: string;
     maxStock?: string;
   }>({});
@@ -46,9 +44,8 @@ export default function EditInventoryItemPage() {
 
         setItem(itemData);
 
-        // Inicializar formData con los datos del item
+        // Inicializar formData con los datos del item (sin quantity)
         setFormData({
-          quantity: itemData.quantity,
           minStock: itemData.minStock,
           maxStock: itemData.maxStock
         });
@@ -77,14 +74,9 @@ export default function EditInventoryItemPage() {
 
   const validateForm = (): boolean => {
     const newErrors: {
-      quantity?: string;
       minStock?: string;
       maxStock?: string;
     } = {};
-
-    if (formData.quantity === undefined || formData.quantity === null || formData.quantity < 0) {
-      newErrors.quantity = 'La cantidad debe ser un número mayor o igual a cero';
-    }
 
     if (formData.minStock === undefined || formData.minStock === null || formData.minStock < 0) {
       newErrors.minStock = 'El stock mínimo debe ser un número mayor o igual a cero';
@@ -221,17 +213,18 @@ export default function EditInventoryItemPage() {
             </div>
 
             <div>
-              <Label htmlFor="quantity">Cantidad <span className="text-red-500">*</span></Label>
+              <Label htmlFor="quantity">Cantidad Actual</Label>
               <Input
                 id="quantity"
                 name="quantity"
                 type="number"
-                value={formData.quantity?.toString() || ''}
-                onChange={handleInputChange}
-                className="mt-1"
-                min="0"
+                value={item.quantity}
+                disabled
+                className="mt-1 bg-gray-100 dark:bg-gray-700"
               />
-              {errors.quantity && <p className="text-red-500 text-xs mt-1">{errors.quantity}</p>}
+              <p className="text-xs text-gray-500 mt-1">
+                La cantidad solo puede modificarse mediante movimientos de inventario
+              </p>
             </div>
 
             <div>
