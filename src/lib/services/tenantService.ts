@@ -3,7 +3,7 @@
 /**
  * Servicio para gestionar las empresas (tenants)
  */
-import { apiGet, apiPost, apiPatch, apiDelete } from './apiService';
+import { apiGet, apiPost, apiPatch, apiDelete, apiPostFormData } from './apiService';
 
 // Interfaz para el modelo de empresa (tenant)
 export interface Tenant {
@@ -139,6 +139,26 @@ export class TenantService {
       return normalizeTenantData(response);
     } catch (error) {
       console.error(`Error al cambiar estado de empresa con ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Sube el logo de la empresa a Cloudinary
+   */
+  static async uploadLogo(id: string, file: File): Promise<{ url: string; publicId: string }> {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await apiPostFormData<{ url: string; publicId: string }>(
+        `/tenants/${id}/upload-logo`,
+        formData
+      );
+
+      return response;
+    } catch (error) {
+      console.error(`Error al subir logo para empresa con ID ${id}:`, error);
       throw error;
     }
   }

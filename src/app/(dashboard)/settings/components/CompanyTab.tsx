@@ -6,15 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Save, Upload, AlertCircle } from 'lucide-react';
+import { Save, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { TenantService, UpdateTenantDto } from '@/lib/services/tenantService';
 import { useTenant } from '@/lib/contexts/TenantContext';
+import { LogoUpload } from '@/components/settings/LogoUpload';
 
 export default function CompanyTab() {
   const { tenantId } = useTenant();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     taxId: '',
@@ -58,6 +61,13 @@ export default function CompanyTab() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleLogoChange = (file: File | null, previewUrl: string | null) => {
+    setLogoFile(file);
+    if (previewUrl) {
+      setFormData((prev) => ({ ...prev, logo: previewUrl }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -75,6 +85,23 @@ export default function CompanyTab() {
     try {
       setSaving(true);
 
+      // Si hay un archivo de logo seleccionado, subirlo primero
+      let logoUrl = formData.logo;
+      if (logoFile) {
+        try {
+          setUploading(true);
+          const uploadResult = await TenantService.uploadLogo(tenantId!, logoFile);
+          logoUrl = uploadResult.url;
+          toast.success('Logo subido correctamente');
+        } catch (uploadError: any) {
+          console.error('Error uploading logo:', uploadError);
+          toast.error(uploadError.message || 'Error al subir el logo');
+          return;
+        } finally {
+          setUploading(false);
+        }
+      }
+
       const updateData: UpdateTenantDto = {
         name: formData.name,
         taxId: formData.taxId || undefined,
@@ -82,12 +109,18 @@ export default function CompanyTab() {
         phone: formData.phone || undefined,
         address: formData.address || undefined,
         description: formData.description || undefined,
-        logo: formData.logo || undefined,
       };
 
       await TenantService.updateTenant(tenantId!, updateData);
 
+      // Actualizar el formData con la nueva URL del logo
+      setFormData((prev) => ({ ...prev, logo: logoUrl }));
+      setLogoFile(null);
+
       toast.success('Información de la empresa actualizada correctamente');
+
+      // Recargar los datos para obtener el logo actualizado
+      await loadCompanyData();
     } catch (error: any) {
       console.error('Error updating company:', error);
       toast.error(error.message || 'Error al actualizar la información de la empresa');
@@ -214,23 +247,15 @@ export default function CompanyTab() {
             </div>
           </div>
 
-          {/* Logo URL - Ancho completo */}
+          {/* Logo - Ancho completo */}
           <div className="space-y-2">
-            <Label htmlFor="logo">URL del Logo</Label>
-            <div className="flex gap-2">
-              <Input
-                id="logo"
-                name="logo"
-                value={formData.logo}
-                onChange={handleInputChange}
-                placeholder="https://ejemplo.com/logo.png"
-              />
-              <Button type="button" variant="outline" size="icon">
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
+            <Label>Logo de la Empresa</Label>
+            <LogoUpload
+              currentLogo={formData.logo}
+              onImageChange={handleLogoChange}
+            />
             <p className="text-xs text-muted-foreground">
-              URL de la imagen del logo de tu empresa
+              Este logo aparecerá en las facturas y documentos de tu empresa
             </p>
           </div>
 
@@ -251,15 +276,15 @@ export default function CompanyTab() {
 
           {/* Botones */}
           <div className="flex items-center gap-3 pt-4">
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={saving || uploading}>
               <Save className="mr-2 h-4 w-4" />
-              {saving ? 'Guardando...' : 'Guardar Cambios'}
+              {uploading ? 'Subiendo logo...' : saving ? 'Guardando...' : 'Guardar Cambios'}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={loadCompanyData}
-              disabled={saving}
+              disabled={saving || uploading}
             >
               Cancelar
             </Button>
