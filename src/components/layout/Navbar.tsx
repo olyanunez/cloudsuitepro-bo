@@ -36,10 +36,23 @@ import { Bell, AlertTriangle, ArrowRight } from 'lucide-react'
 const menuItems = [
   { name: 'Dashboard', href: '/dashboard', icon: 'layout-dashboard', screenCode: null },
   { name: 'Usuarios', href: '/users', icon: 'user-cog', screenCode: 'USERS' },
-  { name: 'Roles', href: '/roles', icon: 'shield', screenCode: 'ROLE' },
+  { name: 'Roles', href: '/roles', icon: 'shield', screenCode: 'ROLES' },
   { name: 'Punto de Venta', href: '/pos', icon: 'shopping-cart', screenCode: 'POS' },
   { name: 'Facturas', href: '/invoices', icon: 'file-text', screenCode: 'INVOICE' },
   { name: 'Notas de Crédito', href: '/credit-notes', icon: 'undo-2', screenCode: 'CREDIT_NOTE' },
+  {
+    name: 'Contabilidad',
+    href: '/accounting',
+    icon: 'calculator',
+    screenCode: null, // Este es un contenedor, no requiere permisos
+    submenu: [
+      { name: 'Panel Contable', href: '/accounting', icon: 'layout-dashboard', screenCode: 'ACCOUNTING' },
+      { name: 'Plan de Cuentas', href: '/accounting/accounts', icon: 'book-open', screenCode: 'ACCOUNTING' },
+      { name: 'Asientos Contables', href: '/accounting/journal-entries', icon: 'file-text', screenCode: 'ACCOUNTING' },
+      { name: 'Balance General', href: '/accounting/reports/balance-sheet', icon: 'bar-chart-3', screenCode: 'ACCOUNTING' },
+      { name: 'Estado de Resultados', href: '/accounting/reports/income-statement', icon: 'trending-up', screenCode: 'ACCOUNTING' },
+    ]
+  },
   {
     name: 'NCF y Fiscalización',
     href: '/ncf',
