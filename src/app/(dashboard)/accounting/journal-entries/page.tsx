@@ -5,6 +5,16 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { apiGet, apiPost } from '@/lib/services/apiService';
 import {
   Plus,
@@ -15,6 +25,7 @@ import {
   Clock,
   XCircle,
   Calendar,
+  AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -77,6 +88,8 @@ export default function JournalEntriesPage() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [entryToPost, setEntryToPost] = useState<{ id: number; entryNumber: string } | null>(null);
 
   useEffect(() => {
     fetchEntries();
@@ -110,16 +123,19 @@ export default function JournalEntriesPage() {
     }
   };
 
-  const handlePost = async (id: number, entryNumber: string) => {
-    if (
-      !confirm(`¿Está seguro de contabilizar el asiento "${entryNumber}"? Esta acción no se puede deshacer.`)
-    ) {
-      return;
-    }
+  const openPostDialog = (id: number, entryNumber: string) => {
+    setEntryToPost({ id, entryNumber });
+    setConfirmDialogOpen(true);
+  };
+
+  const handlePost = async () => {
+    if (!entryToPost) return;
 
     try {
-      await apiPost(`/accounting/journal-entries/${id}/post`, {});
+      await apiPost(`/accounting/journal-entries/${entryToPost.id}/post`, {});
       toast.success('Asiento contabilizado exitosamente');
+      setConfirmDialogOpen(false);
+      setEntryToPost(null);
       fetchEntries();
     } catch (error: any) {
       toast.error('Error al contabilizar asiento', {
@@ -365,7 +381,7 @@ export default function JournalEntriesPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handlePost(entry.id, entry.entryNumber)}
+                              onClick={() => openPostDialog(entry.id, entry.entryNumber)}
                               className="text-green-600 hover:text-green-700"
                             >
                               <CheckCircle className="h-4 w-4" />
@@ -381,6 +397,29 @@ export default function JournalEntriesPage() {
           </table>
         </div>
       </Card>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              Confirmar Contabilización
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Está seguro de contabilizar el asiento <strong className="text-gray-900">{entryToPost?.entryNumber}</strong>?
+              <br /><br />
+              Esta acción actualizará los saldos de las cuentas y <strong>no se puede deshacer</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePost} className="!bg-green-600 hover:!bg-green-700 !text-white">
+              Contabilizar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
