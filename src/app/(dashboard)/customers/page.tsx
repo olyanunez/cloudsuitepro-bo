@@ -113,7 +113,7 @@ export default function CustomersPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Clientes</h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             Gestiona la información de tus clientes
           </p>
         </div>
@@ -149,72 +149,72 @@ export default function CustomersPage() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Clientes</p>
+              <p className="text-sm text-muted-foreground">Total Clientes</p>
               <p className="text-2xl font-bold">{total}</p>
             </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <UserCheck className="h-6 w-6 text-yellow-600" />
+            <div className="bg-yellow-100 dark:bg-yellow-900/20 p-3 rounded-full">
+              <UserCheck className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
             </div>
           </div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Clientes Activos</p>
+              <p className="text-sm text-muted-foreground">Clientes Activos</p>
               <p className="text-2xl font-bold">
                 {customers.filter((c) => c.isActive).length}
               </p>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <UserCheck className="h-6 w-6 text-green-600" />
+            <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full">
+              <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
           </div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Clientes Inactivos</p>
+              <p className="text-sm text-muted-foreground">Clientes Inactivos</p>
               <p className="text-2xl font-bold">
                 {customers.filter((c) => !c.isActive).length}
               </p>
             </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <UserX className="h-6 w-6 text-red-600" />
+            <div className="bg-red-100 dark:bg-red-900/20 p-3 rounded-full">
+              <UserX className="h-6 w-6 text-red-600 dark:text-red-400" />
             </div>
           </div>
         </Card>
       </div>
 
       {/* Table */}
-      <Card>
+      <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Código
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Nombre
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Contacto
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   RNC/Cédula
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Facturas
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {loading ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-4 text-center">
@@ -223,21 +223,21 @@ export default function CustomersPage() {
                 </tr>
               ) : customers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-4 text-center text-muted-foreground">
                     No se encontraron clientes
                   </td>
                 </tr>
               ) : (
                 customers.map((customer) => (
-                  <tr key={customer.id} className="hover:bg-gray-50">
+                  <tr key={customer.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
                         {customer.code}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
                           {customer.name} {customer.lastName || ''}
                         </div>
                       </div>
@@ -245,20 +245,20 @@ export default function CustomersPage() {
                     <td className="px-6 py-4">
                       <div className="space-y-1">
                         {customer.email && (
-                          <div className="flex items-center text-sm text-gray-600">
+                          <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                             <Mail className="h-3 w-3 mr-1" />
                             {customer.email}
                           </div>
                         )}
                         {customer.phone && (
-                          <div className="flex items-center text-sm text-gray-600">
+                          <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
                             <Phone className="h-3 w-3 mr-1" />
                             {customer.phone}
                           </div>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                       {customer.taxId || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -315,8 +315,8 @@ export default function CustomersPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t flex items-center justify-between">
-            <div className="text-sm text-gray-600">
+          <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
+            <div className="text-sm text-gray-700 dark:text-gray-300">
               Página {page} de {totalPages} ({total} clientes en total)
             </div>
             <div className="flex gap-2">
@@ -337,7 +337,7 @@ export default function CustomersPage() {
             </div>
           </div>
         )}
-      </Card>
+      </div>
     </div>
   );
 }
