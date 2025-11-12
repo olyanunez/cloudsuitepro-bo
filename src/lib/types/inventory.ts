@@ -28,6 +28,7 @@ export interface Product {
   barcode?: string;
   price: number;
   cost: number;
+  isStockable: boolean;
   categoryId: number;
   category?: ProductCategory;
   images?: ProductImage[];
@@ -121,6 +122,7 @@ export interface CreateProductDto {
   barcode?: string;
   price: number;
   cost: number;
+  isStockable?: boolean;
   categoryId: number;
 }
 
@@ -131,6 +133,7 @@ export interface UpdateProductDto {
   barcode?: string;
   price?: number;
   cost?: number;
+  isStockable?: boolean;
   categoryId?: number;
 }
 

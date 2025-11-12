@@ -36,6 +36,7 @@ export default function CreateMovementPage() {
   const [quantity, setQuantity] = useState<string>('');
   const [reference, setReference] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [isProductStockable, setIsProductStockable] = useState<boolean>(true);
 
   // UI state
   const [loading, setLoading] = useState<boolean>(true);
@@ -132,10 +133,13 @@ export default function CreateMovementPage() {
       newErrors.destinationWarehouseId = 'Los almacenes de origen y destino deben ser diferentes';
     }
 
-    if (!quantity) {
-      newErrors.quantity = 'La cantidad es requerida';
-    } else if (isNaN(Number(quantity)) || Number(quantity) <= 0) {
-      newErrors.quantity = 'La cantidad debe ser un número mayor que cero';
+    // Solo validar cantidad para productos gastables
+    if (isProductStockable) {
+      if (!quantity) {
+        newErrors.quantity = 'La cantidad es requerida';
+      } else if (isNaN(Number(quantity)) || Number(quantity) <= 0) {
+        newErrors.quantity = 'La cantidad debe ser un número mayor que cero';
+      }
     }
 
     setErrors(newErrors);
@@ -155,7 +159,7 @@ export default function CreateMovementPage() {
       const movementData: CreateInventoryMovementDto = {
         type: movementType as MovementType,
         productId: Number(productId),
-        quantity: Number(quantity),
+        quantity: isProductStockable ? Number(quantity) : 0,
         reference: reference || undefined,
         notes: notes || undefined
       };
@@ -229,7 +233,18 @@ export default function CreateMovementPage() {
                 <label htmlFor="product" className="text-sm font-medium">
                   Producto <span className="text-red-500">*</span>
                 </label>
-                <Select value={productId} onValueChange={setProductId}>
+                <Select value={productId} onValueChange={(value) => {
+                  setProductId(value);
+                  // Actualizar si el producto es gastable
+                  const selectedProduct = products.find(p => p.id.toString() === value);
+                  if (selectedProduct) {
+                    setIsProductStockable(selectedProduct.isStockable);
+                    // Si el producto no es gastable, limpiar la cantidad
+                    if (!selectedProduct.isStockable) {
+                      setQuantity('');
+                    }
+                  }
+                }}>
                   <SelectTrigger id="product" className={errors.productId ? 'border-red-500' : ''}>
                     <SelectValue placeholder="Seleccionar producto" />
                   </SelectTrigger>
@@ -292,22 +307,24 @@ export default function CreateMovementPage() {
                 </div>
               )}
 
-              <div className="space-y-2">
-                <label htmlFor="quantity" className="text-sm font-medium">
-                  Cantidad <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="Ingrese la cantidad"
-                  className={errors.quantity ? 'border-red-500' : ''}
-                />
-                {errors.quantity && <p className="text-red-500 text-xs mt-1">{errors.quantity}</p>}
-              </div>
+              {isProductStockable && (
+                <div className="space-y-2">
+                  <label htmlFor="quantity" className="text-sm font-medium">
+                    Cantidad <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    placeholder="Ingrese la cantidad"
+                    className={errors.quantity ? 'border-red-500' : ''}
+                  />
+                  {errors.quantity && <p className="text-red-500 text-xs mt-1">{errors.quantity}</p>}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label htmlFor="reference" className="text-sm font-medium">

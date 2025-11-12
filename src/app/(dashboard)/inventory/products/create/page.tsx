@@ -23,6 +23,7 @@ export default function CreateProductPage() {
     barcode: '',
     price: 0,
     cost: 0,
+    isStockable: true,
     categoryId: 0
   });
 
@@ -51,10 +52,15 @@ export default function CreateProductPage() {
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
 
+    // Para campos checkbox
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData(prev => ({ ...prev, [name]: checked }));
+    }
     // Para campos numéricos, convertir a número
-    if (name === 'price' || name === 'cost') {
+    else if (name === 'price' || name === 'cost') {
       const numValue = parseFloat(value);
       setFormData(prev => ({ ...prev, [name]: isNaN(numValue) ? 0 : numValue }));
     } else {
@@ -317,6 +323,23 @@ export default function CreateProductPage() {
                   />
                 </div>
               </div>
+
+              <div className="flex items-center space-x-2 pt-4">
+                <input
+                  type="checkbox"
+                  id="isStockable"
+                  name="isStockable"
+                  checked={formData.isStockable}
+                  onChange={handleInputChange}
+                  className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                />
+                <label htmlFor="isStockable" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Afecta el inventario
+                </label>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Desmarcar esta opción para productos que no afectan el inventario (servicios, productos digitales, etc.)
+              </p>
             </div>
           </div>
         </div>

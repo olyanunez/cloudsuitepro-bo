@@ -201,6 +201,12 @@ export default function ProductDetailPage() {
               <p>{product.category?.name || 'Sin categoría'}</p>
             </div>
             <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Tipo de Producto</p>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${product.isStockable ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' : 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100'}`}>
+                {product.isStockable ? 'Inventariable' : 'Servicio'}
+              </span>
+            </div>
+            <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Estado</p>
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${product.isActive ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'}`}>
                 {product.isActive ? 'Activo' : 'Inactivo'}
