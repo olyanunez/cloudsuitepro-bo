@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { apiGet } from '@/lib/services/apiService';
 import { Calendar, Download, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface IncomeStatementAccount {
   code: string;
@@ -41,6 +43,8 @@ interface IncomeStatementData {
 export default function IncomeStatementPage() {
   const [data, setData] = useState<IncomeStatementData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   // Default to current month
   const today = new Date();
@@ -79,6 +83,231 @@ export default function IncomeStatementPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const exportToPDF = () => {
+    if (!data) {
+      toast.error('No hay datos para exportar');
+      return;
+    }
+
+    try {
+      setExportingPDF(true);
+      toast.info('Generando PDF...');
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      let yPosition = 20;
+
+      // Función para formatear montos
+      const formatAmount = (amount: number): string => {
+        return `RD$${amount.toLocaleString('es-DO', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`;
+      };
+
+      // Título
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('ESTADO DE RESULTADOS', pageWidth / 2, yPosition, { align: 'center' });
+
+      yPosition += 8;
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      const dateRange = `Del ${new Date(data.startDate).toLocaleDateString('es-DO')} al ${new Date(data.endDate).toLocaleDateString('es-DO')}`;
+      pdf.text(dateRange, pageWidth / 2, yPosition, { align: 'center' });
+
+      yPosition += 15;
+
+      // Función recursiva para agregar cuentas
+      const addAccountRows = (accounts: IncomeStatementAccount[], rows: any[], indent: number = 0) => {
+        accounts.forEach(account => {
+          const indentText = '  '.repeat(indent);
+          const style = account.isGroup ? 'bold' : 'normal';
+
+          rows.push([
+            { content: `${indentText}${account.code}`, styles: { fontStyle: style } },
+            { content: `${indentText}${account.name}`, styles: { fontStyle: style } },
+            { content: account.isGroup ? '' : formatAmount(account.balance), styles: { fontStyle: style, halign: 'right' } }
+          ]);
+
+          if (account.children && account.children.length > 0) {
+            addAccountRows(account.children, rows, indent + 1);
+          }
+        });
+      };
+
+      // INGRESOS
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(22, 163, 74); // green-600
+      pdf.text('INGRESOS', 14, yPosition);
+      yPosition += 8;
+      pdf.setTextColor(0, 0, 0);
+
+      // Ingresos Operacionales
+      if (data.income.operating.length > 0) {
+        const incomeRows: any[] = [];
+        addAccountRows(data.income.operating, incomeRows);
+
+        autoTable(pdf, {
+          startY: yPosition,
+          head: [['Código', 'Cuenta', 'Monto']],
+          body: incomeRows,
+          theme: 'plain',
+          styles: { fontSize: 9, cellPadding: 2 },
+          columnStyles: {
+            0: { cellWidth: 30 },
+            1: { cellWidth: 100 },
+            2: { cellWidth: 50, halign: 'right' }
+          },
+          didDrawPage: (data) => {
+            yPosition = data.cursor?.y || yPosition;
+          }
+        });
+      }
+
+      // Ingresos No Operacionales
+      if (data.income.nonOperating.length > 0) {
+        yPosition += 5;
+        const nonOpIncomeRows: any[] = [];
+        addAccountRows(data.income.nonOperating, nonOpIncomeRows);
+
+        autoTable(pdf, {
+          startY: yPosition,
+          body: nonOpIncomeRows,
+          theme: 'plain',
+          styles: { fontSize: 9, cellPadding: 2 },
+          columnStyles: {
+            0: { cellWidth: 30 },
+            1: { cellWidth: 100 },
+            2: { cellWidth: 50, halign: 'right' }
+          },
+          didDrawPage: (data) => {
+            yPosition = data.cursor?.y || yPosition;
+          }
+        });
+      }
+
+      // Total Ingresos
+      yPosition += 5;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.text('TOTAL INGRESOS', 14, yPosition);
+      pdf.text(formatAmount(data.income.total), pageWidth - 14, yPosition, { align: 'right' });
+      pdf.setDrawColor(22, 163, 74);
+      pdf.line(14, yPosition + 1, pageWidth - 14, yPosition + 1);
+
+      yPosition += 10;
+
+      // GASTOS
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(220, 38, 38); // red-600
+      pdf.text('GASTOS', 14, yPosition);
+      yPosition += 8;
+      pdf.setTextColor(0, 0, 0);
+
+      // Gastos Operacionales
+      if (data.expenses.operating.length > 0) {
+        const expenseRows: any[] = [];
+        addAccountRows(data.expenses.operating, expenseRows);
+
+        autoTable(pdf, {
+          startY: yPosition,
+          body: expenseRows,
+          theme: 'plain',
+          styles: { fontSize: 9, cellPadding: 2 },
+          columnStyles: {
+            0: { cellWidth: 30 },
+            1: { cellWidth: 100 },
+            2: { cellWidth: 50, halign: 'right' }
+          },
+          didDrawPage: (data) => {
+            yPosition = data.cursor?.y || yPosition;
+          }
+        });
+      }
+
+      // Gastos No Operacionales
+      if (data.expenses.nonOperating.length > 0) {
+        yPosition += 5;
+        const nonOpExpenseRows: any[] = [];
+        addAccountRows(data.expenses.nonOperating, nonOpExpenseRows);
+
+        autoTable(pdf, {
+          startY: yPosition,
+          body: nonOpExpenseRows,
+          theme: 'plain',
+          styles: { fontSize: 9, cellPadding: 2 },
+          columnStyles: {
+            0: { cellWidth: 30 },
+            1: { cellWidth: 100 },
+            2: { cellWidth: 50, halign: 'right' }
+          },
+          didDrawPage: (data) => {
+            yPosition = data.cursor?.y || yPosition;
+          }
+        });
+      }
+
+      // Total Gastos
+      yPosition += 5;
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.text('TOTAL GASTOS', 14, yPosition);
+      pdf.text(formatAmount(data.expenses.total), pageWidth - 14, yPosition, { align: 'right' });
+      pdf.setDrawColor(220, 38, 38);
+      pdf.line(14, yPosition + 1, pageWidth - 14, yPosition + 1);
+
+      yPosition += 15;
+
+      // Resultados Finales
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Utilidad Bruta', 14, yPosition);
+      pdf.text(formatAmount(data.grossProfit), pageWidth - 14, yPosition, { align: 'right' });
+
+      yPosition += 8;
+      pdf.text('Resultado Operativo', 14, yPosition);
+      pdf.text(formatAmount(data.operatingIncome), pageWidth - 14, yPosition, { align: 'right' });
+
+      yPosition += 10;
+      pdf.setFontSize(14);
+      pdf.setDrawColor(0, 0, 0);
+      pdf.line(14, yPosition - 2, pageWidth - 14, yPosition - 2);
+      pdf.text('UTILIDAD NETA', 14, yPosition);
+      const netIncomeColor = data.netIncome >= 0 ? [22, 163, 74] : [220, 38, 38];
+      pdf.setTextColor(netIncomeColor[0], netIncomeColor[1], netIncomeColor[2]);
+      pdf.text(formatAmount(data.netIncome), pageWidth - 14, yPosition, { align: 'right' });
+      pdf.setTextColor(0, 0, 0);
+
+      // Análisis de Márgenes
+      yPosition += 15;
+      pdf.setFontSize(11);
+      pdf.text('Análisis de Márgenes', 14, yPosition);
+      yPosition += 6;
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      const grossMargin = data.income.total > 0 ? ((data.grossProfit / data.income.total) * 100).toFixed(2) : '0.00';
+      const netMargin = data.income.total > 0 ? ((data.netIncome / data.income.total) * 100).toFixed(2) : '0.00';
+      pdf.text(`Margen Bruto: ${grossMargin}%`, 14, yPosition);
+      pdf.text(`Margen Neto: ${netMargin}%`, 70, yPosition);
+
+      // Generar archivo
+      const filename = `Estado_de_Resultados_${startDate}_${endDate}.pdf`;
+      pdf.save(filename);
+
+      toast.success('PDF exportado exitosamente');
+    } catch (error: any) {
+      console.error('Error al exportar PDF:', error);
+      toast.error('Error al exportar PDF', {
+        description: error.message,
+      });
+    } finally {
+      setExportingPDF(false);
     }
   };
 
@@ -135,9 +364,13 @@ export default function IncomeStatementPage() {
               </p>
             )}
           </div>
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={exportToPDF}
+            disabled={!data || exportingPDF}
+          >
             <Download className="h-4 w-4 mr-2" />
-            Exportar PDF
+            {exportingPDF ? 'Generando...' : 'Exportar PDF'}
           </Button>
         </div>
       </div>
@@ -177,7 +410,7 @@ export default function IncomeStatementPage() {
       </Card>
 
       {data && (
-        <>
+        <div ref={reportRef} data-pdf-export>
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card className="p-6">
@@ -388,7 +621,7 @@ export default function IncomeStatementPage() {
               </div>
             </div>
           </Card>
-        </>
+        </div>
       )}
 
       {!data && !loading && (

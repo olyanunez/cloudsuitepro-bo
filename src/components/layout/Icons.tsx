@@ -215,6 +215,33 @@ export const HashIcon: React.FC<IconWithClassProps> = ({ className }) => (
   </svg>
 )
 
+export const CalculatorIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+    <line x1="8" y1="6" x2="16" y2="6"></line>
+    <line x1="16" y1="14" x2="16" y2="14.01"></line>
+    <line x1="12" y1="14" x2="12" y2="14.01"></line>
+    <line x1="8" y1="14" x2="8" y2="14.01"></line>
+    <line x1="16" y1="18" x2="16" y2="18.01"></line>
+    <line x1="12" y1="18" x2="12" y2="18.01"></line>
+    <line x1="8" y1="18" x2="8" y2="18.01"></line>
+  </svg>
+)
+
+export const BookOpenIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+  </svg>
+)
+
+export const Undo2Icon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M9 14 4 9l5-5"></path>
+    <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"></path>
+  </svg>
+)
+
 export const FileCheckIcon: React.FC<IconWithClassProps> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
@@ -257,6 +284,9 @@ export const Icon: React.FC<IconProps> = ({ name, className }) => {
     'calendar': getIconWithClass(CalendarIcon as React.FC<IconWithClassProps>),
     'git-compare': getIconWithClass(GitCompareIcon as React.FC<IconWithClassProps>),
     'hash': getIconWithClass(HashIcon as React.FC<IconWithClassProps>),
+    'calculator': getIconWithClass(CalculatorIcon as React.FC<IconWithClassProps>),
+    'book-open': getIconWithClass(BookOpenIcon as React.FC<IconWithClassProps>),
+    'undo-2': getIconWithClass(Undo2Icon as React.FC<IconWithClassProps>),
   }
 
   return <>{icons[name] || null}</>
