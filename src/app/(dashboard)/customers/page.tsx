@@ -9,6 +9,8 @@ import { Card } from '@/components/ui/card';
 import { apiGet, apiDelete, apiPatch } from '@/lib/services/apiService';
 import { Plus, Search, Edit, Trash2, Eye, UserCheck, UserX, Mail, Phone } from 'lucide-react';
 import { toast } from 'sonner';
+import ProtectedPage from '@/components/ProtectedPage';
+import { usePermissions } from '@/lib/hooks/usePermissions';
 
 interface Customer {
   id: number;
@@ -37,6 +39,7 @@ interface CustomerResponse {
 
 export default function CustomersPage() {
   const router = useRouter();
+  const { canCreate, canUpdate, canDelete } = usePermissions('CUSTOMERS');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -108,22 +111,25 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Clientes</h1>
-          <p className="text-muted-foreground mt-1">
-            Gestiona la información de tus clientes
-          </p>
+    <ProtectedPage screenCode="CUSTOMERS" requiredPermission="VIEW">
+      <div className="p-6">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Clientes</h1>
+            <p className="text-muted-foreground mt-1">
+              Gestiona la información de tus clientes
+            </p>
+          </div>
+          {canCreate && (
+            <Link href="/customers/create">
+              <Button className="bg-primary hover:bg-primary-600">
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Cliente
+              </Button>
+            </Link>
+          )}
         </div>
-        <Link href="/customers/create">
-          <Button className="bg-primary hover:bg-primary-600">
-            <Plus className="h-4 w-4 mr-2" />
-            Nuevo Cliente
-          </Button>
-        </Link>
-      </div>
 
       {/* Search */}
       <Card className="p-4 mb-6">
@@ -287,23 +293,27 @@ export default function CustomersPage() {
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
-                        <Link href={`/customers/edit/${customer.id}`}>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
+                        {canUpdate && (
+                          <Link href={`/customers/edit/${customer.id}`}>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        )}
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handleDelete(
+                                customer.id,
+                                `${customer.name} ${customer.lastName || ''}`
+                              )
+                            }
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
                           </Button>
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleDelete(
-                              customer.id,
-                              `${customer.name} ${customer.lastName || ''}`
-                            )
-                          }
-                        >
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -339,5 +349,6 @@ export default function CustomersPage() {
         )}
       </div>
     </div>
+    </ProtectedPage>
   );
 }

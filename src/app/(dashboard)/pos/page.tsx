@@ -26,6 +26,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import PageHeader from '@/components/layout/PageHeader';
+import ProtectedPage from '@/components/ProtectedPage';
+import { usePermissions } from '@/lib/hooks/usePermissions';
 import {
   Select,
   SelectContent,
@@ -83,6 +85,7 @@ interface CartItem extends ProductStock {
 export default function PosPage() {
   const router = useRouter();
   const { activeBranchId, userBranches } = useBranch();
+  const { canView } = usePermissions('POS'); // POS solo necesita VIEW y EXECUTE_SALES, pero EXECUTE_SALES se valida al procesar la venta
 
   // Estados
   const [searchQuery, setSearchQuery] = useState('');
@@ -1152,12 +1155,13 @@ export default function PosPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <PageHeader
-        title="Punto de Venta"
-        icon="shopping-cart"
-        description={`Sucursal: ${userBranches.find((ub) => ub.branch.id === activeBranchId)?.branch.name || 'No seleccionada'}`}
-      >
+    <ProtectedPage screenCode="POS" requiredPermission="VIEW">
+      <div className="container mx-auto py-6 space-y-6">
+        <PageHeader
+          title="Punto de Venta"
+          icon="shopping-cart"
+          description={`Sucursal: ${userBranches.find((ub) => ub.branch.id === activeBranchId)?.branch.name || 'No seleccionada'}`}
+        >
         <div className="flex flex-col items-end gap-2">
           {currentSession && (
             <div className="flex items-center gap-2">
@@ -2044,5 +2048,6 @@ export default function PosPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </ProtectedPage>
   );
 }

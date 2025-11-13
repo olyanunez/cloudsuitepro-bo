@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight, FilterIcon, XIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import PageHeader from '@/components/layout/PageHeader';
+import ProtectedPage from '@/components/ProtectedPage';
+import { usePermissions } from '@/lib/hooks/usePermissions';
 import {
   Select,
   SelectContent,
@@ -27,6 +29,7 @@ import {
 import { toast } from 'sonner';
 
 export default function InvoicesPage() {
+  const { canView } = usePermissions('INVOICE'); // INVOICE tiene VIEW, PRINT, EXPORT
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
@@ -161,12 +164,13 @@ export default function InvoicesPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <PageHeader
-        title="Gestión de Facturas"
-        description="Visualiza y administra todas las facturas del sistema"
-        icon="file-text"
-      />
+    <ProtectedPage screenCode="INVOICE" requiredPermission="VIEW">
+      <div className="container mx-auto py-8">
+        <PageHeader
+          title="Gestión de Facturas"
+          description="Visualiza y administra todas las facturas del sistema"
+          icon="file-text"
+        />
 
       {/* Search and filter controls */}
       <div className="mb-6 space-y-4">
@@ -442,5 +446,6 @@ export default function InvoicesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </ProtectedPage>
   );
 }

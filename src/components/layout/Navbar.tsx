@@ -33,8 +33,9 @@ import { Bell, AlertTriangle, ArrowRight } from 'lucide-react'
 
 // Definición de los elementos del menú
 // screenCode: código de la pantalla para validar permisos (null = sin permisos requeridos)
+// Los screenCodes deben coincidir exactamente con los definidos en el backend
 const menuItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: 'layout-dashboard', screenCode: null },
+  { name: 'Dashboard', href: '/dashboard', icon: 'layout-dashboard', screenCode: 'DASHBOARD' },
   { name: 'Usuarios', href: '/users', icon: 'user-cog', screenCode: 'USERS' },
   { name: 'Roles', href: '/roles', icon: 'shield', screenCode: 'ROLES' },
   { name: 'Punto de Venta', href: '/pos', icon: 'shopping-cart', screenCode: 'POS' },
@@ -46,11 +47,11 @@ const menuItems = [
     icon: 'calculator',
     screenCode: null, // Este es un contenedor, no requiere permisos
     submenu: [
-      { name: 'Panel Contable', href: '/accounting', icon: 'layout-dashboard', screenCode: 'ACCOUNTING' },
-      { name: 'Plan de Cuentas', href: '/accounting/accounts', icon: 'book-open', screenCode: 'ACCOUNTING' },
-      { name: 'Asientos Contables', href: '/accounting/journal-entries', icon: 'file-text', screenCode: 'ACCOUNTING' },
-      { name: 'Balance General', href: '/accounting/reports/balance-sheet', icon: 'bar-chart-3', screenCode: 'ACCOUNTING' },
-      { name: 'Estado de Resultados', href: '/accounting/reports/income-statement', icon: 'trending-up', screenCode: 'ACCOUNTING' },
+      { name: 'Panel Contable', href: '/accounting', icon: 'layout-dashboard', screenCode: 'FINANCIAL_REPORTS' },
+      { name: 'Plan de Cuentas', href: '/accounting/accounts', icon: 'book-open', screenCode: 'CHART_OF_ACCOUNTS' },
+      { name: 'Asientos Contables', href: '/accounting/journal-entries', icon: 'file-text', screenCode: 'JOURNAL_ENTRIES' },
+      { name: 'Balance General', href: '/accounting/reports/balance-sheet', icon: 'bar-chart-3', screenCode: 'FINANCIAL_REPORTS' },
+      { name: 'Estado de Resultados', href: '/accounting/reports/income-statement', icon: 'trending-up', screenCode: 'FINANCIAL_REPORTS' },
     ]
   },
   {
@@ -71,7 +72,6 @@ const menuItems = [
     screenCode: null, // Este es un contenedor, no requiere permisos
     submenu: [
       { name: 'Inventario', href: '/inventory/items', icon: 'box', screenCode: 'INVENTORY' },
-      // { name: 'Dashboard', href: '/inventory', icon: 'layout-dashboard' },s
       { name: 'Categorías', href: '/inventory/categories', icon: 'tag', screenCode: 'PRODUCT_CATEGORY' },
       { name: 'Productos', href: '/inventory/products', icon: 'shopping-bag', screenCode: 'PRODUCTS' },
       { name: 'Sucursales', href: '/inventory/branches', icon: 'building-2', screenCode: 'BRANCH' },
@@ -95,9 +95,8 @@ const menuItems = [
       { name: 'Comparación de Períodos', href: '/reports/period-comparison', icon: 'git-compare', screenCode: 'REPORTS' },
     ]
   },
-  { name: 'Órdenes', href: '/orders', icon: 'shopping-bag', screenCode: null },
   { name: 'Clientes', href: '/customers', icon: 'users', screenCode: 'CUSTOMERS' },
-  { name: 'Configuración', href: '/settings', icon: 'settings', screenCode: null },
+  { name: 'Configuración', href: '/settings', icon: 'settings', screenCode: 'TENANT' },
 ]
 
 export default function Navbar() {

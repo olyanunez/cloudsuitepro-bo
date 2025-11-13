@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import PageHeader from '@/components/layout/PageHeader';
+import ProtectedPage from '@/components/ProtectedPage';
+import { usePermissions } from '@/lib/hooks/usePermissions';
 import {
   Select,
   SelectContent,
@@ -32,6 +34,7 @@ import { useToast } from '@/components/ui/use-toast';
 export default function RolesPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { canCreate, canUpdate, canDelete } = usePermissions('ROLES');
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -199,18 +202,21 @@ export default function RolesPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <PageHeader
-        title="Gestión de Roles"
-        icon="shield"
-      >
-        <Link href="/roles/create">
-          <Button className="bg-primary hover:bg-primary-600">
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Nuevo Rol
-          </Button>
-        </Link>
-      </PageHeader>
+    <ProtectedPage screenCode="ROLES" requiredPermission="VIEW">
+      <div className="container mx-auto py-8">
+        <PageHeader
+          title="Gestión de Roles"
+          icon="shield"
+        >
+          {canCreate && (
+            <Link href="/roles/create">
+              <Button className="bg-primary hover:bg-primary-600">
+                <PlusIcon className="mr-2 h-4 w-4" />
+                Nuevo Rol
+              </Button>
+            </Link>
+          )}
+        </PageHeader>
 
       {/* Search and filter controls */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -318,19 +324,23 @@ export default function RolesPage() {
                           <EyeIcon className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Link href={`/roles/edit/${role.id}`}>
-                        <Button variant="outline" size="sm" className="px-2 py-1">
-                          <PencilIcon className="h-4 w-4" />
+                      {canUpdate && (
+                        <Link href={`/roles/edit/${role.id}`}>
+                          <Button variant="outline" size="sm" className="px-2 py-1">
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      )}
+                      {canDelete && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
+                          onClick={() => confirmDelete(role.id)}
+                        >
+                          <TrashIcon className="h-4 w-4" />
                         </Button>
-                      </Link>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
-                        onClick={() => confirmDelete(role.id)}
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -411,5 +421,6 @@ export default function RolesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </ProtectedPage>
   );
 }

@@ -9,6 +9,8 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import ProtectedPage from '@/components/ProtectedPage';
+import { usePermissions } from '@/lib/hooks/usePermissions';
 import {
   Select,
   SelectContent,
@@ -36,6 +38,7 @@ import {
 
 export default function ProductsPage() {
   const { compactView } = useCompactView();
+  const { canCreate, canUpdate, canDelete } = usePermissions('PRODUCTS');
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -196,16 +199,19 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gestión de Productos</h1>
-        <Link href="/inventory/products/create">
-          <Button className="bg-primary hover:bg-primary-600">
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Nuevo Producto
-          </Button>
-        </Link>
-      </div>
+    <ProtectedPage screenCode="PRODUCTS" requiredPermission="VIEW">
+      <div className="container mx-auto py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Gestión de Productos</h1>
+          {canCreate && (
+            <Link href="/inventory/products/create">
+              <Button className="bg-primary hover:bg-primary-600">
+                <PlusIcon className="mr-2 h-4 w-4" />
+                Nuevo Producto
+              </Button>
+            </Link>
+          )}
+        </div>
 
       {/* Search and filter controls */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -389,19 +395,23 @@ export default function ProductsPage() {
                             <EyeIcon className="h-4 w-4" />
                           </Button>
                         </Link>
-                        <Link href={`/inventory/products/edit/${product.id}`}>
-                          <Button variant="outline" size="sm" className="px-2 py-1">
-                            <PencilIcon className="h-4 w-4" />
+                        {canUpdate && (
+                          <Link href={`/inventory/products/edit/${product.id}`}>
+                            <Button variant="outline" size="sm" className="px-2 py-1">
+                              <PencilIcon className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        )}
+                        {canDelete && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
+                            onClick={() => confirmDelete(product.id)}
+                          >
+                            <TrashIcon className="h-4 w-4" />
                           </Button>
-                        </Link>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
-                          onClick={() => confirmDelete(product.id)}
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -550,5 +560,6 @@ export default function ProductsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </ProtectedPage>
   );
 }
