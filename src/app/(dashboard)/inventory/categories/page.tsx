@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import ProtectedPage from '@/components/ProtectedPage';
+import { usePermissions } from '@/lib/hooks/usePermissions';
 import {
   Select,
   SelectContent,
@@ -26,6 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export default function CategoriesPage() {
+  const { canCreate, canUpdate, canDelete } = usePermissions('PRODUCT_CATEGORY');
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -138,16 +141,19 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gestión de Categorías</h1>
-        <Link href="/inventory/categories/create">
-          <Button className="bg-primary hover:bg-primary-600">
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Nueva Categoría
-          </Button>
-        </Link>
-      </div>
+    <ProtectedPage screenCode="PRODUCT_CATEGORY" requiredPermission="VIEW">
+      <div className="container mx-auto py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Gestión de Categorías</h1>
+          {canCreate && (
+            <Link href="/inventory/categories/create">
+              <Button className="bg-primary hover:bg-primary-600">
+                <PlusIcon className="mr-2 h-4 w-4" />
+                Nueva Categoría
+              </Button>
+            </Link>
+          )}
+        </div>
 
       {/* Search and filter controls */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -263,19 +269,23 @@ export default function CategoriesPage() {
                           <EyeIcon className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Link href={`/inventory/categories/edit/${category.id}`}>
-                        <Button variant="outline" size="sm" className="px-2 py-1">
-                          <PencilIcon className="h-4 w-4" />
+                      {canUpdate && (
+                        <Link href={`/inventory/categories/edit/${category.id}`}>
+                          <Button variant="outline" size="sm" className="px-2 py-1">
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      )}
+                      {canDelete && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
+                          onClick={() => confirmDelete(category.id)}
+                        >
+                          <TrashIcon className="h-4 w-4" />
                         </Button>
-                      </Link>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
-                        onClick={() => confirmDelete(category.id)}
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -353,5 +363,6 @@ export default function CategoriesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </ProtectedPage>
   );
 }

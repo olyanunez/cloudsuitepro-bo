@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import ncfService from '@/lib/services/ncfService';
+import ProtectedPage from '@/components/ProtectedPage';
 
 export default function DashboardPage() {
   const { activeBranchId } = useBranch();
@@ -162,12 +163,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <PageHeader
-        title="Dashboard"
-        icon="layout-dashboard"
-        description="Resumen ejecutivo de tu negocio"
-      >
+    <ProtectedPage screenCode="DASHBOARD" requiredPermission="VIEW">
+      <div className="container mx-auto py-6 space-y-6">
+        <PageHeader
+          title="Dashboard"
+          icon="layout-dashboard"
+          description="Resumen ejecutivo de tu negocio"
+        >
         <Button
           variant="outline"
           size="sm"
@@ -257,5 +259,6 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
     </div>
+    </ProtectedPage>
   );
 }

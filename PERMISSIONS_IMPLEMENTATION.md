@@ -129,10 +129,12 @@ return (
 - [/roles/page.tsx](src/app/(dashboard)/roles/page.tsx) - ROLES
 - [/users/page.tsx](src/app/(dashboard)/users/page.tsx) - USERS
 - [/inventory/products/page.tsx](src/app/(dashboard)/inventory/products/page.tsx) - PRODUCTS
+- [/inventory/categories/page.tsx](src/app/(dashboard)/inventory/categories/page.tsx) - PRODUCT_CATEGORY
 
 ✅ **Implementadas con protección VIEW:**
 - [/pos/page.tsx](src/app/(dashboard)/pos/page.tsx) - POS
 - [/invoices/page.tsx](src/app/(dashboard)/invoices/page.tsx) - INVOICE
+- [/dashboard/page.tsx](src/app/(dashboard)/dashboard/page.tsx) - DASHBOARD
 
 ✅ **Navbar actualizado:**
 - [/components/layout/Navbar.tsx](src/components/layout/Navbar.tsx) - Ya filtra menús según permisos
