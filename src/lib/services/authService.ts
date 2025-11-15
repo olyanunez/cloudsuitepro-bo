@@ -118,7 +118,15 @@ export class AuthService {
       // Guardar permisos del usuario
       if (data && data.user && data.user.permissions) {
         console.log('Saving user permissions:', data.user.permissions);
-        PermissionService.setUserPermissions(data.user.permissions);
+        // Transformar los permisos al formato esperado por PermissionService
+        const formattedPermissions = data.user.permissions.map((p: any) => ({
+          screenCode: p.screenCode,
+          permissionCode: p.permissionCode,
+          screenName: p.screenName,
+          permissionName: p.permissionName,
+        }));
+        console.log('Formatted permissions:', formattedPermissions);
+        PermissionService.setUserPermissions(formattedPermissions);
       }
 
       return data;

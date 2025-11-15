@@ -40,6 +40,9 @@ export class PermissionService {
   static setUserPermissions(permissions: UserPermission[]): void {
     if (typeof window === 'undefined') return;
     localStorage.setItem('user_permissions', JSON.stringify(permissions));
+
+    // Emitir evento personalizado para notificar a los componentes que los permisos han cambiado
+    window.dispatchEvent(new CustomEvent('permissionsUpdated'));
   }
 
   /**

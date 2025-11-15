@@ -16,13 +16,38 @@ export function usePermissions(screenCode: string) {
   });
 
   useEffect(() => {
-    // Verificar todos los permisos para esta pantalla
-    setPermissions({
-      canView: PermissionService.canView(screenCode),
-      canCreate: PermissionService.canCreate(screenCode),
-      canUpdate: PermissionService.canUpdate(screenCode),
-      canDelete: PermissionService.canDelete(screenCode),
-    });
+    // Función para verificar y actualizar permisos
+    const checkPermissions = () => {
+      setPermissions({
+        canView: PermissionService.canView(screenCode),
+        canCreate: PermissionService.canCreate(screenCode),
+        canUpdate: PermissionService.canUpdate(screenCode),
+        canDelete: PermissionService.canDelete(screenCode),
+      });
+    };
+
+    // Verificar permisos inicialmente
+    checkPermissions();
+
+    // Escuchar cambios en localStorage (cuando se actualizan los permisos)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user_permissions') {
+        checkPermissions();
+      }
+    };
+
+    // Escuchar evento personalizado para cambios en permisos
+    const handlePermissionsUpdate = () => {
+      checkPermissions();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('permissionsUpdated', handlePermissionsUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('permissionsUpdated', handlePermissionsUpdate);
+    };
   }, [screenCode]);
 
   return permissions;
