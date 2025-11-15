@@ -69,6 +69,8 @@ interface RoleDataFromBackend {
   name: string;
   code: string; // Campo obligatorio en el backend
   description?: string;
+  defaultScreenId?: number; // ID de la pantalla principal
+  defaultScreen?: Screen; // Pantalla principal
   permissions?: number[] | Permission[]; // IDs de permisos como números o objetos Permission
   roleScreenPermissions?: RoleScreenPermissionData[];
   isActive?: boolean;
@@ -209,6 +211,8 @@ const normalizeRoleData = (roleData: RoleDataFromBackend): Role => {
     name: roleData.name,
     code: roleData.code, // Campo obligatorio
     description: roleData.description || '',
+    defaultScreenId: roleData.defaultScreenId,
+    defaultScreen: roleData.defaultScreen,
     isActive: roleData.isActive !== undefined ? roleData.isActive : true,
     // Campos específicos del frontend
     screensWithPermissions: screensWithPermissions,
@@ -283,6 +287,7 @@ export class RoleService {
           name: roleData.name,
           code: roleData.code,
           description: roleData.description || '',
+          defaultScreenId: roleData.defaultScreenId,
           isActive: true
         },
         screenPermissionIds: roleData.screenPermissionIds || []
@@ -355,6 +360,7 @@ export class RoleService {
             name: roleData.name,
             code: roleData.code,
             description: roleData.description,
+            defaultScreenId: roleData.defaultScreenId,
             isActive: roleData.isActive
           },
           // Enviamos las listas de permisos a agregar y quitar
@@ -545,6 +551,19 @@ export class RoleService {
       console.error('Error al obtener pantallas con permisos:', error);
       return [
       ];
+    }
+  }
+
+  /**
+   * Obtener todas las pantallas disponibles para seleccionar como pantalla principal
+   */
+  static async getAvailableScreens(): Promise<Screen[]> {
+    try {
+      const data = await apiGet<Screen[]>('/roles/available-screens');
+      return data;
+    } catch (error) {
+      console.error('Error al obtener pantallas disponibles:', error);
+      return [];
     }
   }
 }

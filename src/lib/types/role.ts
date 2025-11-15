@@ -4,6 +4,8 @@ export interface Role extends BaseEntity {
   name: string;
   code: string; // Campo obligatorio en el backend
   description?: string; // Opcional en el backend
+  defaultScreenId?: number; // ID de la pantalla principal
+  defaultScreen?: Screen; // Pantalla principal
   isActive?: boolean;
   // Campos específicos del frontend
   screensWithPermissions?: ScreenWithPermissions[];
@@ -40,6 +42,7 @@ export interface RoleCreateInput {
   name: string;
   code: string; // Campo obligatorio en el backend
   description?: string;
+  defaultScreenId: number; // Pantalla principal (requerido)
   isActive?: boolean;
   // Cambiado para adaptarse al nuevo backend que usa screenPermissionIds
   screenPermissionIds: number[];
@@ -49,6 +52,7 @@ export interface RoleUpdateInput {
   name?: string;
   code?: string;
   description?: string;
+  defaultScreenId?: number; // Pantalla principal
   isActive?: boolean;
   screenPermissionIds?: number[];
   // Agregamos el campo para los pares screenId-permissionId

@@ -22,6 +22,7 @@ interface ScreenWithPermissions {
 export default function CreateRolePage() {
   const router = useRouter();
   const [screensWithPermissions, setScreensWithPermissions] = useState<ScreenWithPermissions[]>([]);
+  const [availableScreens, setAvailableScreens] = useState<{id: number; name: string; code: string}[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [expandedScreens, setExpandedScreens] = useState<Record<number, boolean>>({});
@@ -29,12 +30,14 @@ export default function CreateRolePage() {
     name: '',
     code: '',
     description: '',
+    defaultScreenId: 0,
     screenPermissionIds: []
   });
   const [errors, setErrors] = useState<{
     name?: string;
     code?: string;
     description?: string;
+    defaultScreenId?: string;
     screenPermissionIds?: string;
   }>({});
 
@@ -42,9 +45,14 @@ export default function CreateRolePage() {
     async function loadData() {
       try {
         setLoading(true);
-        const screensData = await RoleService.getScreensWithPermissions();
+        const [screensData, availableScreensData] = await Promise.all([
+          RoleService.getScreensWithPermissions(),
+          RoleService.getAvailableScreens()
+        ]);
         console.log('Datos recibidos:', screensData);
+        console.log('Pantallas disponibles:', availableScreensData);
         setScreensWithPermissions(screensData);
+        setAvailableScreens(availableScreensData);
 
         // Inicializar el estado de expansión de pantallas
         const initialExpandedState: Record<number, boolean> = {};
@@ -62,9 +70,10 @@ export default function CreateRolePage() {
     loadData();
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const parsedValue = name === 'defaultScreenId' ? parseInt(value) : value;
+    setFormData(prev => ({ ...prev, [name]: parsedValue }));
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
@@ -142,6 +151,10 @@ export default function CreateRolePage() {
 
     if (!formData.description?.trim()) {
       newErrors.description = 'La descripción es requerida';
+    }
+
+    if (!formData.defaultScreenId || formData.defaultScreenId === 0) {
+      newErrors.defaultScreenId = 'Debe seleccionar una pantalla principal';
     }
 
     if (formData.screenPermissionIds.length === 0) {
@@ -250,6 +263,32 @@ export default function CreateRolePage() {
                     placeholder="Descripción del rol"
                   />
                   {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="defaultScreenId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Pantalla Principal <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="defaultScreenId"
+                    name="defaultScreenId"
+                    value={formData.defaultScreenId}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-md ${
+                      errors.defaultScreenId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                  >
+                    <option value={0}>Seleccione una pantalla</option>
+                    {availableScreens.map((screen) => (
+                      <option key={screen.id} value={screen.id}>
+                        {screen.name} ({screen.code})
+                      </option>
+                    ))}
+                  </select>
+                  {errors.defaultScreenId && <p className="mt-1 text-sm text-red-500">{errors.defaultScreenId}</p>}
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Al iniciar sesión, el usuario será redirigido a esta pantalla
+                  </p>
                 </div>
               </div>
             </div>

@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon, SaveIcon, ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { de } from 'date-fns/locale';
 
 // Extendemos el tipo Permission para incluir screenPermissionId
 type ExtendedPermission = Permission & { screenPermissionId?: number };
@@ -19,6 +18,7 @@ export default function EditRolePage() {
 
   const [role, setRole] = useState<(Role & { createdAt?: string | Date, updatedAt?: string | Date }) | null>(null);
   const [screensWithPermissions, setScreensWithPermissions] = useState<{ id: number, name: string, code: string, permissions: ExtendedPermission[] }[]>([]);
+  const [availableScreens, setAvailableScreens] = useState<{id: number; name: string; code: string}[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [expandedScreens, setExpandedScreens] = useState<Record<number, boolean>>({});
@@ -29,6 +29,7 @@ export default function EditRolePage() {
     name: '',
     code: '',
     description: '',
+    defaultScreenId: 0,
     screenPermissionIds: [],
     screenPermissionPairs: []
   });
@@ -37,6 +38,7 @@ export default function EditRolePage() {
     name?: string;
     code?: string;
     description?: string;
+    defaultScreenId?: string;
     screenPermissionIds?: string;
   }>({});
 
@@ -54,9 +56,14 @@ export default function EditRolePage() {
 
         setRole(roleData);
 
-        // Cargar todas las pantallas con sus permisos
-        const screensData = await RoleService.getScreensWithPermissions();
+        // Cargar todas las pantallas con sus permisos y las pantallas disponibles
+        const [screensData, availableScreensData] = await Promise.all([
+          RoleService.getScreensWithPermissions(),
+          RoleService.getAvailableScreens()
+        ]);
         console.log('Datos de pantallas con permisos:', screensData);
+        console.log('Pantallas disponibles:', availableScreensData);
+        setAvailableScreens(availableScreensData);
 
         // Procesar y agrupar los datos
         const screenMap = new Map();
@@ -114,6 +121,7 @@ export default function EditRolePage() {
           name: roleData.name,
           code: roleData.code,
           description: roleData.description,
+          defaultScreenId: roleData.defaultScreenId || 0,
           screenPermissionIds,
           screenPermissionPairs
         });
@@ -130,9 +138,10 @@ export default function EditRolePage() {
     }
   }, [roleId, router]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const parsedValue = name === 'defaultScreenId' ? parseInt(value) : value;
+    setFormData(prev => ({ ...prev, [name]: parsedValue }));
 
     // Clear error when user types
     if (errors[name as keyof typeof errors]) {
@@ -249,6 +258,7 @@ export default function EditRolePage() {
       name?: string;
       code?: string;
       description?: string;
+      defaultScreenId?: string;
       screenPermissionIds?: string;
     } = {};
 
@@ -262,6 +272,10 @@ export default function EditRolePage() {
 
     if (!formData.description || !formData.description.trim()) {
       newErrors.description = 'La descripción del rol es obligatoria';
+    }
+
+    if (!formData.defaultScreenId || formData.defaultScreenId === 0) {
+      newErrors.defaultScreenId = 'Debe seleccionar una pantalla principal';
     }
 
     // Eliminamos la validación que requiere al menos un permiso
@@ -320,6 +334,7 @@ export default function EditRolePage() {
         name: formData.name || '',
         code: formData.code || '',
         description: formData.description,
+        defaultScreenId: formData.defaultScreenId,
         screenPermissionIds: currentPermissionIds,
         initialScreenPermissionIds: initialPermissions,
         selectedScreenPermissionIds: currentPermissionIds
@@ -435,6 +450,33 @@ export default function EditRolePage() {
                   />
                   {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
                 </div>
+
+                <div>
+                  <label htmlFor="defaultScreenId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Pantalla Principal <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="defaultScreenId"
+                    name="defaultScreenId"
+                    value={formData.defaultScreenId}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-md ${
+                      errors.defaultScreenId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                  >
+                    <option value={0}>Seleccione una pantalla</option>
+                    {availableScreens.map((screen) => (
+                      <option key={screen.id} value={screen.id}>
+                        {screen.name} ({screen.code})
+                      </option>
+                    ))}
+                  </select>
+                  {errors.defaultScreenId && <p className="mt-1 text-sm text-red-500">{errors.defaultScreenId}</p>}
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Al iniciar sesión, el usuario será redirigido a esta pantalla
+                  </p>
+                </div>
+
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Fecha de Creación</p>
                   <p>{role?.createdAt ? new Date(role.createdAt).toLocaleDateString() : 'N/A'}</p>

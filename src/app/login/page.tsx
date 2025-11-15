@@ -49,8 +49,35 @@ export default function LoginPage() {
         await loadUserBranches(response.user.id);
       }
 
-      // Redirigir al dashboard después del inicio de sesión exitoso
-      router.push('/dashboard');
+      // Determinar la ruta de redirección basada en la pantalla por defecto del rol
+      let redirectPath = '/dashboard'; // Ruta por defecto
+
+      if (response.user?.role?.defaultScreen?.code) {
+        // Mapear el código de la pantalla a la ruta correspondiente
+        const screenCodeToPath: Record<string, string> = {
+          'DASHBOARD': '/dashboard',
+          'INVENTORY': '/inventory',
+          'POS': '/pos',
+          'PRODUCTS': '/inventory/products',
+          'REPORTS': '/reports',
+          'USERS': '/users',
+          'ROLES': '/roles',
+          'SETTINGS': '/settings',
+          'CUSTOMERS': '/customers',
+          'INVOICES': '/invoices',
+          'BRANCHES': '/branches',
+          'WAREHOUSES': '/warehouses',
+          'CASH_SESSIONS': '/cash-sessions',
+          'NCF': '/ncf',
+          'ACCOUNTING': '/accounting',
+          'PRODUCT_CATEGORIES': '/inventory/product-categories',
+        };
+
+        redirectPath = screenCodeToPath[response.user.role.defaultScreen.code] || '/dashboard';
+      }
+
+      // Redirigir a la pantalla correspondiente
+      router.push(redirectPath);
     } catch (error: unknown) {
       // Mostrar mensaje de error
       const errorMessage = error instanceof Error ? error.message : 'Error al iniciar sesión. Por favor intente nuevamente.';

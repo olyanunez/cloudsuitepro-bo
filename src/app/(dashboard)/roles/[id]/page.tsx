@@ -106,6 +106,22 @@ export default function RoleDetailPage() {
                 <p>{role.description}</p>
               </div>
               <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Pantalla Principal</p>
+                <p className="font-medium">
+                  {role.defaultScreen ? (
+                    <span>
+                      {role.defaultScreen.name}
+                      <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">({role.defaultScreen.code})</span>
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">No definida</span>
+                  )}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Pantalla a la que se redirige al usuario al iniciar sesión
+                </p>
+              </div>
+              <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Fecha de Creación</p>
                 <p>{role.createdAt ? new Date(role.createdAt).toLocaleDateString() : 'N/A'}</p>
               </div>
