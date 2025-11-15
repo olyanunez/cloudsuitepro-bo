@@ -23,6 +23,7 @@ export default function CreateRolePage() {
   const router = useRouter();
   const [screensWithPermissions, setScreensWithPermissions] = useState<ScreenWithPermissions[]>([]);
   const [availableScreens, setAvailableScreens] = useState<{id: number; name: string; code: string}[]>([]);
+  const [filteredAvailableScreens, setFilteredAvailableScreens] = useState<{id: number; name: string; code: string}[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [expandedScreens, setExpandedScreens] = useState<Record<number, boolean>>({});
@@ -69,6 +70,46 @@ export default function CreateRolePage() {
 
     loadData();
   }, []);
+
+  // Filtrar las pantallas disponibles basándose en los permisos seleccionados con VIEW
+  useEffect(() => {
+    if (screensWithPermissions.length === 0 || formData.screenPermissionIds.length === 0) {
+      setFilteredAvailableScreens([]);
+      // Si el defaultScreenId actual no está en las pantallas filtradas, resetear
+      if (formData.defaultScreenId !== 0) {
+        setFormData(prev => ({ ...prev, defaultScreenId: 0 }));
+      }
+      return;
+    }
+
+    // Obtener los IDs de las pantallas donde se seleccionó el permiso VIEW
+    const screensWithViewPermission = new Set<number>();
+
+    screensWithPermissions.forEach(screen => {
+      screen.permissions.forEach(permission => {
+        // Verificar si este permiso está seleccionado y es de tipo VIEW
+        if (
+          permission.screenPermissionId &&
+          formData.screenPermissionIds.includes(permission.screenPermissionId) &&
+          permission.code === 'VIEW'
+        ) {
+          screensWithViewPermission.add(screen.id);
+        }
+      });
+    });
+
+    // Filtrar las pantallas disponibles para solo mostrar aquellas con VIEW seleccionado
+    const filtered = availableScreens.filter(screen =>
+      screensWithViewPermission.has(screen.id)
+    );
+
+    setFilteredAvailableScreens(filtered);
+
+    // Si el defaultScreenId actual no está en las pantallas filtradas, resetear
+    if (formData.defaultScreenId !== 0 && !screensWithViewPermission.has(formData.defaultScreenId)) {
+      setFormData(prev => ({ ...prev, defaultScreenId: 0 }));
+    }
+  }, [formData.screenPermissionIds, screensWithPermissions, availableScreens, formData.defaultScreenId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -277,9 +318,14 @@ export default function CreateRolePage() {
                     className={`w-full px-3 py-2 border rounded-md ${
                       errors.defaultScreenId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                     } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                    disabled={filteredAvailableScreens.length === 0}
                   >
-                    <option value={0}>Seleccione una pantalla</option>
-                    {availableScreens.map((screen) => (
+                    <option value={0}>
+                      {filteredAvailableScreens.length === 0
+                        ? 'Primero selecciona permisos VER'
+                        : 'Seleccione una pantalla'}
+                    </option>
+                    {filteredAvailableScreens.map((screen) => (
                       <option key={screen.id} value={screen.id}>
                         {screen.name} ({screen.code})
                       </option>
@@ -287,7 +333,7 @@ export default function CreateRolePage() {
                   </select>
                   {errors.defaultScreenId && <p className="mt-1 text-sm text-red-500">{errors.defaultScreenId}</p>}
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Al iniciar sesión, el usuario será redirigido a esta pantalla
+                    Al iniciar sesión, el usuario será redirigido a esta pantalla. Solo se muestran pantallas con permiso VIEW seleccionado.
                   </p>
                 </div>
               </div>
