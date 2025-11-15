@@ -51,7 +51,7 @@ export class BranchService {
   static async getUserBranches(userId: number): Promise<UserBranch[]> {
     try {
       console.log('🌐 Fetching user branches for userId:', userId);
-      const user = await apiGet<UserWithBranches>(`/users/${userId}`);
+      const user = await apiGet<UserWithBranches>(`/users/me`);
       console.log('📦 User data received:', user);
       console.log('🔗 User branches raw:', user.userBranches);
 

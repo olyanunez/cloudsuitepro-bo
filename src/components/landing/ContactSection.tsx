@@ -42,7 +42,7 @@ export function ContactSection() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:3001/email/contact', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/email/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

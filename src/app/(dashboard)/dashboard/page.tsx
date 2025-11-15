@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useBranch } from '@/lib/contexts/BranchContext';
+import { usePermissions } from '@/lib/hooks/usePermissions';
 import { DashboardService } from '@/lib/services/dashboardService';
 import { CashSessionService } from '@/lib/services/cashSessionService';
 import UserPreferencesService from '@/lib/services/userPreferencesService';
@@ -27,6 +28,13 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Permisos de cada módulo
+  const { canView: canViewInvoices } = usePermissions('INVOICE');
+  const { canView: canViewInventory } = usePermissions('INVENTORY');
+  const { canView: canViewCustomers } = usePermissions('CUSTOMERS');
+  const { canView: canViewCashSessions } = usePermissions('CASH_SESSIONS');
+  const { canView: canViewNcf } = usePermissions('NCF');
+
   // Estados para datos
   const [salesStats, setSalesStats] = useState<any>(null);
   const [salesTrend, setSalesTrend] = useState<any[]>([]);
@@ -50,53 +58,83 @@ export default function DashboardPage() {
       const startOfDay = new Date(today.setHours(0, 0, 0, 0));
       const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-      // Cargar datos en paralelo
-      const [stats, trend, growth, inventory, lowStock, sessions, ncfStatsData, ncfUsage] = await Promise.all([
-        // Estadísticas de ventas de hoy
-        DashboardService.getSalesStats({
-          branchId: activeBranchId || undefined,
-          startDate: startOfDay.toISOString().split('T')[0],
-          endDate: endOfDay.toISOString().split('T')[0],
-        }),
+      // Preparar array de promesas solo para los datos que el usuario puede ver
+      const promises: Promise<any>[] = [];
+      let statsIndex = -1;
+      let trendIndex = -1;
+      let growthIndex = -1;
+      let inventoryIndex = -1;
+      let lowStockIndex = -1;
+      let sessionsIndex = -1;
+      let ncfStatsIndex = -1;
+      let ncfUsageIndex = -1;
 
-        // Tendencia de ventas (últimos 30 días)
-        DashboardService.getSalesTrend(30, activeBranchId || undefined),
+      // Solo cargar datos de ventas si tiene permiso de ver facturas
+      if (canViewInvoices) {
+        statsIndex = promises.length;
+        promises.push(
+          DashboardService.getSalesStats({
+            branchId: activeBranchId || undefined,
+            startDate: startOfDay.toISOString().split('T')[0],
+            endDate: endOfDay.toISOString().split('T')[0],
+          })
+        );
 
-        // Tasa de crecimiento (hoy vs ayer)
-        DashboardService.getGrowthRate({
-          branchId: activeBranchId || undefined,
-          startDate: startOfDay.toISOString().split('T')[0],
-          endDate: endOfDay.toISOString().split('T')[0],
-        }),
+        trendIndex = promises.length;
+        promises.push(DashboardService.getSalesTrend(30, activeBranchId || undefined));
 
-        // Valorización de inventario
-        DashboardService.getStockValuation(),
+        growthIndex = promises.length;
+        promises.push(
+          DashboardService.getGrowthRate({
+            branchId: activeBranchId || undefined,
+            startDate: startOfDay.toISOString().split('T')[0],
+            endDate: endOfDay.toISOString().split('T')[0],
+          })
+        );
+      }
 
-        // Productos con stock bajo
-        DashboardService.getLowStockReport(),
+      // Solo cargar datos de inventario si tiene permiso
+      if (canViewInventory) {
+        inventoryIndex = promises.length;
+        promises.push(DashboardService.getStockValuation());
 
-        // Sesiones de caja de hoy
-        CashSessionService.getSessions({
-          branchId: activeBranchId || undefined,
-          startDate: startOfDay.toISOString().split('T')[0],
-          endDate: endOfDay.toISOString().split('T')[0],
-        }),
+        lowStockIndex = promises.length;
+        promises.push(DashboardService.getLowStockReport());
+      }
 
-        // Estadísticas de NCF
-        ncfService.getDashboardStats().catch(() => null),
+      // Solo cargar sesiones de caja si tiene permiso
+      if (canViewCashSessions) {
+        sessionsIndex = promises.length;
+        promises.push(
+          CashSessionService.getSessions({
+            branchId: activeBranchId || undefined,
+            startDate: startOfDay.toISOString().split('T')[0],
+            endDate: endOfDay.toISOString().split('T')[0],
+          })
+        );
+      }
 
-        // Uso de NCF por mes
-        ncfService.getNcfUsageByMonth(6).catch(() => []),
-      ]);
+      // Solo cargar datos de NCF si tiene permiso
+      if (canViewNcf) {
+        ncfStatsIndex = promises.length;
+        promises.push(ncfService.getDashboardStats().catch(() => null));
 
-      setSalesStats(stats);
-      setSalesTrend(trend);
-      setGrowthData(growth);
-      setInventoryData(inventory);
-      setLowStockData(lowStock);
-      setCashSessions(sessions);
-      setNcfStats(ncfStatsData);
-      setNcfUsageData(ncfUsage);
+        ncfUsageIndex = promises.length;
+        promises.push(ncfService.getNcfUsageByMonth(6).catch(() => []));
+      }
+
+      // Ejecutar todas las promesas en paralelo
+      const results = await Promise.all(promises);
+
+      // Asignar resultados solo si se cargaron
+      if (statsIndex !== -1) setSalesStats(results[statsIndex]);
+      if (trendIndex !== -1) setSalesTrend(results[trendIndex]);
+      if (growthIndex !== -1) setGrowthData(results[growthIndex]);
+      if (inventoryIndex !== -1) setInventoryData(results[inventoryIndex]);
+      if (lowStockIndex !== -1) setLowStockData(results[lowStockIndex]);
+      if (sessionsIndex !== -1) setCashSessions(results[sessionsIndex]);
+      if (ncfStatsIndex !== -1) setNcfStats(results[ncfStatsIndex]);
+      if (ncfUsageIndex !== -1) setNcfUsageData(results[ncfUsageIndex]);
     } catch (error: any) {
       console.error('Error loading dashboard data:', error);
       toast.error('Error al cargar los datos del dashboard');
@@ -181,52 +219,62 @@ export default function DashboardPage() {
         </Button>
       </PageHeader>
 
-      {/* KPIs Principales */}
-      <KPICards
-        totalSales={totalSales}
-        transactionCount={transactionCount}
-        avgTicket={avgTicket}
-        growthRate={growthRate}
-      />
+      {/* KPIs Principales - Solo si tiene permiso de ver facturas */}
+      {canViewInvoices && (
+        <KPICards
+          totalSales={totalSales}
+          transactionCount={transactionCount}
+          avgTicket={avgTicket}
+          growthRate={growthRate}
+        />
+      )}
 
-      {/* Gráficos de Ventas */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <SalesTrendChart data={salesTrend} />
-        <PaymentMethodChart data={salesStats?.invoicesByPaymentMethod || []} />
-      </div>
+      {/* Gráficos de Ventas - Solo si tiene permiso de ver facturas */}
+      {canViewInvoices && (
+        <div className="grid gap-4 md:grid-cols-3">
+          <SalesTrendChart data={salesTrend} />
+          <PaymentMethodChart data={salesStats?.invoicesByPaymentMethod || []} />
+        </div>
+      )}
 
-      {/* Sección de Inventario */}
-      <InventorySection
-        totalValue={inventoryData?.summary?.totalValue || 0}
-        lowStockCount={lowStockData?.count || 0}
-        totalProducts={inventoryData?.summary?.totalItems || 0}
-        lowStockItems={lowStockData?.items || []}
-      />
+      {/* Sección de Inventario - Solo si tiene permiso de ver inventario */}
+      {canViewInventory && (
+        <InventorySection
+          totalValue={inventoryData?.summary?.totalValue || 0}
+          lowStockCount={lowStockData?.count || 0}
+          totalProducts={inventoryData?.summary?.totalItems || 0}
+          lowStockItems={lowStockData?.items || []}
+        />
+      )}
 
       {/* Sesiones de Caja y Top Clientes */}
       <div className="grid gap-4 md:grid-cols-2">
-        <CashSessionsWidget
-          openSessions={openSessions}
-          totalCollected={totalCollected}
-          totalDifference={totalDifference}
-          recentSessions={cashSessions.map((s) => ({
-            id: s.id,
-            sessionNumber: s.sessionNumber,
-            userName: s.user?.name || 'Usuario',
-            totalCash: parseFloat(s.totalCash || '0'),
-            totalCard: parseFloat(s.totalCard || '0'),
-            totalTransfer: parseFloat(s.totalTransfer || '0'),
-            difference: parseFloat(s.difference || '0'),
-            differenceVouchers: parseFloat(s.differenceVouchers || '0'),
-            status: s.status,
-          }))}
-        />
+        {/* Widget de Sesiones de Caja - Solo si tiene permiso */}
+        {canViewCashSessions && (
+          <CashSessionsWidget
+            openSessions={openSessions}
+            totalCollected={totalCollected}
+            totalDifference={totalDifference}
+            recentSessions={cashSessions.map((s) => ({
+              id: s.id,
+              sessionNumber: s.sessionNumber,
+              userName: s.user?.name || 'Usuario',
+              totalCash: parseFloat(s.totalCash || '0'),
+              totalCard: parseFloat(s.totalCard || '0'),
+              totalTransfer: parseFloat(s.totalTransfer || '0'),
+              difference: parseFloat(s.difference || '0'),
+              differenceVouchers: parseFloat(s.differenceVouchers || '0'),
+              status: s.status,
+            }))}
+          />
+        )}
 
-        <TopCustomersWidget />
+        {/* Widget de Top Clientes - Solo si tiene permiso */}
+        {canViewCustomers && <TopCustomersWidget />}
       </div>
 
-      {/* Sección de NCF / Cumplimiento Fiscal */}
-      {ncfStats && (
+      {/* Sección de NCF / Cumplimiento Fiscal - Solo si tiene permiso */}
+      {canViewNcf && ncfStats && (
         <>
           <div className="grid gap-4 md:grid-cols-3">
             <NcfUsageChart data={ncfUsageData} />
