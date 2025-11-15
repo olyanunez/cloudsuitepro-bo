@@ -42,23 +42,34 @@ export function ContactSection() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Implement actual API call to send contact form
-      // For now, just simulate success
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      toast.success('Mensaje enviado exitosamente', {
-        description: 'Nos pondremos en contacto contigo pronto',
+      const response = await fetch('http://localhost:3001/email/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
 
-      // Reset form
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: '',
-      });
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success('Mensaje enviado exitosamente', {
+          description: 'Nos pondremos en contacto contigo pronto',
+        });
+
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: '',
+        });
+      } else {
+        throw new Error(data.message || 'Error al enviar el mensaje');
+      }
     } catch (error) {
+      console.error('Error sending contact form:', error);
       toast.error('Error al enviar el mensaje', {
         description: 'Por favor intenta de nuevo más tarde',
       });
