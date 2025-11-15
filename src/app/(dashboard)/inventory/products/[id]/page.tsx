@@ -228,21 +228,10 @@ export default function ProductDetailPage() {
             <p className="text-sm text-gray-500 dark:text-gray-400">Última Actualización</p>
             <p>{product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : 'N/A'}</p>
           </div>
-          {/* Estos campos no existen en la interfaz Product del backend */}
-          {/*
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Stock Actual</p>
-            <p className="font-medium">0 unidades</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Stock Mínimo</p>
-            <p>0 unidades</p>
-          </div>
           <div>
             <p className="text-sm text-gray-500 dark:text-gray-400">Código de Barras</p>
-            <p className="font-mono">N/A</p>
+            <p className="font-mono">{product.barcode || 'N/A'}</p>
           </div>
-          */}
         </div>
       </div>
     </div>

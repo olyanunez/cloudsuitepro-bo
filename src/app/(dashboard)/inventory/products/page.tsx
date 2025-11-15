@@ -275,6 +275,14 @@ export default function ProductsPage() {
                 </th>
                 <th
                   scope="col"
+                  className={getTableCellClass("px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider")}
+                >
+                  <div className="flex items-center">
+                    Código de Barras
+                  </div>
+                </th>
+                <th
+                  scope="col"
                   className={getTableCellClass("px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer")}
                   onClick={() => handleSort('name')}
                 >
@@ -362,6 +370,11 @@ export default function ProductsPage() {
                     <td className={getTableCellClass("px-6 py-4 whitespace-nowrap")}>
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {product.code}
+                      </div>
+                    </td>
+                    <td className={getTableCellClass("px-6 py-4 whitespace-nowrap")}>
+                      <div className="text-sm font-mono text-gray-900 dark:text-white">
+                        {product.barcode || 'N/A'}
                       </div>
                     </td>
                     <td className={getTableCellClass("px-6 py-4 whitespace-nowrap")}>
