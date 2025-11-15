@@ -198,6 +198,20 @@ export class InvoiceService {
   }
 
   /**
+   * Obtiene una factura con cantidades disponibles para devolución
+   * @param invoiceId ID de la factura
+   * @returns Promise con la factura incluyendo availableQuantity y returnedQuantity en cada item
+   */
+  static async getWithAvailableQuantities(invoiceId: number): Promise<any> {
+    try {
+      return await apiGet<any>(`/invoices/${invoiceId}/available-quantities`);
+    } catch (error) {
+      console.error('Error al obtener factura con cantidades disponibles:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Obtiene estadísticas de facturas
    * @param branchId ID de la sucursal (opcional)
    * @param startDate Fecha de inicio (opcional)
@@ -290,6 +304,7 @@ export class InvoiceService {
 export const invoiceService = {
   getAll: (params?: InvoiceQueryParams) => InvoiceService.getInvoices(params),
   getById: (id: number) => InvoiceService.getInvoice(id),
+  getWithAvailableQuantities: (id: number) => InvoiceService.getWithAvailableQuantities(id),
   cancel: (id: number) => InvoiceService.cancelInvoice(id),
   getStats: (branchId?: number, startDate?: string, endDate?: string) =>
     InvoiceService.getStats(branchId, startDate, endDate),

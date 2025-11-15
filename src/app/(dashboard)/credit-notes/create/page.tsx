@@ -82,14 +82,17 @@ export default function CreateCreditNotePage() {
       }
 
       const foundInvoice = invoices.data[0] as any;
-      setInvoice(foundInvoice);
 
-      // Inicializar items para devolución
-      const items: ReturnItem[] = foundInvoice.items.map((item: InvoiceItem) => ({
+      // Obtener la factura con cantidades disponibles (descontando devoluciones previas)
+      const invoiceWithAvailableQty = await invoiceService.getWithAvailableQuantities(foundInvoice.id);
+      setInvoice(invoiceWithAvailableQty);
+
+      // Inicializar items para devolución usando availableQuantity en lugar de quantity
+      const items: ReturnItem[] = invoiceWithAvailableQty.items.map((item: any) => ({
         originalItemId: item.id,
         productId: item.productId,
         productName: item.product.name,
-        maxQuantity: item.quantity,
+        maxQuantity: item.availableQuantity || 0, // Usar availableQuantity que ya resta lo devuelto
         quantityToReturn: 0,
         unitPrice: parseFloat(item.unitPrice.toString()),
         discount: parseFloat(item.discount.toString()),

@@ -71,6 +71,7 @@ export default function LoginPage() {
           'NCF': '/ncf',
           'ACCOUNTING': '/accounting',
           'PRODUCT_CATEGORIES': '/inventory/product-categories',
+          'CREDIT_NOTE': '/credit-notes'
         };
 
         redirectPath = screenCodeToPath[response.user.role.defaultScreen.code] || '/dashboard';
