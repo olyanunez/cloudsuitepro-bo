@@ -56,7 +56,7 @@ export default function LoginPage() {
         // Mapear el código de la pantalla a la ruta correspondiente
         const screenCodeToPath: Record<string, string> = {
           'DASHBOARD': '/dashboard',
-          'INVENTORY': '/inventory',
+          'INVENTORY': '/inventory/items',
           'POS': '/pos',
           'PRODUCTS': '/inventory/products',
           'REPORTS': '/reports',
@@ -65,13 +65,14 @@ export default function LoginPage() {
           'SETTINGS': '/settings',
           'CUSTOMERS': '/customers',
           'INVOICES': '/invoices',
-          'BRANCHES': '/branches',
-          'WAREHOUSES': '/warehouses',
+          'BRANCH': '/inventory/branches',
+          'WAREHOUSE': '/inventory/warehouses',
           'CASH_SESSIONS': '/cash-sessions',
           'NCF': '/ncf',
           'ACCOUNTING': '/accounting',
-          'PRODUCT_CATEGORIES': '/inventory/product-categories',
-          'CREDIT_NOTE': '/credit-notes'
+          'PRODUCT_CATEGORY': '/inventory/categories',
+          'CREDIT_NOTE': '/credit-notes',
+          'MOVEMENTS': '/inventory/movements',
         };
 
         redirectPath = screenCodeToPath[response.user.role.defaultScreen.code] || '/dashboard';

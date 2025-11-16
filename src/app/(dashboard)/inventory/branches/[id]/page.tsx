@@ -1,139 +1,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BranchService, WarehouseService } from '@/lib/services/inventoryService';
-import { Branch, Warehouse } from '@/lib/types/inventory';
-import { toast } from 'react-hot-toast';
-import { ArrowLeftIcon, PencilIcon, PlusIcon, TrashIcon, Building2, MapPin, Phone, Mail, Package } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { Branch } from '@/lib/types/inventory';
+import { BranchService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeftIcon, PencilIcon, MapPinIcon, PhoneIcon, MailIcon, PackageIcon, CalendarIcon, CheckCircleIcon, XCircleIcon } from 'lucide-react';
 
-interface BranchDetailPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function BranchDetailPage({ params }: BranchDetailPageProps) {
+export default function BranchDetailPage() {
+  const params = useParams();
   const router = useRouter();
-  const { id } = params;
-  const branchId = parseInt(id, 10);
+  const branchId = params.id as string;
 
-  const [loading, setLoading] = useState(true);
   const [branch, setBranch] = useState<Branch | null>(null);
-  const [allWarehouses, setAllWarehouses] = useState<Warehouse[]>([]);
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-  const [selectedWarehouses, setSelectedWarehouses] = useState<number[]>([]);
-  const [isUnassignDialogOpen, setIsUnassignDialogOpen] = useState(false);
-  const [warehouseToUnassign, setWarehouseToUnassign] = useState<number | null>(null);
-  const [assigning, setAssigning] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    loadData();
+    async function loadBranch() {
+      try {
+        const branchData = await BranchService.getBranchById(parseInt(branchId));
+        setBranch(branchData);
+      } catch (error) {
+        console.error('Error loading branch:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (branchId) {
+      loadBranch();
+    }
   }, [branchId]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [branchData, warehousesData] = await Promise.all([
-        BranchService.getBranchById(branchId),
-        WarehouseService.getWarehouses(),
-      ]);
-      setBranch(branchData);
-      setAllWarehouses(warehousesData);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast.error('Error al cargar los datos');
-      router.push('/inventory/branches');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const availableWarehouses = allWarehouses.filter(
-    (warehouse) =>
-      !warehouse.branchId || warehouse.branchId === branchId
-  );
-
-  const handleOpenAssignDialog = () => {
-    setSelectedWarehouses([]);
-    setIsAssignDialogOpen(true);
-  };
-
-  const handleWarehouseSelection = (warehouseId: number, checked: boolean) => {
-    setSelectedWarehouses((prev) =>
-      checked
-        ? [...prev, warehouseId]
-        : prev.filter((id) => id !== warehouseId)
-    );
-  };
-
-  const handleAssignWarehouses = async () => {
-    if (selectedWarehouses.length === 0) {
-      toast.error('Debe seleccionar al menos un almacén');
-      return;
-    }
-
-    try {
-      setAssigning(true);
-      const updatedBranch = await BranchService.assignWarehouses(branchId, {
-        warehouseIds: selectedWarehouses,
-      });
-      setBranch(updatedBranch);
-      toast.success('Almacenes asignados exitosamente');
-      setIsAssignDialogOpen(false);
-      setSelectedWarehouses([]);
-      loadData(); // Reload to refresh warehouse list
-    } catch (error) {
-      console.error('Error assigning warehouses:', error);
-      toast.error('Error al asignar almacenes');
-    } finally {
-      setAssigning(false);
-    }
-  };
-
-  const confirmUnassign = (warehouseId: number) => {
-    setWarehouseToUnassign(warehouseId);
-    setIsUnassignDialogOpen(true);
-  };
-
-  const handleUnassignWarehouse = async () => {
-    if (!warehouseToUnassign) return;
-
-    try {
-      const updatedBranch = await BranchService.unassignWarehouse(branchId, warehouseToUnassign);
-      setBranch(updatedBranch);
-      toast.success('Almacén desasignado exitosamente');
-      setIsUnassignDialogOpen(false);
-      setWarehouseToUnassign(null);
-      loadData(); // Reload to refresh warehouse list
-    } catch (error) {
-      console.error('Error unassigning warehouse:', error);
-      toast.error('Error al desasignar el almacén');
-      setWarehouseToUnassign(null);
-      setIsUnassignDialogOpen(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -146,225 +45,262 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
   if (!branch) {
     return (
       <div className="container mx-auto py-8">
-        <p>Sucursal no encontrada</p>
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4">
+          <p className="text-yellow-800 dark:text-yellow-200">Sucursal no encontrada</p>
+        </div>
+        <div className="mt-4">
+          <Link href="/inventory/branches">
+            <Button variant="outline">
+              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+              Volver a Sucursales
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center">
-          <Link href="/inventory/branches" className="mr-4">
-            <Button variant="outline" size="icon">
-              <ArrowLeftIcon className="h-4 w-4" />
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/inventory/branches">
+            <Button variant="outline" size="sm">
+              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+              Volver
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold">Detalles de la Sucursal</h1>
+          <div>
+            <h1 className="text-3xl font-bold">{branch.name}</h1>
+            <p className="text-muted-foreground">Código: {branch.code}</p>
+          </div>
         </div>
-        <Link href={`/inventory/branches/edit/${branch.id}`}>
-          <Button className="bg-primary hover:bg-primary-600">
-            <PencilIcon className="mr-2 h-4 w-4" />
-            Editar
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href={`/inventory/branches/edit/${branch.id}`}>
+            <Button>
+              <PencilIcon className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
+          </Link>
+        </div>
       </div>
 
-      {/* Branch Information */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Building2 className="mr-2 h-5 w-5" />
-            Información General
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Código</p>
-              <p className="text-base font-semibold">{branch.code}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Nombre</p>
-              <p className="text-base font-semibold">{branch.name}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center">
-                <MapPin className="mr-1 h-4 w-4" />
-                Dirección
-              </p>
-              <p className="text-base">{branch.address || 'No especificada'}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center">
-                <Phone className="mr-1 h-4 w-4" />
-                Teléfono
-              </p>
-              <p className="text-base">{branch.phone || 'No especificado'}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 flex items-center">
-                <Mail className="mr-1 h-4 w-4" />
-                Email
-              </p>
-              <p className="text-base">{branch.email || 'No especificado'}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Estado</p>
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${branch.isActive ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'}`}>
-                {branch.isActive ? 'Activa' : 'Inactiva'}
-              </span>
-            </div>
-          </div>
-          {branch.description && (
-            <div className="mt-4">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Descripción</p>
-              <p className="text-base">{branch.description}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Información General */}
+        <div className="md:col-span-2 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Información General</CardTitle>
+              <CardDescription>Detalles de la sucursal</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Código
+                  </label>
+                  <p className="mt-1 text-base font-medium">{branch.code}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Nombre
+                  </label>
+                  <p className="mt-1 text-base font-medium">{branch.name}</p>
+                </div>
+              </div>
 
-      {/* Assigned Warehouses */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center">
-            <Package className="mr-2 h-5 w-5" />
-            Almacenes Asignados ({branch.warehouses?.length || 0})
-          </CardTitle>
-          <Button onClick={handleOpenAssignDialog} size="sm" className="bg-primary hover:bg-primary-600">
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Asignar Almacenes
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {!branch.warehouses || branch.warehouses.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-              No hay almacenes asignados a esta sucursal
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {branch.warehouses.map((warehouse) => (
-                <div
-                  key={warehouse.id}
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-base">{warehouse.name}</h3>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
-                      onClick={() => confirmUnassign(warehouse.id)}
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {warehouse.description || 'Sin descripción'}
-                  </p>
-                  {warehouse.address && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-center">
-                      <MapPin className="mr-1 h-3 w-3" />
-                      {warehouse.address}
-                    </p>
+              {branch.description && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Descripción
+                  </label>
+                  <p className="mt-1 text-base">{branch.description}</p>
+                </div>
+              )}
+
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
+                  Información de Contacto
+                </h3>
+                <div className="space-y-3">
+                  {branch.address && (
+                    <div className="flex items-start gap-3">
+                      <MapPinIcon className="h-5 w-5 text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Dirección</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{branch.address}</p>
+                      </div>
+                    </div>
+                  )}
+                  {branch.phone && (
+                    <div className="flex items-start gap-3">
+                      <PhoneIcon className="h-5 w-5 text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Teléfono</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{branch.phone}</p>
+                      </div>
+                    </div>
+                  )}
+                  {branch.email && (
+                    <div className="flex items-start gap-3">
+                      <MailIcon className="h-5 w-5 text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">Correo Electrónico</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{branch.email}</p>
+                      </div>
+                    </div>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Assign Warehouses Dialog */}
-      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Asignar Almacenes</DialogTitle>
-            <DialogDescription>
-              Seleccione los almacenes que desea asignar a esta sucursal
-            </DialogDescription>
-          </DialogHeader>
-          <div className="max-h-[400px] overflow-y-auto py-4">
-            {availableWarehouses.length === 0 ? (
-              <p className="text-center text-gray-500 dark:text-gray-400 py-8">
-                No hay almacenes disponibles para asignar
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {availableWarehouses.map((warehouse) => {
-                  const isAlreadyAssigned = branch.warehouses?.some(w => w.id === warehouse.id);
-                  return (
-                    <div key={warehouse.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <input
-                        type="checkbox"
-                        id={`warehouse-${warehouse.id}`}
-                        checked={selectedWarehouses.includes(warehouse.id) || isAlreadyAssigned}
-                        onChange={(e) => {
-                          if (!isAlreadyAssigned) {
-                            handleWarehouseSelection(warehouse.id, e.target.checked);
-                          }
-                        }}
-                        disabled={isAlreadyAssigned}
-                        className="h-4 w-4 mt-1 text-primary-600 focus:ring-primary-500 border-gray-300 rounded cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-                      />
-                      <label
-                        htmlFor={`warehouse-${warehouse.id}`}
-                        className="flex-1 cursor-pointer"
-                      >
-                        <p className="font-medium">{warehouse.name}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {warehouse.description || 'Sin descripción'}
-                        </p>
+          {/* Almacenes */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PackageIcon className="h-5 w-5" />
+                Almacenes Asignados
+              </CardTitle>
+              <CardDescription>
+                {branch.warehouses?.length || 0} almacén(es) en esta sucursal
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {branch.warehouses && branch.warehouses.length > 0 ? (
+                <div className="space-y-3">
+                  {branch.warehouses.map((warehouse) => (
+                    <div
+                      key={warehouse.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <h4 className="font-medium">{warehouse.name}</h4>
+                        {warehouse.description && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {warehouse.description}
+                          </p>
+                        )}
                         {warehouse.address && (
-                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          <p className="text-sm text-gray-500 dark:text-gray-500 mt-1 flex items-center gap-1">
+                            <MapPinIcon className="h-3 w-3" />
                             {warehouse.address}
                           </p>
                         )}
-                        {isAlreadyAssigned && (
-                          <span className="text-xs text-blue-600 dark:text-blue-400">
-                            Ya asignado
-                          </span>
-                        )}
-                      </label>
+                      </div>
+                      <div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            warehouse.isActive
+                              ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                              : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                          }`}
+                        >
+                          {warehouse.isActive ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleAssignWarehouses}
-              disabled={selectedWarehouses.length === 0 || assigning}
-              className="bg-primary hover:bg-primary-600"
-            >
-              {assigning ? 'Asignando...' : `Asignar (${selectedWarehouses.length})`}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <PackageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No hay almacenes asignados a esta sucursal</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Unassign Confirmation Dialog */}
-      <AlertDialog open={isUnassignDialogOpen} onOpenChange={setIsUnassignDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Desasignar almacén?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción desasignará el almacén de esta sucursal. El almacén quedará disponible para ser asignado a otra sucursal.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleUnassignWarehouse} className="!bg-red-600 hover:!bg-red-700 !text-white border-red-600">
-              Desasignar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* Información Adicional */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Estado</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                {branch.isActive ? (
+                  <>
+                    <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                    <span className="text-base font-medium text-green-600">Activa</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircleIcon className="h-5 w-5 text-red-600" />
+                    <span className="text-base font-medium text-red-600">Inactiva</span>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Información del Sistema</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
+                  <CalendarIcon className="h-4 w-4" />
+                  <span>Fecha de Creación</span>
+                </div>
+                <p className="text-sm font-medium">
+                  {new Date(branch.createdAt).toLocaleDateString('es-MX', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
+                  <CalendarIcon className="h-4 w-4" />
+                  <span>Última Actualización</span>
+                </div>
+                <p className="text-sm font-medium">
+                  {new Date(branch.updatedAt).toLocaleDateString('es-MX', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Estadísticas</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <PackageIcon className="h-5 w-5 text-blue-600" />
+                  <span className="text-sm font-medium">Almacenes</span>
+                </div>
+                <span className="text-xl font-bold text-blue-600">
+                  {branch.warehouses?.length || 0}
+                </span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <CheckCircleIcon className="h-5 w-5 text-green-600" />
+                  <span className="text-sm font-medium">Almacenes Activos</span>
+                </div>
+                <span className="text-xl font-bold text-green-600">
+                  {branch.warehouses?.filter(w => w.isActive).length || 0}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

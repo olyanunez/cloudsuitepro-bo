@@ -8,6 +8,8 @@ import { Role } from '@/lib/types/role';
 import { AvatarUpload } from '@/components/users/AvatarUpload';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 // Usamos elementos HTML estándar en lugar de componentes UI personalizados
@@ -86,14 +88,13 @@ export default function EditUserPage() {
     }
   };
 
-  const handleSwitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, isActive: e.target.checked }));
+  const handleSwitchChange = (checked: boolean) => {
+    setFormData(prev => ({ ...prev, isActive: checked }));
   };
 
-  const handlePasswordSwitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const isChecked = e.target.checked;
-    setChangePassword(isChecked);
-    if (!isChecked) {
+  const handlePasswordSwitchChange = (checked: boolean) => {
+    setChangePassword(checked);
+    if (!checked) {
       // Clear password fields if user decides not to change password
       setFormData(prev => ({
         ...prev,
@@ -280,18 +281,20 @@ export default function EditUserPage() {
                   {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
                 </div>
                 
-                <div className="flex items-center space-x-2 py-2">
-                  <div className="relative inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      id="changePassword"
-                      checked={changePassword}
-                      onChange={handlePasswordSwitchChange}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                <div className="flex items-center justify-between py-2">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="changePassword" className="text-sm font-medium">
+                      Cambiar contraseña
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Activar para establecer una nueva contraseña
+                    </p>
                   </div>
-                  <label htmlFor="changePassword" className="text-sm font-medium text-gray-900 dark:text-gray-300">Cambiar contraseña</label>
+                  <Switch
+                    id="changePassword"
+                    checked={changePassword}
+                    onCheckedChange={handlePasswordSwitchChange}
+                  />
                 </div>
                 
                 {changePassword && (
@@ -335,22 +338,21 @@ export default function EditUserPage() {
                 )}
 
                 <div className="pt-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="relative inline-flex items-center">
-                      <input
-                        type="checkbox"
-                        id="isActive"
-                        checked={formData.isActive}
-                        onChange={handleSwitchChange}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="isActive" className="text-sm font-medium">
+                        Usuario Activo
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Los usuarios inactivos no pueden iniciar sesión en el sistema
+                      </p>
                     </div>
-                    <label htmlFor="isActive" className="text-sm font-medium text-gray-900 dark:text-gray-300">Usuario Activo</label>
+                    <Switch
+                      id="isActive"
+                      checked={formData.isActive}
+                      onCheckedChange={handleSwitchChange}
+                    />
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Los usuarios inactivos no pueden iniciar sesión en el sistema.
-                  </p>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">

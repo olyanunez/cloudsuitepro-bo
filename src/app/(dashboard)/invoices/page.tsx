@@ -16,24 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
 export default function InvoicesPage() {
   const { canView } = usePermissions('INVOICE'); // INVOICE tiene VIEW, PRINT, EXPORT
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [invoiceToCancel, setInvoiceToCancel] = useState<number | null>(null);
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -64,32 +52,6 @@ export default function InvoicesPage() {
       toast.error('Error al cargar las facturas');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const confirmCancel = (invoiceId: number) => {
-    setInvoiceToCancel(invoiceId);
-    setIsCancelDialogOpen(true);
-  };
-
-  const handleCancelInvoice = async () => {
-    if (!invoiceToCancel) return;
-
-    try {
-      await InvoiceService.cancelInvoice(invoiceToCancel);
-      // Update the invoice in the list
-      setInvoices(invoices.map(invoice =>
-        invoice.id === invoiceToCancel
-          ? { ...invoice, status: 'CANCELLED' as const }
-          : invoice
-      ));
-      toast.success('Factura cancelada exitosamente');
-    } catch (error) {
-      console.error('Error cancelling invoice:', error);
-      toast.error('Error al cancelar la factura');
-    } finally {
-      setInvoiceToCancel(null);
-      setIsCancelDialogOpen(false);
     }
   };
 
@@ -351,23 +313,11 @@ export default function InvoicesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end space-x-2">
-                        <Link href={`/invoices/${invoice.id}`}>
-                          <Button variant="outline" size="sm" className="px-2 py-1">
-                            <EyeIcon className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        {invoice.status !== 'CANCELLED' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
-                            onClick={() => confirmCancel(invoice.id)}
-                          >
-                            Cancelar
-                          </Button>
-                        )}
-                      </div>
+                      <Link href={`/invoices/${invoice.id}`}>
+                        <Button variant="outline" size="sm" className="px-2 py-1">
+                          <EyeIcon className="h-4 w-4" />
+                        </Button>
+                      </Link>
                     </td>
                   </tr>
                 ))
@@ -428,23 +378,6 @@ export default function InvoicesPage() {
           </div>
         </div>
       )}
-
-      <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Cancelar factura?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción cancelará la factura. Esta operación no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCancelInvoice} className="!bg-red-600 hover:!bg-red-700 !text-white border-red-600">
-              Confirmar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
     </ProtectedPage>
   );
