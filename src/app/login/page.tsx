@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { AuthService } from '@/lib/services/authService';
+import ProfileService from '@/lib/services/profileService';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import { useBranch } from '@/lib/contexts/BranchContext';
 
@@ -13,9 +14,68 @@ export default function LoginPage() {
   const [password, setPassword] = useState('admin123');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
   const { setCurrentTenant } = useTenant();
   const { loadUserBranches } = useBranch();
+
+  // Verificar si el usuario ya está autenticado
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+
+        if (token) {
+          // Verificar si el token es válido obteniendo el perfil
+          const profile = await ProfileService.getMyProfile();
+
+          if (profile) {
+            // Determinar la ruta de redirección basada en la pantalla por defecto del rol
+            let redirectPath = '/dashboard'; // Ruta por defecto
+
+            if (profile.role?.defaultScreen?.code) {
+              // Mapear el código de la pantalla a la ruta correspondiente
+              const screenCodeToPath: Record<string, string> = {
+                'DASHBOARD': '/dashboard',
+                'INVENTORY': '/inventory/items',
+                'POS': '/pos',
+                'PRODUCTS': '/inventory/products',
+                'REPORTS': '/reports',
+                'USERS': '/users',
+                'ROLES': '/roles',
+                'SETTINGS': '/settings',
+                'CUSTOMERS': '/customers',
+                'INVOICES': '/invoices',
+                'BRANCH': '/inventory/branches',
+                'WAREHOUSE': '/inventory/warehouses',
+                'CASH_SESSIONS': '/cash-sessions',
+                'NCF': '/ncf',
+                'ACCOUNTING': '/accounting',
+                'PRODUCT_CATEGORY': '/inventory/categories',
+                'CREDIT_NOTE': '/credit-notes',
+                'MOVEMENTS': '/inventory/movements',
+                'INVENTORY_REPORT': '/inventory/reports',
+              };
+
+              redirectPath = screenCodeToPath[profile.role.defaultScreen.code] || '/dashboard';
+            }
+
+            // Usuario autenticado, redirigir a la pantalla correspondiente
+            router.push(redirectPath);
+            return;
+          }
+        }
+      } catch (error) {
+        // Token inválido o expirado, limpiar
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('tenant_id');
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuthentication();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +133,7 @@ export default function LoginPage() {
           'PRODUCT_CATEGORY': '/inventory/categories',
           'CREDIT_NOTE': '/credit-notes',
           'MOVEMENTS': '/inventory/movements',
+          'INVENTORY_REPORT': '/inventory/reports',
         };
 
         redirectPath = screenCodeToPath[response.user.role.defaultScreen.code] || '/dashboard';
@@ -89,6 +150,15 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (isCheckingAuth) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-amber-50 to-amber-100 dark:from-gray-900 dark:to-gray-800 px-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-amber-50 to-amber-100 dark:from-gray-900 dark:to-gray-800 px-4">

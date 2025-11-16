@@ -13,6 +13,11 @@ export interface UserProfile {
     id: number;
     name: string;
     code: string;
+    defaultScreen?: {
+      id: number;
+      code: string;
+      name: string;
+    };
   };
   createdAt: string;
   updatedAt: string;
