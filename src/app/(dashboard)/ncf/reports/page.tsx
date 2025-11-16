@@ -32,6 +32,7 @@ import ncfService, {
   dgiiReportTypeLabels,
   GenerateDgiiReportDto,
 } from '@/lib/services/ncfService';
+import { PermissionService } from '@/lib/services/permissionService';
 
 const formSchema = z.object({
   reportType: z.nativeEnum(DgiiReportType, {
@@ -67,6 +68,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function DgiiReportsPage() {
   const [loading, setLoading] = useState(false);
+  const canExport = PermissionService.hasPermission('DGII', 'EXPORT');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -280,10 +282,19 @@ export default function DgiiReportsPage() {
               </div>
 
               {/* Botón de descarga */}
-              <Button type="submit" disabled={loading} className="w-full">
-                <Download className="mr-2 h-4 w-4" />
-                {loading ? 'Generando reporte...' : 'Descargar Reporte'}
-              </Button>
+              {canExport ? (
+                <Button type="submit" disabled={loading} className="w-full">
+                  <Download className="mr-2 h-4 w-4" />
+                  {loading ? 'Generando reporte...' : 'Descargar Reporte'}
+                </Button>
+              ) : (
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    No tienes permisos para exportar reportes DGII. Contacta con tu administrador.
+                  </AlertDescription>
+                </Alert>
+              )}
             </form>
           </Form>
         </CardContent>

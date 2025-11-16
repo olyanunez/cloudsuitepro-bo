@@ -60,6 +60,7 @@ const menuItems = [
     icon: 'file-check',
     screenCode: null, // Este es un contenedor, no requiere permisos
     submenu: [
+      { name: 'Dashboard NCF', href: '/ncf', icon: 'layout-dashboard', screenCode: 'NCF' },
       { name: 'Secuencias NCF', href: '/ncf/sequences', icon: 'hash', screenCode: 'NCF' },
       { name: 'Reportes DGII', href: '/ncf/reports', icon: 'file-text', screenCode: 'DGII' },
       { name: 'Configuración NCF', href: '/ncf/config', icon: 'settings', screenCode: 'NCF' },

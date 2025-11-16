@@ -29,9 +29,12 @@ import ncfService, {
   NcfType,
 } from '@/lib/services/ncfService';
 import { toast } from 'sonner';
+import { PermissionService } from '@/lib/services/permissionService';
 
 export default function NcfSequencesPage() {
   const router = useRouter();
+  const canCreateSequence = PermissionService.hasPermission('NCF', 'CREATE_SEQUENCE');
+  const canUpdateSequence = PermissionService.hasPermission('NCF', 'UPDATE_SEQUENCE');
   const [sequences, setSequences] = useState<NcfSequence[]>([]);
   const [expiringSequences, setExpiringSequences] = useState<NcfSequence[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,10 +102,12 @@ export default function NcfSequencesPage() {
         icon="hash"
         description="Gestión de Números de Comprobante Fiscal"
       >
-        <Button onClick={() => router.push('/ncf/sequences/create')}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva Secuencia
-        </Button>
+        {canCreateSequence && (
+          <Button onClick={() => router.push('/ncf/sequences/create')}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nueva Secuencia
+          </Button>
+        )}
       </PageHeader>
 
       {/* Alertas de secuencias próximas a vencer */}
@@ -276,15 +281,17 @@ export default function NcfSequencesPage() {
                         {sequence.branch?.name || 'Todas'}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            router.push(`/ncf/sequences/${sequence.id}`)
-                          }
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        {canUpdateSequence && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              router.push(`/ncf/sequences/${sequence.id}`)
+                            }
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
