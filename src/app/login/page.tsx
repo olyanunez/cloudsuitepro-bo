@@ -10,8 +10,10 @@ import { useTenant } from '@/lib/contexts/TenantContext';
 import { useBranch } from '@/lib/contexts/BranchContext';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@xotica.com');
-  const [password, setPassword] = useState('admin123');
+  // const [email, setEmail] = useState('admin@xotica.com');
+  // const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
