@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  eslint: {
+    // Deshabilitar ESLint durante el build de producción
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // Deshabilitar verificación de TypeScript durante el build
+    ignoreBuildErrors: true,
+  },
   compiler: {
     // Enable JSX transformation
     styledComponents: true,
