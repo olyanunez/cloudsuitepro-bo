@@ -141,6 +141,10 @@ export default function PosPage() {
   const [manualCustomerName, setManualCustomerName] = useState('');
   const [sellAsFinalConsumer, setSellAsFinalConsumer] = useState(false);
 
+  // Estados para envío de email
+  const [sendEmail, setSendEmail] = useState(false);
+  const [customerEmail, setCustomerEmail] = useState('');
+
   // Estado para información de la empresa (tenant)
   const [tenantInfo, setTenantInfo] = useState<Tenant | null>(null);
 
@@ -390,6 +394,15 @@ export default function PosPage() {
     return () => clearTimeout(handler);
   }, [customerSearch]);
 
+  // Prellenar email del cliente cuando se selecciona uno
+  useEffect(() => {
+    if (selectedCustomer?.email) {
+      setCustomerEmail(selectedCustomer.email);
+    } else {
+      setCustomerEmail('');
+    }
+  }, [selectedCustomer]);
+
   // Agregar producto al carrito
   const addToCart = (product: ProductStock) => {
     setCart((prevCart) => {
@@ -456,6 +469,8 @@ export default function PosPage() {
     setManualCustomerName('');
     setSelectedCustomer(null);
     setSellAsFinalConsumer(false);
+    setSendEmail(false);
+    setCustomerEmail('');
   };
 
   // Calcular totales
@@ -510,6 +525,21 @@ export default function PosPage() {
       return;
     }
 
+    // Validar que se haya ingresado un email si se marcó enviar por correo
+    if (sendEmail && !customerEmail.trim()) {
+      toast.error('Debe ingresar un correo electrónico para enviar la factura');
+      return;
+    }
+
+    // Validar formato de email si se ingresó uno
+    if (sendEmail && customerEmail.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(customerEmail.trim())) {
+        toast.error('El formato del correo electrónico no es válido');
+        return;
+      }
+    }
+
     // Si todas las validaciones pasan, mostrar confirmación
     setShowPaymentConfirmation(true);
   };
@@ -547,11 +577,21 @@ export default function PosPage() {
               : (manualCustomerName.trim() || undefined)),
         items,
         cashSessionId: currentSession.id,
+        sendEmail,
+        customerEmail: customerEmail.trim() || undefined,
       });
 
       // Mostrar modal de factura
       setCompletedInvoice(invoice);
       setShowInvoiceModal(true);
+
+      // Mostrar mensaje de éxito con información de email
+      if (sendEmail) {
+        toast.success(
+          `Factura creada exitosamente${customerEmail ? ` y enviada a ${customerEmail}` : ''}`
+        );
+      }
+
       clearCart();
 
       // Auto-imprimir recibo si está configurado
@@ -1571,6 +1611,41 @@ export default function PosPage() {
                       />
                       <p className="text-xs text-muted-foreground">
                         Formato: E + 2 dígitos de tipo + 8 dígitos de secuencia
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Checkbox para enviar factura por email */}
+                  <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-md">
+                    <input
+                      type="checkbox"
+                      id="sendEmail"
+                      checked={sendEmail}
+                      onChange={(e) => setSendEmail(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <Label htmlFor="sendEmail" className="cursor-pointer text-sm font-medium">
+                      Enviar factura por correo electrónico
+                    </Label>
+                  </div>
+
+                  {/* Campo de email (solo si checkbox está marcado) */}
+                  {sendEmail && (
+                    <div className="space-y-2">
+                      <Label htmlFor="customerEmail">
+                        Correo Electrónico {!selectedCustomer?.email ? '*' : '(Opcional)'}
+                      </Label>
+                      <Input
+                        id="customerEmail"
+                        type="email"
+                        placeholder="Ej: cliente@ejemplo.com"
+                        value={customerEmail}
+                        onChange={(e) => setCustomerEmail(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {selectedCustomer?.email
+                          ? 'Email del cliente pre-llenado. Puede modificarlo si el cliente lo desea.'
+                          : 'Ingrese el correo electrónico donde se enviará la factura.'}
                       </p>
                     </div>
                   )}

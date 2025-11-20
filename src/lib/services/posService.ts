@@ -49,6 +49,8 @@ export interface CreateInvoicePayload {
   paymentReference?: string; // Voucher de tarjeta o referencia de transferencia
   manualNcf?: string; // NCF manual (solo si está permitido en configuración)
   items: InvoiceItem[];
+  sendEmail?: boolean; // Enviar factura por correo electrónico
+  customerEmail?: string; // Correo del cliente (opcional, si no se proporciona se usa el del cliente registrado)
 }
 
 export interface Invoice {
