@@ -161,6 +161,10 @@ export const ProductService = {
   deleteProduct: async (id: number): Promise<void> => {
     return apiDelete(`/products/${id}`);
   },
+
+  generateBarcode: async (): Promise<{ barcode: string }> => {
+    return apiGet('/products/generate-barcode');
+  },
 };
 
 // Servicio para almacenes

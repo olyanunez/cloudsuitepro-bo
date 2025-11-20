@@ -5,15 +5,17 @@ import { CreateProductDto, ProductCategory } from '@/lib/types/inventory';
 import { ProductService, ProductCategoryService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
+import { ArrowLeftIcon, SaveIcon, RefreshCwIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProductImageUpload, ProductImage } from '@/components/products/ProductImageUpload';
+import { toast } from 'sonner';
 
 export default function CreateProductPage() {
   const router = useRouter();
   const [saving, setSaving] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [generatingBarcode, setGeneratingBarcode] = useState<boolean>(false);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [images, setImages] = useState<ProductImage[]>([]);
   const [formData, setFormData] = useState<CreateProductDto>({
@@ -84,6 +86,21 @@ export default function CreateProductPage() {
     }
   };
 
+  const handleGenerateBarcode = async () => {
+    try {
+      setGeneratingBarcode(true);
+      const result = await ProductService.generateBarcode();
+      setFormData(prev => ({ ...prev, barcode: result.barcode }));
+      toast.success('Código de barras generado exitosamente');
+    } catch (error: any) {
+      toast.error('Error al generar código de barras', {
+        description: error.message || 'No se pudo generar el código de barras',
+      });
+    } finally {
+      setGeneratingBarcode(false);
+    }
+  };
+
   const validateForm = (): boolean => {
     const newErrors: {
       name?: string;
@@ -126,10 +143,13 @@ export default function CreateProductPage() {
       const imageFiles = images.map(img => img.file).filter((file): file is File => file !== undefined);
 
       await ProductService.createProduct(formData, imageFiles);
+      toast.success('Producto creado exitosamente');
       router.push('/inventory/products');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating product:', error);
-      alert('Ocurrió un error al crear el producto. Por favor intente nuevamente.');
+      toast.error('Error al crear producto', {
+        description: error.message || 'No se pudo crear el producto. Por favor intente nuevamente.',
+      });
     } finally {
       setSaving(false);
     }
@@ -213,18 +233,39 @@ export default function CreateProductPage() {
                 <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Código de Barras
                 </label>
-                <input
-                  type="text"
-                  id="barcode"
-                  name="barcode"
-                  value={formData.barcode}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700"
-                  placeholder="Escanea o ingresa el código de barras"
-                  maxLength={50}
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    id="barcode"
+                    name="barcode"
+                    value={formData.barcode}
+                    onChange={handleInputChange}
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700"
+                    placeholder="Escanea o ingresa el código de barras"
+                    maxLength={50}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGenerateBarcode}
+                    disabled={generatingBarcode}
+                    className="shrink-0"
+                  >
+                    {generatingBarcode ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary mr-2"></div>
+                        Generando...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCwIcon className="h-4 w-4 mr-2" />
+                        Generar
+                      </>
+                    )}
+                  </Button>
+                </div>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Opcional. Puedes escanear el código de barras o ingresarlo manualmente.
+                  Opcional. Puedes escanear, generar o ingresar el código de barras manualmente.
                 </p>
               </div>
 
