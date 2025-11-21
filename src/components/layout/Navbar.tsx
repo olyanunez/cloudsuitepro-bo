@@ -393,7 +393,7 @@ export default function Navbar() {
 
       {/* Drawer para móvil */}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="w-[240px] sm:w-[300px] flex flex-col">
+        <SheetContent side="left" className="w-[240px] sm:w-[300px] flex flex-col rounded-r-[30px]">
           {/* Logo en el sidebar */}
           <div className="flex items-center justify-center  border-b border-gray-200 dark:border-gray-800">
             <Image
