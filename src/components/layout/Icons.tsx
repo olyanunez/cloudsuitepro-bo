@@ -250,6 +250,14 @@ export const FileCheckIcon: React.FC<IconWithClassProps> = ({ className }) => (
   </svg>
 )
 
+export const LayersIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+    <polyline points="2 17 12 22 22 17"></polyline>
+    <polyline points="2 12 12 17 22 12"></polyline>
+  </svg>
+)
+
 interface IconProps {
   name: string;
   className?: string;
@@ -263,6 +271,7 @@ export const Icon: React.FC<IconProps> = ({ name, className }) => {
   const icons: Record<string, React.ReactNode> = {
     'grid': getIconWithClass(GridIcon as React.FC<IconWithClassProps>),
     'box': getIconWithClass(BoxIcon as React.FC<IconWithClassProps>),
+    'layers': getIconWithClass(LayersIcon as React.FC<IconWithClassProps>),
     'shopping-bag': getIconWithClass(ShoppingBagIcon as React.FC<IconWithClassProps>),
     'shopping-cart': getIconWithClass(ShoppingCartIcon as React.FC<IconWithClassProps>),
     'file-text': getIconWithClass(FileTextIcon as React.FC<IconWithClassProps>),
