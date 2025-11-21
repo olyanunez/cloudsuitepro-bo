@@ -16,12 +16,14 @@ import { CashSessionsWidget } from './components/CashSessionsWidget';
 import { NcfAlertsWidget } from './components/NcfAlertsWidget';
 import { NcfUsageChart } from './components/NcfUsageChart';
 import { NcfComplianceWidget } from './components/NcfComplianceWidget';
+import { BatchExpirationWidget } from './components/BatchExpirationWidget';
 import PageHeader from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import ncfService from '@/lib/services/ncfService';
+import { BatchService } from '@/lib/services/batchService';
 import ProtectedPage from '@/components/ProtectedPage';
 
 export default function DashboardPage() {
@@ -47,6 +49,7 @@ export default function DashboardPage() {
   const [cashSessions, setCashSessions] = useState<any[]>([]);
   const [ncfStats, setNcfStats] = useState<any>(null);
   const [ncfUsageData, setNcfUsageData] = useState<any[]>([]);
+  const [expiringBatches, setExpiringBatches] = useState<any[]>([]);
 
   // Estado para preferencias de usuario
   const [showNcfAlerts, setShowNcfAlerts] = useState<boolean>(false);
@@ -73,6 +76,7 @@ export default function DashboardPage() {
       let sessionsIndex = -1;
       let ncfStatsIndex = -1;
       let ncfUsageIndex = -1;
+      let batchesIndex = -1;
 
       // Solo cargar datos de ventas si tiene permiso de ver facturas
       if (canViewInvoices) {
@@ -105,6 +109,9 @@ export default function DashboardPage() {
 
         lowStockIndex = promises.length;
         promises.push(DashboardService.getLowStockReport());
+
+        batchesIndex = promises.length;
+        promises.push(BatchService.getExpiringBatches(30).catch(() => []));
       }
 
       // Solo cargar sesiones de caja si tiene permiso
@@ -139,6 +146,7 @@ export default function DashboardPage() {
       if (growthIndex !== -1) setGrowthData(results[growthIndex]);
       if (inventoryIndex !== -1) setInventoryData(results[inventoryIndex]);
       if (lowStockIndex !== -1) setLowStockData(results[lowStockIndex]);
+      if (batchesIndex !== -1) setExpiringBatches(results[batchesIndex]);
       if (sessionsIndex !== -1) setCashSessions(results[sessionsIndex]);
       if (ncfStatsIndex !== -1) setNcfStats(results[ncfStatsIndex]);
       if (ncfUsageIndex !== -1) setNcfUsageData(results[ncfUsageIndex]);
@@ -245,12 +253,19 @@ export default function DashboardPage() {
 
         {/* Sección de Inventario - Solo si tiene permiso de ver inventario */}
         {canViewInventory && (
-          <InventorySection
-            totalValue={inventoryData?.summary?.totalValue || 0}
-            lowStockCount={lowStockData?.count || 0}
-            totalProducts={inventoryData?.summary?.totalItems || 0}
-            lowStockItems={lowStockData?.items || []}
-          />
+          <>
+            <InventorySection
+              totalValue={inventoryData?.summary?.totalValue || 0}
+              lowStockCount={lowStockData?.count || 0}
+              totalProducts={inventoryData?.summary?.totalItems || 0}
+              lowStockItems={lowStockData?.items || []}
+            />
+
+            {/* Widget de Lotes por Vencer */}
+            {
+              <BatchExpirationWidget expiringBatches={expiringBatches} />
+            }
+          </>
         )}
 
         {/* Sesiones de Caja y Top Clientes */}

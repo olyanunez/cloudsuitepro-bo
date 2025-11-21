@@ -85,6 +85,24 @@ export enum MovementType {
   TRANSFERENCIA = 'TRANSFERENCIA',
 }
 
+export interface BatchMovement {
+  id: number;
+  batchId: number;
+  batch: {
+    id: number;
+    batchNumber: string;
+  };
+  type: string;
+  quantity: number;
+  quantityBefore: number;
+  quantityAfter: number;
+  inventoryMovementId?: number;
+  reference?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface InventoryMovement {
   id: number;
   type: MovementType;
@@ -97,6 +115,7 @@ export interface InventoryMovement {
   quantity: number;
   reference?: string;
   notes?: string;
+  batchMovements?: BatchMovement[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -193,6 +212,15 @@ export interface CreateInventoryMovementDto {
   quantity: number;
   reference?: string;
   notes?: string;
+  // Batch-related fields
+  existingBatchId?: number;
+  batchNumber?: string;
+  unitCost?: number;
+  expirationDate?: string;
+  manufacturingDate?: string;
+  supplierName?: string;
+  purchaseOrderRef?: string;
+  location?: string;
 }
 
 // Interfaces para reportes

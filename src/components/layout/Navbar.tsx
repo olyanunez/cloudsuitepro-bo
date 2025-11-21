@@ -73,6 +73,7 @@ const menuItems = [
     screenCode: null, // Este es un contenedor, no requiere permisos
     submenu: [
       { name: 'Inventario', href: '/inventory/items', icon: 'box', screenCode: 'INVENTORY' },
+      { name: 'Lotes', href: '/inventory/batches', icon: 'package', screenCode: 'INVENTORY' },
       { name: 'Categorías', href: '/inventory/categories', icon: 'tag', screenCode: 'PRODUCT_CATEGORY' },
       { name: 'Productos', href: '/inventory/products', icon: 'shopping-bag', screenCode: 'PRODUCTS' },
       { name: 'Sucursales', href: '/inventory/branches', icon: 'building-2', screenCode: 'BRANCH' },

@@ -197,6 +197,15 @@ export default function MovementsPage() {
     }
   };
 
+  // Helper function to get batch numbers from movement
+  const getBatchNumbers = (movement: InventoryMovement) => {
+    if (!movement.batchMovements || movement.batchMovements.length === 0) {
+      return '-';
+    }
+    const uniqueBatchNumbers = [...new Set(movement.batchMovements.map(bm => bm.batch.batchNumber))];
+    return uniqueBatchNumbers.join(', ');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -370,6 +379,9 @@ export default function MovementsPage() {
                   Origen/Destino
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Lote
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Referencia
                 </th>
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -416,6 +428,9 @@ export default function MovementsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                      {getBatchNumbers(movement)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                       <div>{movement.reference || '-'}</div>
                       {movement.notes && (
                         <div className="text-xs italic mt-1">{movement.notes}</div>
@@ -439,7 +454,7 @@ export default function MovementsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                     No se encontraron movimientos con los filtros seleccionados
                   </td>
                 </tr>

@@ -38,6 +38,15 @@ export default function CreateMovementPage() {
   const [notes, setNotes] = useState<string>('');
   const [isProductStockable, setIsProductStockable] = useState<boolean>(true);
 
+  // Batch-related fields
+  const [unitCost, setUnitCost] = useState<string>('');
+  const [expirationDate, setExpirationDate] = useState<string>('');
+  const [manufacturingDate, setManufacturingDate] = useState<string>('');
+  const [supplierName, setSupplierName] = useState<string>('');
+  const [purchaseOrderRef, setPurchaseOrderRef] = useState<string>('');
+  const [location, setLocation] = useState<string>('');
+  const [batchNumber, setBatchNumber] = useState<string>('');
+
   // UI state
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -47,6 +56,7 @@ export default function CreateMovementPage() {
     sourceWarehouseId?: string;
     destinationWarehouseId?: string;
     quantity?: string;
+    unitCost?: string;
     general?: string;
   }>({});
 
@@ -142,6 +152,15 @@ export default function CreateMovementPage() {
       }
     }
 
+    // Validar costo unitario para entradas
+    if (movementType === MovementType.ENTRADA) {
+      if (!unitCost) {
+        newErrors.unitCost = 'El costo unitario es requerido para entradas';
+      } else if (isNaN(Number(unitCost)) || Number(unitCost) <= 0) {
+        newErrors.unitCost = 'El costo unitario debe ser un número mayor que cero';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -170,6 +189,17 @@ export default function CreateMovementPage() {
 
       if (movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA || movementType === MovementType.AJUSTE) {
         movementData.sourceWarehouseId = Number(sourceWarehouseId);
+      }
+
+      // Add batch-related fields for ENTRADA
+      if (movementType === MovementType.ENTRADA) {
+        movementData.unitCost = Number(unitCost);
+        if (expirationDate) movementData.expirationDate = expirationDate;
+        if (manufacturingDate) movementData.manufacturingDate = manufacturingDate;
+        if (supplierName) movementData.supplierName = supplierName;
+        if (purchaseOrderRef) movementData.purchaseOrderRef = purchaseOrderRef;
+        if (location) movementData.location = location;
+        if (batchNumber) movementData.batchNumber = batchNumber;
       }
 
       await InventoryService.createMovement(movementData);
@@ -337,6 +367,99 @@ export default function CreateMovementPage() {
                   placeholder="Referencia o número de documento"
                 />
               </div>
+
+              {movementType === MovementType.ENTRADA && (
+                <>
+                  <div className="space-y-2">
+                    <label htmlFor="unitCost" className="text-sm font-medium">
+                      Costo Unitario <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      id="unitCost"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={unitCost}
+                      onChange={(e) => setUnitCost(e.target.value)}
+                      placeholder="Costo por unidad"
+                      className={errors.unitCost ? 'border-red-500' : ''}
+                    />
+                    {errors.unitCost && <p className="text-red-500 text-xs mt-1">{errors.unitCost}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="expirationDate" className="text-sm font-medium">
+                      Fecha de Caducidad
+                    </label>
+                    <Input
+                      id="expirationDate"
+                      type="date"
+                      value={expirationDate}
+                      onChange={(e) => setExpirationDate(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="manufacturingDate" className="text-sm font-medium">
+                      Fecha de Fabricación
+                    </label>
+                    <Input
+                      id="manufacturingDate"
+                      type="date"
+                      value={manufacturingDate}
+                      onChange={(e) => setManufacturingDate(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="supplierName" className="text-sm font-medium">
+                      Proveedor
+                    </label>
+                    <Input
+                      id="supplierName"
+                      value={supplierName}
+                      onChange={(e) => setSupplierName(e.target.value)}
+                      placeholder="Nombre del proveedor"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="purchaseOrderRef" className="text-sm font-medium">
+                      Orden de Compra
+                    </label>
+                    <Input
+                      id="purchaseOrderRef"
+                      value={purchaseOrderRef}
+                      onChange={(e) => setPurchaseOrderRef(e.target.value)}
+                      placeholder="Referencia de OC"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="location" className="text-sm font-medium">
+                      Ubicación Física
+                    </label>
+                    <Input
+                      id="location"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="Ej: Pasillo A, Estante 3"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="batchNumber" className="text-sm font-medium">
+                      Número de Lote
+                    </label>
+                    <Input
+                      id="batchNumber"
+                      value={batchNumber}
+                      onChange={(e) => setBatchNumber(e.target.value)}
+                      placeholder="Dejar vacío para generarlo automáticamente"
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="space-y-2">
