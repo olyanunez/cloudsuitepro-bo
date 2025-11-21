@@ -219,6 +219,16 @@ export default function BatchDetailPage() {
                 </div>
               </div>
 
+              {batch.manufacturingDate && (
+                <div className="flex items-start space-x-3">
+                  <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Fecha de Fabricación</p>
+                    <p className="font-medium">{formatDate(batch.manufacturingDate)}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-start space-x-3">
                 <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div>
@@ -313,6 +323,27 @@ export default function BatchDetailPage() {
               <p className="text-muted-foreground">{batch.notes}</p>
             </Card>
           )}
+
+          {/* Audit Dates */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Información de Auditoría</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-start space-x-3">
+                <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Fecha de Creación</p>
+                  <p className="font-medium">{formatDateTime(batch.createdAt)}</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Última Actualización</p>
+                  <p className="font-medium">{formatDateTime(batch.updatedAt)}</p>
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
 
         {/* Right Column - Movements */}

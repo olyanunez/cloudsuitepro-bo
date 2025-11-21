@@ -258,7 +258,10 @@ export default function BatchesPage() {
                     Stock
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Entrada
+                    Proveedor
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Fabricación
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Vencimiento
@@ -277,13 +280,13 @@ export default function BatchesPage() {
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-4 text-center">
+                    <td colSpan={10} className="px-6 py-4 text-center">
                       Cargando...
                     </td>
                   </tr>
                 ) : batches.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-4 text-center text-muted-foreground">
+                    <td colSpan={10} className="px-6 py-4 text-center text-muted-foreground">
                       No se encontraron lotes
                     </td>
                   </tr>
@@ -319,10 +322,18 @@ export default function BatchesPage() {
                             <div className="text-xs text-gray-500">
                               de {batch.initialQuantity}
                             </div>
+                            {batch.reservedQuantity > 0 && (
+                              <div className="text-xs text-blue-600 dark:text-blue-400">
+                                {batch.reservedQuantity} reservadas
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                          {formatDate(batch.entryDate)}
+                          {batch.supplierName || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                          {formatDate(batch.manufacturingDate)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>

@@ -91,6 +91,17 @@ export interface BatchMovement {
   batch: {
     id: number;
     batchNumber: string;
+    unitCost: number;
+    totalCost: number;
+    initialQuantity: number;
+    currentQuantity: number;
+    reservedQuantity: number;
+    status: string;
+    expirationDate?: string;
+    manufacturingDate?: string;
+    supplierName?: string;
+    purchaseOrderRef?: string;
+    location?: string;
   };
   type: string;
   quantity: number;

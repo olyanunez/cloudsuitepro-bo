@@ -89,7 +89,7 @@ export function BatchExpirationWidget({ expiringBatches, loading = false }: Batc
           <div>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-500" />
-              Alertas de Vencimiento
+              Alertas de Vencimiento de Lotes
             </CardTitle>
             <CardDescription>
               {expiringBatches.length} lote{expiringBatches.length !== 1 ? 's' : ''} próximo{expiringBatches.length !== 1 ? 's' : ''} a vencer
@@ -157,8 +157,8 @@ export function BatchExpirationWidget({ expiringBatches, loading = false }: Batc
                         batch.daysUntilExpiration <= 0
                           ? ''
                           : batch.daysUntilExpiration <= 7
-                          ? 'border-red-600 text-red-600'
-                          : 'border-orange-600 text-orange-600'
+                            ? 'border-red-600 text-red-600'
+                            : 'border-orange-600 text-orange-600'
                       }
                     >
                       {getDaysLabel(batch.daysUntilExpiration)}

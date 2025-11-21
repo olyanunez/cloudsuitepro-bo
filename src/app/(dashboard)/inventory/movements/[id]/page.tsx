@@ -16,7 +16,10 @@ import {
   ArrowRight,
   ArrowDown,
   ArrowUp,
-  RefreshCw
+  RefreshCw,
+  Box,
+  DollarSign,
+  MapPin
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -264,6 +267,183 @@ export default function MovementDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Batch Information */}
+      {movement.batchMovements && movement.batchMovements.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Box className="h-5 w-5" />
+              Lotes Asociados
+            </CardTitle>
+            <CardDescription>
+              Información de los lotes involucrados en este movimiento
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {movement.batchMovements.map((batchMovement, index) => (
+                <div
+                  key={batchMovement.id}
+                  className="p-6 border rounded-lg bg-muted/30 space-y-4"
+                >
+                  {/* Header del Lote */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Box className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <Link
+                          href={`/inventory/batches/${batchMovement.batchId}`}
+                          className="text-lg font-semibold text-primary hover:underline"
+                        >
+                          {batchMovement.batch.batchNumber}
+                        </Link>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Estado del lote: <span className="font-medium">{batchMovement.batch.status}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-sm">
+                      {batchMovement.type}
+                    </Badge>
+                  </div>
+
+                  {/* Cantidades del Movimiento */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4 border-b">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1.5">Cantidad del Movimiento</p>
+                      <p className="text-lg font-semibold">
+                        {batchMovement.quantity > 0 ? '+' : ''}{batchMovement.quantity} unidades
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1.5">Cantidad Antes</p>
+                      <p className="text-lg font-semibold">{batchMovement.quantityBefore} unidades</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1.5">Cantidad Después</p>
+                      <p className="text-lg font-semibold">{batchMovement.quantityAfter} unidades</p>
+                    </div>
+                  </div>
+
+                  {/* Información del Lote */}
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3">Información del Lote</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                          <DollarSign className="h-3 w-3" />
+                          Costo Unitario
+                        </p>
+                        <p className="text-sm font-medium">{formatCurrency(batchMovement.batch.unitCost)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                          <DollarSign className="h-3 w-3" />
+                          Costo Total del Lote
+                        </p>
+                        <p className="text-sm font-medium">{formatCurrency(batchMovement.batch.totalCost)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Cantidad Inicial</p>
+                        <p className="text-sm font-medium">{batchMovement.batch.initialQuantity} unidades</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Cantidad Actual del Lote</p>
+                        <p className="text-sm font-medium">{batchMovement.batch.currentQuantity} unidades</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Cantidad Reservada</p>
+                        <p className="text-sm font-medium">{batchMovement.batch.reservedQuantity} unidades</p>
+                      </div>
+                      {batchMovement.batch.location && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            Ubicación
+                          </p>
+                          <p className="text-sm font-medium">{batchMovement.batch.location}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Fechas */}
+                  {(batchMovement.batch.manufacturingDate || batchMovement.batch.expirationDate) && (
+                    <div className="pt-4 border-t">
+                      <h4 className="text-sm font-semibold mb-3">Fechas</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {batchMovement.batch.manufacturingDate && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              Fecha de Fabricación
+                            </p>
+                            <p className="text-sm font-medium">
+                              {format(new Date(batchMovement.batch.manufacturingDate), "PPP", { locale: es })}
+                            </p>
+                          </div>
+                        )}
+                        {batchMovement.batch.expirationDate && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              Fecha de Vencimiento
+                            </p>
+                            <p className="text-sm font-medium">
+                              {format(new Date(batchMovement.batch.expirationDate), "PPP", { locale: es })}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Proveedor y OC */}
+                  {(batchMovement.batch.supplierName || batchMovement.batch.purchaseOrderRef) && (
+                    <div className="pt-4 border-t">
+                      <h4 className="text-sm font-semibold mb-3">Información del Proveedor</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {batchMovement.batch.supplierName && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Proveedor</p>
+                            <p className="text-sm font-medium">{batchMovement.batch.supplierName}</p>
+                          </div>
+                        )}
+                        {batchMovement.batch.purchaseOrderRef && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Orden de Compra</p>
+                            <p className="text-sm font-medium">{batchMovement.batch.purchaseOrderRef}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Referencias y Notas del Movimiento del Lote */}
+                  {(batchMovement.reference || batchMovement.notes) && (
+                    <div className="pt-4 border-t">
+                      <h4 className="text-sm font-semibold mb-3">Información Adicional del Movimiento</h4>
+                      {batchMovement.reference && (
+                        <div className="mb-3">
+                          <p className="text-xs text-muted-foreground mb-1">Referencia</p>
+                          <p className="text-sm">{batchMovement.reference}</p>
+                        </div>
+                      )}
+                      {batchMovement.notes && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">Notas</p>
+                          <p className="text-sm whitespace-pre-wrap">{batchMovement.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Notes */}
       {movement.notes && (

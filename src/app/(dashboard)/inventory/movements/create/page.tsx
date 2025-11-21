@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MovementType, Product, Warehouse } from '@/lib/types/inventory';
 import { InventoryService, ProductService, WarehouseService } from '@/lib/services/inventoryService';
+import { BatchService } from '@/lib/services/batchService';
+import { Batch } from '@/lib/types/batch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -39,6 +41,10 @@ export default function CreateMovementPage() {
   const [isProductStockable, setIsProductStockable] = useState<boolean>(true);
 
   // Batch-related fields
+  const [batchMode, setBatchMode] = useState<'new' | 'existing'>('new');
+  const [existingBatchId, setExistingBatchId] = useState<string>('');
+  const [availableBatches, setAvailableBatches] = useState<Batch[]>([]);
+  const [loadingBatches, setLoadingBatches] = useState<boolean>(false);
   const [unitCost, setUnitCost] = useState<string>('');
   const [expirationDate, setExpirationDate] = useState<string>('');
   const [manufacturingDate, setManufacturingDate] = useState<string>('');
@@ -57,6 +63,7 @@ export default function CreateMovementPage() {
     destinationWarehouseId?: string;
     quantity?: string;
     unitCost?: string;
+    existingBatchId?: string;
     general?: string;
   }>({});
 
@@ -120,6 +127,41 @@ export default function CreateMovementPage() {
     loadWarehousesWithStock();
   }, [productId, warehouses, sourceWarehouseId]);
 
+  // Cargar lotes disponibles cuando se selecciona producto y almacén destino para ENTRADA
+  useEffect(() => {
+    async function loadAvailableBatches() {
+      if (movementType !== MovementType.ENTRADA || !productId || !destinationWarehouseId || batchMode !== 'existing') {
+        setAvailableBatches([]);
+        return;
+      }
+
+      try {
+        setLoadingBatches(true);
+        const batches = await BatchService.getAvailableBatches(Number(productId), Number(destinationWarehouseId));
+
+        // Filtrar solo lotes activos y no vencidos/bloqueados
+        const activeBatches = batches.filter(batch =>
+          batch.status === 'ACTIVE' || batch.status === 'RESERVED'
+        );
+
+        setAvailableBatches(activeBatches);
+
+        if (activeBatches.length === 0) {
+          toast.info('No hay lotes activos para este producto y almacén. Se creará un nuevo lote.');
+          setBatchMode('new');
+        }
+      } catch (error) {
+        console.error('Error loading available batches:', error);
+        toast.error('Error al cargar los lotes disponibles');
+        setAvailableBatches([]);
+      } finally {
+        setLoadingBatches(false);
+      }
+    }
+
+    loadAvailableBatches();
+  }, [productId, destinationWarehouseId, movementType, batchMode]);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -152,10 +194,22 @@ export default function CreateMovementPage() {
       }
     }
 
-    // Validar costo unitario para entradas
-    if (movementType === MovementType.ENTRADA) {
+    // Validar costo unitario para entradas (solo para nuevos lotes)
+    if (movementType === MovementType.ENTRADA && batchMode === 'new') {
       if (!unitCost) {
         newErrors.unitCost = 'El costo unitario es requerido para entradas';
+      } else if (isNaN(Number(unitCost)) || Number(unitCost) <= 0) {
+        newErrors.unitCost = 'El costo unitario debe ser un número mayor que cero';
+      }
+    }
+
+    // Validar selección de lote existente
+    if (movementType === MovementType.ENTRADA && batchMode === 'existing') {
+      if (!existingBatchId) {
+        newErrors.existingBatchId = 'Debe seleccionar un lote existente';
+      }
+      if (!unitCost) {
+        newErrors.unitCost = 'El costo unitario es requerido';
       } else if (isNaN(Number(unitCost)) || Number(unitCost) <= 0) {
         newErrors.unitCost = 'El costo unitario debe ser un número mayor que cero';
       }
@@ -194,12 +248,19 @@ export default function CreateMovementPage() {
       // Add batch-related fields for ENTRADA
       if (movementType === MovementType.ENTRADA) {
         movementData.unitCost = Number(unitCost);
-        if (expirationDate) movementData.expirationDate = expirationDate;
-        if (manufacturingDate) movementData.manufacturingDate = manufacturingDate;
-        if (supplierName) movementData.supplierName = supplierName;
-        if (purchaseOrderRef) movementData.purchaseOrderRef = purchaseOrderRef;
-        if (location) movementData.location = location;
-        if (batchNumber) movementData.batchNumber = batchNumber;
+
+        if (batchMode === 'existing') {
+          // Agregar a lote existente
+          movementData.existingBatchId = Number(existingBatchId);
+        } else {
+          // Crear nuevo lote
+          if (expirationDate) movementData.expirationDate = expirationDate;
+          if (manufacturingDate) movementData.manufacturingDate = manufacturingDate;
+          if (supplierName) movementData.supplierName = supplierName;
+          if (purchaseOrderRef) movementData.purchaseOrderRef = purchaseOrderRef;
+          if (location) movementData.location = location;
+          if (batchNumber) movementData.batchNumber = batchNumber;
+        }
       }
 
       await InventoryService.createMovement(movementData);
@@ -370,6 +431,67 @@ export default function CreateMovementPage() {
 
               {movementType === MovementType.ENTRADA && (
                 <>
+                  {/* Batch Mode Selection */}
+                  <div className="space-y-2 p-4 border rounded-lg bg-muted/30">
+                    <label htmlFor="batchMode" className="text-sm font-medium">
+                      Modo de Lote
+                    </label>
+                    <Select value={batchMode} onValueChange={(value: 'new' | 'existing') => {
+                      setBatchMode(value);
+                      setExistingBatchId('');
+                    }}>
+                      <SelectTrigger id="batchMode">
+                        <SelectValue placeholder="Seleccionar modo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">Crear nuevo lote</SelectItem>
+                        <SelectItem value="existing">Agregar a lote existente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {batchMode === 'new'
+                        ? 'Se creará un nuevo lote con la información proporcionada'
+                        : 'Seleccione un lote existente para agregar inventario'}
+                    </p>
+                  </div>
+
+                  {/* Existing Batch Selection */}
+                  {batchMode === 'existing' && (
+                    <div className="space-y-2">
+                      <label htmlFor="existingBatch" className="text-sm font-medium">
+                        Seleccionar Lote <span className="text-red-500">*</span>
+                      </label>
+                      <Select value={existingBatchId} onValueChange={setExistingBatchId} disabled={loadingBatches}>
+                        <SelectTrigger id="existingBatch" className={errors.existingBatchId ? 'border-red-500' : ''}>
+                          <SelectValue placeholder={loadingBatches ? "Cargando lotes..." : "Seleccionar lote existente"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableBatches.length === 0 ? (
+                            <div className="p-2 text-sm text-muted-foreground text-center">
+                              No hay lotes disponibles
+                            </div>
+                          ) : (
+                            availableBatches.map(batch => (
+                              <SelectItem key={batch.id} value={batch.id.toString()}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{batch.batchNumber}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    Stock: {batch.currentQuantity} | Costo: ${Number(batch.unitCost).toFixed(2)}
+                                    {batch.expirationDate && ` | Vence: ${new Date(batch.expirationDate).toLocaleDateString()}`}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {errors.existingBatchId && <p className="text-red-500 text-xs mt-1">{errors.existingBatchId}</p>}
+                      <p className="text-xs text-muted-foreground">
+                        Seleccione un lote existente para agregar más inventario
+                      </p>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <label htmlFor="unitCost" className="text-sm font-medium">
                       Costo Unitario <span className="text-red-500">*</span>
@@ -387,6 +509,8 @@ export default function CreateMovementPage() {
                     {errors.unitCost && <p className="text-red-500 text-xs mt-1">{errors.unitCost}</p>}
                   </div>
 
+                  {batchMode === 'new' && (
+                    <>
                   <div className="space-y-2">
                     <label htmlFor="expirationDate" className="text-sm font-medium">
                       Fecha de Caducidad
@@ -457,7 +581,12 @@ export default function CreateMovementPage() {
                       onChange={(e) => setBatchNumber(e.target.value)}
                       placeholder="Dejar vacío para generarlo automáticamente"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Si se deja vacío, se generará automáticamente con el formato LOTE-YYYY-NNNNNN
+                    </p>
                   </div>
+                    </>
+                  )}
                 </>
               )}
             </div>
