@@ -14,6 +14,13 @@ import { toast } from 'sonner';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePermissions } from '@/lib/hooks/usePermissions';
 import { formatCurrency } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function BatchesPage() {
   const router = useRouter();
@@ -26,7 +33,8 @@ export default function BatchesPage() {
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState<BatchStatus | ''>('');
   const [withStockOnly, setWithStockOnly] = useState(true);
-  const limit = 15;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const limit = itemsPerPage;
 
   const fetchBatches = async () => {
     try {
@@ -54,13 +62,7 @@ export default function BatchesPage() {
 
   useEffect(() => {
     fetchBatches();
-  }, [page, statusFilter, withStockOnly]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    fetchBatches();
-  };
+  }, [page, search, statusFilter, withStockOnly, itemsPerPage]);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -136,57 +138,76 @@ export default function BatchesPage() {
           )}
         </div>
 
-        {/* Search & Filters */}
-        <Card className="p-4 mb-6">
-          <form onSubmit={handleSearch} className="space-y-4">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    type="text"
-                    placeholder="Buscar por número de lote..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <Button type="submit">Buscar</Button>
-            </div>
+        {/* Search and filter controls */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Buscar lotes..."
+              className="pl-10 w-full"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
 
-            <div className="flex gap-4 flex-wrap">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium">Estado:</label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as BatchStatus | '')}
-                  className="px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-800"
-                >
-                  <option value="">Todos</option>
-                  <option value={BatchStatus.ACTIVE}>Activo</option>
-                  <option value={BatchStatus.RESERVED}>Reservado</option>
-                  <option value={BatchStatus.DEPLETED}>Agotado</option>
-                  <option value={BatchStatus.EXPIRED}>Vencido</option>
-                  <option value={BatchStatus.BLOCKED}>Bloqueado</option>
-                </select>
-              </div>
+          <Select
+            value={statusFilter || "all"}
+            onValueChange={(value) => {
+              setStatusFilter(value === "all" ? '' : value as BatchStatus);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              <SelectItem value={BatchStatus.ACTIVE}>Activo</SelectItem>
+              <SelectItem value={BatchStatus.RESERVED}>Reservado</SelectItem>
+              <SelectItem value={BatchStatus.DEPLETED}>Agotado</SelectItem>
+              <SelectItem value={BatchStatus.EXPIRED}>Vencido</SelectItem>
+              <SelectItem value={BatchStatus.BLOCKED}>Bloqueado</SelectItem>
+            </SelectContent>
+          </Select>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="withStock"
-                  checked={withStockOnly}
-                  onChange={(e) => setWithStockOnly(e.target.checked)}
-                  className="rounded"
-                />
-                <label htmlFor="withStock" className="text-sm font-medium">
-                  Solo con stock disponible
-                </label>
-              </div>
-            </div>
-          </form>
-        </Card>
+          <Select
+            value={withStockOnly ? "withStock" : "all"}
+            onValueChange={(value) => {
+              setWithStockOnly(value === "withStock");
+              setPage(1);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Inventario" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los lotes</SelectItem>
+              <SelectItem value="withStock">Solo con stock</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={itemsPerPage.toString()}
+            onValueChange={(value) => {
+              setItemsPerPage(Number(value));
+              setPage(1);
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Elementos por página" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5 por página</SelectItem>
+              <SelectItem value="10">10 por página</SelectItem>
+              <SelectItem value="25">25 por página</SelectItem>
+              <SelectItem value="50">50 por página</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

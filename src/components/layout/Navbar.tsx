@@ -98,6 +98,7 @@ const menuItems = [
     ]
   },
   { name: 'Clientes', href: '/customers', icon: 'users', screenCode: 'CUSTOMERS' },
+  { name: 'Proveedores', href: '/suppliers', icon: 'truck', screenCode: 'SUPPLIERS' },
   { name: 'Configuración', href: '/settings', icon: 'settings', screenCode: 'TENANT' },
 ]
 
