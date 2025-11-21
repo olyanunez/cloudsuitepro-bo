@@ -27,7 +27,8 @@ export default function CreateMovementPage() {
 
   // Data state
   const [products, setProducts] = useState<Product[]>([]);
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]); // Todos los almacenes (para destino)
+  const [userWarehouses, setUserWarehouses] = useState<Warehouse[]>([]); // Almacenes del usuario (para origen)
   const [availableSourceWarehouses, setAvailableSourceWarehouses] = useState<Warehouse[]>([]);
 
   // Form state
@@ -71,13 +72,15 @@ export default function CreateMovementPage() {
     async function loadData() {
       try {
         setLoading(true);
-        const [productsData, warehousesData] = await Promise.all([
+        const [productsData, allWarehousesData, userWarehousesData] = await Promise.all([
           ProductService.getProducts(),
-          WarehouseService.getWarehouses()
+          WarehouseService.getWarehouses(), // Todos los almacenes para destino
+          WarehouseService.getUserWarehouses() // Almacenes del usuario para origen
         ]);
 
         setProducts(productsData);
-        setWarehouses(warehousesData);
+        setWarehouses(allWarehousesData);
+        setUserWarehouses(userWarehousesData);
       } catch (error) {
         console.error('Error loading data:', error);
         toast.error('Error al cargar los datos necesarios');
@@ -106,8 +109,8 @@ export default function CreateMovementPage() {
           .filter(item => item.quantity > 0)
           .map(item => item.warehouseId);
 
-        // Filtrar la lista de almacenes para incluir solo los que tienen stock
-        const warehousesWithStock = warehouses.filter(warehouse =>
+        // Filtrar la lista de almacenes del usuario para incluir solo los que tienen stock
+        const warehousesWithStock = userWarehouses.filter(warehouse =>
           warehouseIdsWithStock.includes(warehouse.id)
         );
 
@@ -125,7 +128,7 @@ export default function CreateMovementPage() {
     }
 
     loadWarehousesWithStock();
-  }, [productId, warehouses, sourceWarehouseId]);
+  }, [productId, userWarehouses, sourceWarehouseId]);
 
   // Cargar lotes disponibles cuando se selecciona producto y almacén destino para ENTRADA
   useEffect(() => {

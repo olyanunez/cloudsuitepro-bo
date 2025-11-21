@@ -173,6 +173,10 @@ export const WarehouseService = {
     return apiGet('/warehouses');
   },
 
+  getUserWarehouses: async (): Promise<Warehouse[]> => {
+    return apiGet('/warehouses/user/my-warehouses');
+  },
+
   getWarehouseById: async (id: number): Promise<Warehouse> => {
     return apiGet(`/warehouses/${id}`);
   },
