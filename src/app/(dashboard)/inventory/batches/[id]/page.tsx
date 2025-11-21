@@ -219,15 +219,13 @@ export default function BatchDetailPage() {
                 </div>
               </div>
 
-              {batch.manufacturingDate && (
-                <div className="flex items-start space-x-3">
-                  <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Fecha de Fabricación</p>
-                    <p className="font-medium">{formatDate(batch.manufacturingDate)}</p>
-                  </div>
+              <div className="flex items-start space-x-3">
+                <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Fecha de Fabricación</p>
+                  <p className="font-medium">{formatDate(batch.manufacturingDate)}</p>
                 </div>
-              )}
+              </div>
 
               <div className="flex items-start space-x-3">
                 <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
@@ -255,13 +253,12 @@ export default function BatchDetailPage() {
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                   <div
-                    className={`h-3 rounded-full transition-all ${
-                      stockPercentage > 50
-                        ? 'bg-green-500'
-                        : stockPercentage > 20
+                    className={`h-3 rounded-full transition-all ${stockPercentage > 50
+                      ? 'bg-green-500'
+                      : stockPercentage > 20
                         ? 'bg-orange-500'
                         : 'bg-red-500'
-                    }`}
+                      }`}
                     style={{ width: `${Math.min(100, stockPercentage)}%` }}
                   />
                 </div>
@@ -293,37 +290,28 @@ export default function BatchDetailPage() {
           </Card>
 
           {/* Supplier Info */}
-          {(batch.supplierName || batch.purchaseOrderRef) && (
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Información del Proveedor</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {batch.supplierName && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Proveedor</p>
-                    <p className="font-medium">{batch.supplierName}</p>
-                  </div>
-                )}
-                {batch.purchaseOrderRef && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Orden de Compra</p>
-                    <p className="font-medium">{batch.purchaseOrderRef}</p>
-                  </div>
-                )}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Información del Proveedor</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Proveedor</p>
+                <p className="font-medium">{batch.supplierName}</p>
               </div>
-            </Card>
-          )}
+              <div>
+                <p className="text-sm text-muted-foreground">Orden de Compra</p>
+                <p className="font-medium">{batch.purchaseOrderRef}</p>
+              </div>
+            </div>
+          </Card>
 
           {/* Notes */}
-          {batch.notes && (
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Notas
-              </h2>
-              <p className="text-muted-foreground">{batch.notes}</p>
-            </Card>
-          )}
-
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Notas
+            </h2>
+            <p className="text-muted-foreground">{batch.notes}</p>
+          </Card>
           {/* Audit Dates */}
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Información de Auditoría</h2>

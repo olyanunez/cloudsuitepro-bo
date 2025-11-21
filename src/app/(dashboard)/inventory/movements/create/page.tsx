@@ -390,7 +390,8 @@ export default function CreateMovementPage() {
                       <SelectValue placeholder="Seleccionar almacén de destino" />
                     </SelectTrigger>
                     <SelectContent>
-                      {warehouses.map(warehouse => (
+                      {/* Para ENTRADA: solo almacenes del usuario. Para TRANSFERENCIA: todos los almacenes */}
+                      {(movementType === MovementType.ENTRADA ? userWarehouses : warehouses).map(warehouse => (
                         <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
                           {warehouse.name}
                         </SelectItem>
