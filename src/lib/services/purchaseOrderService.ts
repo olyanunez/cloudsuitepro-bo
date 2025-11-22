@@ -4,6 +4,7 @@ import {
   UpdatePurchaseOrderInput,
   PurchaseOrderResponse,
   PurchaseOrderStatus,
+  ReceivePurchaseOrderInput,
 } from '../types/purchase-order';
 import { apiGet, apiPost, apiPatch, apiDelete } from './apiService';
 
@@ -125,6 +126,24 @@ export class PurchaseOrderService {
       return response.orderNumber;
     } catch (error) {
       console.error('Error al generar número de orden:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Recibir una orden de compra (total o parcial)
+   */
+  static async receivePurchaseOrder(
+    id: number,
+    receiveData: ReceivePurchaseOrderInput,
+  ): Promise<PurchaseOrder> {
+    try {
+      return await apiPost<PurchaseOrder>(
+        `/purchase-orders/${id}/receive`,
+        receiveData,
+      );
+    } catch (error) {
+      console.error(`Error al recibir orden de compra ${id}:`, error);
       throw error;
     }
   }

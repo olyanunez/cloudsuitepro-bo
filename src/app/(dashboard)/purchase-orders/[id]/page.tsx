@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeftIcon, PencilIcon, Send, Printer } from 'lucide-react';
+import { ArrowLeftIcon, PencilIcon, Send, Printer, PackageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { PurchaseOrderService } from '@/lib/services/purchaseOrderService';
 import { PurchaseOrder, PurchaseOrderStatus } from '@/lib/types/purchase-order';
@@ -191,6 +191,20 @@ export default function PurchaseOrderDetailPage() {
                 )}
               </Button>
             )}
+            {(purchaseOrder.status === PurchaseOrderStatus.SENT ||
+              purchaseOrder.status === PurchaseOrderStatus.CONFIRMED ||
+              purchaseOrder.status === PurchaseOrderStatus.PARTIAL) && canUpdate && (
+              <Link href={`/purchase-orders/receive/${purchaseOrder.id}`}>
+                <Button
+                  variant="default"
+                  style={{ backgroundColor: '#22c55e', color: 'white' }}
+                  className="hover:opacity-90"
+                >
+                  <PackageIcon className="h-4 w-4 mr-2" />
+                  Recibir Orden
+                </Button>
+              </Link>
+            )}
             {purchaseOrder.status === PurchaseOrderStatus.DRAFT && canUpdate && (
               <Link href={`/purchase-orders/edit/${purchaseOrder.id}`}>
                 <Button variant="outline">
@@ -286,6 +300,12 @@ export default function PurchaseOrderDetailPage() {
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
                         Cantidad
                       </th>
+                      {(purchaseOrder.status === PurchaseOrderStatus.PARTIAL ||
+                        purchaseOrder.status === PurchaseOrderStatus.RECEIVED) && (
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                          Recibido
+                        </th>
+                      )}
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
                         Costo Unit.
                       </th>
@@ -312,6 +332,14 @@ export default function PurchaseOrderDetailPage() {
                         <td className="px-4 py-3 text-right font-medium">
                           {item.quantity}
                         </td>
+                        {(purchaseOrder.status === PurchaseOrderStatus.PARTIAL ||
+                          purchaseOrder.status === PurchaseOrderStatus.RECEIVED) && (
+                          <td className="px-4 py-3 text-right">
+                            <span className="text-green-600 dark:text-green-400 font-medium">
+                              {item.receivedQty}
+                            </span>
+                          </td>
+                        )}
                         <td className="px-4 py-3 text-right">
                           ${Number(item.unitCost).toFixed(2)}
                         </td>

@@ -104,3 +104,17 @@ export interface PurchaseOrderResponse {
     totalPages: number;
   };
 }
+
+export interface ReceivePurchaseOrderItem {
+  purchaseOrderItemId: number;
+  receivedQuantity: number;
+  batchNumber?: string;
+  expirationDate?: string;
+  notes?: string;
+}
+
+export interface ReceivePurchaseOrderInput {
+  items: ReceivePurchaseOrderItem[];
+  receivedDate?: string;
+  notes?: string;
+}
