@@ -83,6 +83,16 @@ const menuItems = [
     ]
   },
   {
+    name: 'Compras',
+    href: '/purchases',
+    icon: 'shopping-cart',
+    screenCode: null, // Este es un contenedor, no requiere permisos
+    submenu: [
+      { name: 'Proveedores', href: '/suppliers', icon: 'truck', screenCode: 'SUPPLIERS' },
+      { name: 'Órdenes de Compra', href: '/purchase-orders', icon: 'file-text', screenCode: 'PURCHASE_ORDERS' },
+    ]
+  },
+  {
     name: 'Reportes',
     href: '#',
     icon: 'bar-chart-3',
@@ -98,7 +108,6 @@ const menuItems = [
     ]
   },
   { name: 'Clientes', href: '/customers', icon: 'users', screenCode: 'CUSTOMERS' },
-  { name: 'Proveedores', href: '/suppliers', icon: 'truck', screenCode: 'SUPPLIERS' },
   { name: 'Configuración', href: '/settings', icon: 'settings', screenCode: 'TENANT' },
 ]
 

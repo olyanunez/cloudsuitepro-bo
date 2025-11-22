@@ -292,7 +292,7 @@ export default function SupplierDetailPage() {
           {/* Recent Batches */}
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Últimos Lotes</h2>
-            {supplier.batches.length === 0 ? (
+            {!supplier.batches || supplier.batches.length === 0 ? (
               <p className="text-gray-500 text-center py-4">
                 No hay lotes registrados
               </p>
@@ -354,7 +354,7 @@ export default function SupplierDetailPage() {
                   <div>
                     <p className="text-sm text-gray-600">Total Lotes</p>
                     <p className="text-2xl font-bold">
-                      {supplier.stats.totalBatches}
+                      {supplier.stats?.totalBatches || 0}
                     </p>
                   </div>
                 </div>
@@ -369,14 +369,14 @@ export default function SupplierDetailPage() {
                     <div>
                       <p className="text-sm text-gray-600">Total Unidades</p>
                       <p className="text-2xl font-bold">
-                        {supplier.stats.totalQuantity}
+                        {supplier.stats?.totalQuantity || 0}
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {supplier.stats.totalBatches > 0 && (
+              {supplier.stats && supplier.stats.totalBatches > 0 && (
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between">
                     <div>
