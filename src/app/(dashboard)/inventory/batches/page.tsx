@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BatchService } from '@/lib/services/batchService';
 import { Batch, BatchStatus, FilterBatchDto } from '@/lib/types/batch';
-import { Plus, Search, Eye, Package, AlertTriangle, Archive, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PlusIcon, SearchIcon, EyeIcon, Package, AlertTriangle, Archive, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePermissions } from '@/lib/hooks/usePermissions';
@@ -119,7 +119,7 @@ export default function BatchesPage() {
 
   return (
     <ProtectedPage screenCode="INVENTORY" requiredPermission="VIEW">
-      <div className="p-6">
+      <div className="container mx-auto py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -128,20 +128,18 @@ export default function BatchesPage() {
               Control de trazabilidad y vencimientos
             </p>
           </div>
-          {canCreate && (
-            <Link href="/inventory/batches/create">
-              <Button className="bg-primary hover:bg-primary-600">
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo Lote
-              </Button>
-            </Link>
-          )}
+          <Link href="/inventory/batches/create">
+            <Button className="bg-primary hover:bg-primary-600">
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Nuevo Lote
+            </Button>
+          </Link>
         </div>
 
         {/* Search and filter controls */}
         <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
               placeholder="Buscar lotes..."
@@ -266,39 +264,39 @@ export default function BatchesPage() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Lote
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Producto
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Almacén
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Stock
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Proveedor
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Fabricación
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Vencimiento
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Costo Unit.
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                 {loading ? (
                   <tr>
                     <td colSpan={10} className="px-6 py-4 text-center">
@@ -318,7 +316,7 @@ export default function BatchesPage() {
                     const isExpired = daysUntilExp !== null && daysUntilExp <= 0;
 
                     return (
-                      <tr key={batch.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <tr key={batch.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="font-medium text-gray-900 dark:text-gray-100">
                             {batch.batchNumber}
@@ -377,12 +375,14 @@ export default function BatchesPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(batch.status)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <Link href={`/inventory/batches/${batch.id}`}>
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </Link>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex justify-end space-x-2">
+                            <Link href={`/inventory/batches/${batch.id}`}>
+                              <Button variant="outline" size="sm" className="px-2 py-1">
+                                <EyeIcon className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                          </div>
                         </td>
                       </tr>
                     );

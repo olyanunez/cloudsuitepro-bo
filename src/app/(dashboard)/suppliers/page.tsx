@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { apiGet, apiDelete, apiPatch } from '@/lib/services/apiService';
-import { Plus, Search, Edit, Trash2, Eye, Briefcase, Mail, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PlusIcon, SearchIcon, PencilIcon, TrashIcon, EyeIcon, Briefcase, Mail, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePermissions } from '@/lib/hooks/usePermissions';
@@ -18,6 +18,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Supplier {
   id: number;
@@ -59,6 +69,8 @@ export default function SuppliersPage() {
   const [total, setTotal] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const limit = itemsPerPage;
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [supplierToDelete, setSupplierToDelete] = useState<{ id: number; name: string } | null>(null);
 
   const fetchSuppliers = async () => {
     try {
@@ -86,19 +98,25 @@ export default function SuppliersPage() {
     fetchSuppliers();
   }, [page, search, itemsPerPage]);
 
-  const handleDelete = async (id: number, supplierName: string) => {
-    if (!confirm(`¿Está seguro de eliminar el proveedor "${supplierName}"?`)) {
-      return;
-    }
+  const confirmDelete = (id: number, supplierName: string) => {
+    setSupplierToDelete({ id, name: supplierName });
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!supplierToDelete) return;
 
     try {
-      await apiDelete(`/suppliers/${id}`);
+      await apiDelete(`/suppliers/${supplierToDelete.id}`);
       toast.success('Proveedor eliminado exitosamente');
       fetchSuppliers();
     } catch (error: any) {
       toast.error('Error al eliminar proveedor', {
         description: error.message || 'No se pudo eliminar el proveedor',
       });
+    } finally {
+      setSupplierToDelete(null);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -118,7 +136,7 @@ export default function SuppliersPage() {
 
   return (
     <ProtectedPage screenCode="SUPPLIERS" requiredPermission="VIEW">
-      <div className="p-6">
+      <div className="container mx-auto py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -130,7 +148,7 @@ export default function SuppliersPage() {
           {canCreate && (
             <Link href="/suppliers/create">
               <Button className="bg-primary hover:bg-primary-600">
-                <Plus className="h-4 w-4 mr-2" />
+                <PlusIcon className="h-4 w-4 mr-2" />
                 Nuevo Proveedor
               </Button>
             </Link>
@@ -140,7 +158,7 @@ export default function SuppliersPage() {
         {/* Search and filters */}
         <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="relative md:col-span-2">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
               placeholder="Buscar por código, nombre, email, teléfono o RNC..."
@@ -219,30 +237,30 @@ export default function SuppliersPage() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Código
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Nombre
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Contacto
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     RNC
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Lotes
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                 {loading ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-4 text-center">
@@ -257,7 +275,7 @@ export default function SuppliersPage() {
                   </tr>
                 ) : (
                   suppliers.map((supplier) => (
-                    <tr key={supplier.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <tr key={supplier.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="font-medium text-gray-900 dark:text-gray-100">
                           {supplier.code}
@@ -306,29 +324,30 @@ export default function SuppliersPage() {
                           {supplier.isActive ? 'Activo' : 'Inactivo'}
                         </button>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-2">
                           <Link href={`/suppliers/${supplier.id}`}>
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
+                            <Button variant="outline" size="sm" className="px-2 py-1">
+                              <EyeIcon className="h-4 w-4" />
                             </Button>
                           </Link>
                           {canUpdate && (
                             <Link href={`/suppliers/edit/${supplier.id}`}>
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4" />
+                              <Button variant="outline" size="sm" className="px-2 py-1">
+                                <PencilIcon className="h-4 w-4" />
                               </Button>
                             </Link>
                           )}
                           {canDelete && (
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
+                              className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
                               onClick={() =>
-                                handleDelete(supplier.id, supplier.name)
+                                confirmDelete(supplier.id, supplier.name)
                               }
                             >
-                              <Trash2 className="h-4 w-4 text-red-600" />
+                              <TrashIcon className="h-4 w-4" />
                             </Button>
                           )}
                         </div>
@@ -391,6 +410,27 @@ export default function SuppliersPage() {
             </Button>
           </div>
         </div>
+
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer. Se eliminará permanentemente el proveedor
+                &quot;{supplierToDelete?.name}&quot; y todos sus datos asociados del sistema.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="!bg-red-500 hover:!bg-red-600 !text-white"
+              >
+                Eliminar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </ProtectedPage>
   );
