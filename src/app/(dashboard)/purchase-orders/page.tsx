@@ -11,6 +11,7 @@ import { PlusIcon, SearchIcon, PencilIcon, TrashIcon, EyeIcon, Send, FileText, C
 import { toast } from 'sonner';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePermissions } from '@/lib/hooks/usePermissions';
+import PageHeader from '@/components/layout/PageHeader';
 import {
   Select,
   SelectContent,
@@ -159,14 +160,11 @@ export default function PurchaseOrdersPage() {
   return (
     <ProtectedPage screenCode="PURCHASE_ORDERS" requiredPermission="VIEW">
       <div className="container mx-auto py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Órdenes de Compra</h1>
-            <p className="text-muted-foreground mt-1">
-              Gestiona las órdenes de compra a proveedores
-            </p>
-          </div>
+        <PageHeader
+          title="Órdenes de Compra"
+          description="Gestiona las órdenes de compra a proveedores"
+          icon="file-text"
+        >
           {canCreate && (
             <Link href="/purchase-orders/create">
               <Button className="bg-primary hover:bg-primary-600">
@@ -175,7 +173,7 @@ export default function PurchaseOrdersPage() {
               </Button>
             </Link>
           )}
-        </div>
+        </PageHeader>
 
         {/* Search and filters */}
         <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -47,11 +47,11 @@ const menuItems = [
     icon: 'calculator',
     screenCode: null, // Este es un contenedor, no requiere permisos
     submenu: [
-      { name: 'Panel Contable', href: '/accounting', icon: 'layout-dashboard', screenCode: 'FINANCIAL_REPORTS' },
-      { name: 'Plan de Cuentas', href: '/accounting/accounts', icon: 'book-open', screenCode: 'CHART_OF_ACCOUNTS' },
-      { name: 'Asientos Contables', href: '/accounting/journal-entries', icon: 'file-text', screenCode: 'JOURNAL_ENTRIES' },
-      { name: 'Balance General', href: '/accounting/reports/balance-sheet', icon: 'bar-chart-3', screenCode: 'FINANCIAL_REPORTS' },
-      { name: 'Estado de Resultados', href: '/accounting/reports/income-statement', icon: 'trending-up', screenCode: 'FINANCIAL_REPORTS' },
+      { name: 'Panel Contable', href: '/accounting', icon: 'layout-dashboard', screenCode: 'ACCOUNTING' },
+      { name: 'Plan de Cuentas', href: '/accounting/accounts', icon: 'book-open', screenCode: 'ACCOUNTING' },
+      { name: 'Asientos Contables', href: '/accounting/journal-entries', icon: 'file-text', screenCode: 'ACCOUNTING' },
+      { name: 'Balance General', href: '/accounting/reports/balance-sheet', icon: 'bar-chart-3', screenCode: 'ACCOUNTING' },
+      { name: 'Estado de Resultados', href: '/accounting/reports/income-statement', icon: 'trending-up', screenCode: 'ACCOUNTING' },
     ]
   },
   {
@@ -85,7 +85,7 @@ const menuItems = [
   {
     name: 'Compras',
     href: '/purchases',
-    icon: 'shopping-cart',
+    icon: 'truck',
     screenCode: null, // Este es un contenedor, no requiere permisos
     submenu: [
       { name: 'Proveedores', href: '/suppliers', icon: 'truck', screenCode: 'SUPPLIERS' },
@@ -215,8 +215,19 @@ export default function Navbar() {
   React.useEffect(() => {
     const newOpenSubmenus: Record<string, boolean> = {}
     filteredMenuItems.forEach(item => {
-      if (item && item.submenu && (pathname === item.href || pathname.startsWith(item.href + '/'))) {
-        newOpenSubmenus[item.href] = true
+      if (item && item.submenu) {
+        // Verificar si la ruta actual coincide con el item padre
+        const isParentActive = pathname === item.href || pathname.startsWith(item.href + '/')
+
+        // Verificar si algún sub-item coincide con la ruta actual
+        const isSubItemActive = item.submenu.some(subItem =>
+          pathname === subItem.href || pathname.startsWith(subItem.href + '/')
+        )
+
+        // Abrir el submenú si el padre o algún hijo está activo
+        if (isParentActive || isSubItemActive) {
+          newOpenSubmenus[item.href] = true
+        }
       }
     })
     setOpenSubmenus(newOpenSubmenus)

@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { apiGet, apiDelete, apiPatch } from '@/lib/services/apiService';
-import { PlusIcon, SearchIcon, PencilIcon, TrashIcon, EyeIcon, Briefcase, Mail, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PlusIcon, SearchIcon, PencilIcon, TrashIcon, EyeIcon, Truck, Mail, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePermissions } from '@/lib/hooks/usePermissions';
+import PageHeader from '@/components/layout/PageHeader';
 import {
   Select,
   SelectContent,
@@ -137,14 +138,11 @@ export default function SuppliersPage() {
   return (
     <ProtectedPage screenCode="SUPPLIERS" requiredPermission="VIEW">
       <div className="container mx-auto py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Proveedores</h1>
-            <p className="text-muted-foreground mt-1">
-              Gestiona la información de tus proveedores
-            </p>
-          </div>
+        <PageHeader
+          title="Proveedores"
+          description="Gestiona la información de tus proveedores"
+          icon="truck"
+        >
           {canCreate && (
             <Link href="/suppliers/create">
               <Button className="bg-primary hover:bg-primary-600">
@@ -153,7 +151,7 @@ export default function SuppliersPage() {
               </Button>
             </Link>
           )}
-        </div>
+        </PageHeader>
 
         {/* Search and filters */}
         <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -199,7 +197,7 @@ export default function SuppliersPage() {
                 <p className="text-2xl font-bold">{total}</p>
               </div>
               <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-full">
-                <Briefcase className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <Truck className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </Card>
@@ -212,7 +210,7 @@ export default function SuppliersPage() {
                 </p>
               </div>
               <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full">
-                <Briefcase className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <Truck className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </Card>
@@ -225,7 +223,7 @@ export default function SuppliersPage() {
                 </p>
               </div>
               <div className="bg-red-100 dark:bg-red-900/20 p-3 rounded-full">
-                <Briefcase className="h-6 w-6 text-red-600 dark:text-red-400" />
+                <Truck className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </Card>
