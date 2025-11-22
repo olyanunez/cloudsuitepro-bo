@@ -1,5 +1,8 @@
 // Interfaces para el módulo de inventario
 
+// Re-export new variant-based types from product.ts
+export type { Product, InventoryItem, CreateProductDto, UpdateProductDto } from './product';
+
 export interface ProductCategory {
   id: number;
   name: string;
@@ -20,7 +23,12 @@ export interface ProductImage {
   updatedAt: string;
 }
 
-export interface Product {
+/**
+ * @deprecated Use Product from './product.ts' instead.
+ * This interface is kept for backward compatibility but will be removed in future versions.
+ * Products now support variants - see ProductVariant in './product.ts'
+ */
+export interface ProductLegacy {
   id: number;
   code: string;
   name: string;
@@ -35,7 +43,7 @@ export interface Product {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  inventoryItems?: InventoryItem[];
+  inventoryItems?: InventoryItemLegacy[];
 }
 
 export interface Branch {
@@ -64,10 +72,15 @@ export interface Warehouse {
   updatedAt: string;
 }
 
-export interface InventoryItem {
+/**
+ * @deprecated Use InventoryItem from './product.ts' instead.
+ * This interface is kept for backward compatibility.
+ * Inventory is now tracked at variant level, not product level.
+ */
+export interface InventoryItemLegacy {
   id: number;
   productId: number;
-  product?: Product;
+  product?: ProductLegacy;
   warehouseId: number;
   warehouse?: Warehouse;
   quantity: number;
@@ -114,11 +127,15 @@ export interface BatchMovement {
   updatedAt: string;
 }
 
+/**
+ * @deprecated This interface uses the old product-based inventory.
+ * New implementations should use variant-based inventory movements.
+ */
 export interface InventoryMovement {
   id: number;
   type: MovementType;
   productId: number;
-  product?: Product;
+  product?: ProductLegacy;
   sourceWarehouseId?: number;
   sourceWarehouse?: Warehouse;
   destinationWarehouseId?: number;
@@ -145,7 +162,11 @@ export interface UpdateProductCategoryDto {
   isActive?: boolean;
 }
 
-export interface CreateProductDto {
+/**
+ * @deprecated Use CreateProductDto from './product.ts' instead.
+ * Products now support variants.
+ */
+export interface CreateProductDtoLegacy {
   code: string;
   name: string;
   description?: string;
@@ -156,7 +177,11 @@ export interface CreateProductDto {
   categoryId: number;
 }
 
-export interface UpdateProductDto {
+/**
+ * @deprecated Use UpdateProductDto from './product.ts' instead.
+ * Products now support variants.
+ */
+export interface UpdateProductDtoLegacy {
   code?: string;
   name?: string;
   description?: string;
@@ -201,6 +226,9 @@ export interface UpdateWarehouseDto {
   address?: string;
 }
 
+/**
+ * @deprecated Inventory items are now created automatically when variants are created.
+ */
 export interface CreateInventoryItemDto {
   productId: number;
   warehouseId: number;
@@ -215,6 +243,10 @@ export interface UpdateInventoryItemDto {
   maxStock?: number;
 }
 
+/**
+ * @deprecated Use variant-based inventory movements instead.
+ * Replace productId with variantId in new implementations.
+ */
 export interface CreateInventoryMovementDto {
   type: MovementType;
   productId: number;
