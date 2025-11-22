@@ -12,6 +12,58 @@ import { PurchaseOrder, PurchaseOrderStatus } from '@/lib/types/purchase-order';
 import { usePermissions } from '@/lib/hooks/usePermissions';
 import ProtectedPage from '@/components/ProtectedPage';
 
+// Estilos para impresión
+const printStyles = `
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+
+    #printable-area,
+    #printable-area * {
+      visibility: visible;
+    }
+
+    #printable-area {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      padding: 20px;
+    }
+
+    .no-print {
+      display: none !important;
+    }
+
+    .print-page-break {
+      page-break-after: always;
+    }
+
+    @page {
+      size: letter;
+      margin: 0.5in;
+    }
+
+    table {
+      page-break-inside: auto;
+    }
+
+    tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
+    }
+
+    thead {
+      display: table-header-group;
+    }
+
+    tfoot {
+      display: table-footer-group;
+    }
+  }
+`;
+
 export default function PurchaseOrderDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -100,8 +152,10 @@ export default function PurchaseOrderDetailPage() {
 
   return (
     <ProtectedPage screenCode="PURCHASE_ORDERS" requiredPermission="VIEW">
-      <div className="container mx-auto py-8">
-        {/* Header */}
+      <style>{printStyles}</style>
+
+      {/* Header - No imprimible */}
+      <div className="container mx-auto py-8 no-print">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center">
             <Link href="/purchase-orders">
@@ -151,7 +205,10 @@ export default function PurchaseOrderDetailPage() {
             </Button>
           </div>
         </div>
+      </div>
 
+      {/* Vista normal - Solo pantalla */}
+      <div className="container mx-auto no-print">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Información Principal */}
           <div className="md:col-span-2 space-y-6">
@@ -332,6 +389,165 @@ export default function PurchaseOrderDetailPage() {
               )}
             </Card>
           </div>
+        </div>
+      </div>
+
+      {/* Área imprimible - Solo para imprimir */}
+      <div id="printable-area" className="hidden print:block">
+        {/* Header de impresión */}
+        <div className="mb-8 border-b-2 border-gray-800 pb-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">ORDEN DE COMPRA</h1>
+              <p className="text-xl font-semibold text-gray-700">#{purchaseOrder.orderNumber}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-600">Fecha de Orden:</p>
+              <p className="font-semibold">{new Date(purchaseOrder.orderDate).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              {purchaseOrder.expectedDate && (
+                <>
+                  <p className="text-sm text-gray-600 mt-2">Fecha Esperada:</p>
+                  <p className="font-semibold">{new Date(purchaseOrder.expectedDate).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Información del Proveedor y Almacén */}
+        <div className="grid grid-cols-2 gap-8 mb-8">
+          <div className="border border-gray-300 p-4 rounded">
+            <h2 className="text-lg font-bold text-gray-800 mb-3 border-b pb-2">PROVEEDOR</h2>
+            <div className="space-y-2">
+              <div>
+                <p className="text-xs text-gray-600">Nombre:</p>
+                <p className="font-semibold text-gray-900">{purchaseOrder.supplier?.name}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">Código:</p>
+                <p className="font-medium">{purchaseOrder.supplier?.code}</p>
+              </div>
+              {purchaseOrder.supplier?.email && (
+                <div>
+                  <p className="text-xs text-gray-600">Email:</p>
+                  <p className="font-medium">{purchaseOrder.supplier.email}</p>
+                </div>
+              )}
+              {purchaseOrder.supplier?.phone && (
+                <div>
+                  <p className="text-xs text-gray-600">Teléfono:</p>
+                  <p className="font-medium">{purchaseOrder.supplier.phone}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="border border-gray-300 p-4 rounded">
+            <h2 className="text-lg font-bold text-gray-800 mb-3 border-b pb-2">ALMACÉN DESTINO</h2>
+            <div className="space-y-2">
+              <div>
+                <p className="text-xs text-gray-600">Almacén:</p>
+                <p className="font-semibold text-gray-900">{purchaseOrder.warehouse?.name}</p>
+              </div>
+              {purchaseOrder.paymentTerms && (
+                <div className="mt-4">
+                  <p className="text-xs text-gray-600">Términos de Pago:</p>
+                  <p className="font-medium">{purchaseOrder.paymentTerms}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Tabla de Productos */}
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-gray-800 mb-3">PRODUCTOS</h2>
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase">Producto</th>
+                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase">Código</th>
+                <th className="border border-gray-300 px-3 py-2 text-right text-xs font-semibold text-gray-700 uppercase">Cantidad</th>
+                <th className="border border-gray-300 px-3 py-2 text-right text-xs font-semibold text-gray-700 uppercase">Costo Unit.</th>
+                <th className="border border-gray-300 px-3 py-2 text-right text-xs font-semibold text-gray-700 uppercase">Descuento</th>
+                <th className="border border-gray-300 px-3 py-2 text-right text-xs font-semibold text-gray-700 uppercase">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {purchaseOrder.items?.map((item, index) => (
+                <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="border border-gray-300 px-3 py-2">
+                    <div className="font-medium text-gray-900">{item.product?.name}</div>
+                    {item.notes && (
+                      <div className="text-xs text-gray-600 mt-1">{item.notes}</div>
+                    )}
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2 text-sm text-gray-700">{item.product?.code}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-right font-medium">{item.quantity}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-right">${Number(item.unitCost).toFixed(2)}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-right text-red-600">
+                    {item.discount > 0 ? `-$${Number(item.discount).toFixed(2)}` : '-'}
+                  </td>
+                  <td className="border border-gray-300 px-3 py-2 text-right font-semibold">${Number(item.total).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Notas */}
+        {purchaseOrder.notes && (
+          <div className="mb-8">
+            <div className="border border-gray-300 p-4 rounded">
+              <h3 className="text-sm font-bold text-gray-800 mb-2">NOTAS</h3>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap">{purchaseOrder.notes}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Totales y Firma */}
+        <div className="grid grid-cols-2 gap-8 mb-8">
+          {/* Espacio para firma */}
+          <div className='flex flex-col justify-end'>
+            <div className="border-t-2 border-gray-800 pt-2 mt-12">
+              <p className="text-center text-sm font-semibold text-gray-900">Firma y Nombre del Responsable</p>
+            </div>
+          </div>
+
+          {/* Totales */}
+          <div className="border border-gray-800 p-4 rounded bg-gray-50">
+            <h3 className="text-sm font-bold text-gray-800 mb-3">RESUMEN</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-700">Subtotal:</span>
+                <span className="font-semibold">${Number(purchaseOrder.subtotal).toFixed(2)}</span>
+              </div>
+              {purchaseOrder.discount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-700">Descuento:</span>
+                  <span className="font-semibold text-red-600">-${Number(purchaseOrder.discount).toFixed(2)}</span>
+                </div>
+              )}
+              {purchaseOrder.tax > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-700">Impuesto:</span>
+                  <span className="font-semibold">${Number(purchaseOrder.tax).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="border-t-2 border-gray-800 pt-2 mt-2">
+                <div className="flex justify-between">
+                  <span className="text-lg font-bold text-gray-900">TOTAL:</span>
+                  <span className="text-xl font-bold text-gray-900">${Number(purchaseOrder.total).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer de impresión */}
+        <div className="mt-12 pt-6 border-t border-gray-300 text-center text-xs text-gray-600">
+          <p>Este documento es una orden de compra y no constituye un comprobante fiscal</p>
+          <p className="mt-1">Generado el {new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
         </div>
       </div>
     </ProtectedPage>
