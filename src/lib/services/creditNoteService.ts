@@ -109,7 +109,7 @@ export interface CreditNote {
 
 export interface CreateCreditNoteItemDto {
   originalInvoiceItemId?: number;
-  productId: number;
+  variantId: number;
   quantity: number;
   unitPrice: number;
   discount?: number;
