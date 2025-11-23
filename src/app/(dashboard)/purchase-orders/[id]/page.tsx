@@ -194,17 +194,17 @@ export default function PurchaseOrderDetailPage() {
             {(purchaseOrder.status === PurchaseOrderStatus.SENT ||
               purchaseOrder.status === PurchaseOrderStatus.CONFIRMED ||
               purchaseOrder.status === PurchaseOrderStatus.PARTIAL) && canUpdate && (
-              <Link href={`/purchase-orders/receive/${purchaseOrder.id}`}>
-                <Button
-                  variant="default"
-                  style={{ backgroundColor: '#22c55e', color: 'white' }}
-                  className="hover:opacity-90"
-                >
-                  <PackageIcon className="h-4 w-4 mr-2" />
-                  Recibir Orden
-                </Button>
-              </Link>
-            )}
+                <Link href={`/purchase-orders/receive/${purchaseOrder.id}`}>
+                  <Button
+                    variant="default"
+                    style={{ backgroundColor: '#22c55e', color: 'white' }}
+                    className="hover:opacity-90"
+                  >
+                    <PackageIcon className="h-4 w-4 mr-2" />
+                    Recibir Orden
+                  </Button>
+                </Link>
+              )}
             {purchaseOrder.status === PurchaseOrderStatus.DRAFT && canUpdate && (
               <Link href={`/purchase-orders/edit/${purchaseOrder.id}`}>
                 <Button variant="outline">
@@ -302,10 +302,10 @@ export default function PurchaseOrderDetailPage() {
                       </th>
                       {(purchaseOrder.status === PurchaseOrderStatus.PARTIAL ||
                         purchaseOrder.status === PurchaseOrderStatus.RECEIVED) && (
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                          Recibido
-                        </th>
-                      )}
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                            Recibido
+                          </th>
+                        )}
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
                         Costo Unit.
                       </th>
@@ -334,12 +334,12 @@ export default function PurchaseOrderDetailPage() {
                         </td>
                         {(purchaseOrder.status === PurchaseOrderStatus.PARTIAL ||
                           purchaseOrder.status === PurchaseOrderStatus.RECEIVED) && (
-                          <td className="px-4 py-3 text-right">
-                            <span className="text-green-600 dark:text-green-400 font-medium">
-                              {item.receivedQty}
-                            </span>
-                          </td>
-                        )}
+                            <td className="px-4 py-3 text-right">
+                              <span className="text-green-600 dark:text-green-400 font-medium">
+                                {item.receivedQty}
+                              </span>
+                            </td>
+                          )}
                         <td className="px-4 py-3 text-right">
                           ${Number(item.unitCost).toFixed(2)}
                         </td>
