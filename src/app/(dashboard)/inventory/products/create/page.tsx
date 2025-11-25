@@ -299,11 +299,14 @@ export default function CreateProductPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted');
 
     if (!validateForm()) {
+      console.log('Validation failed', errors);
       return;
     }
 
+    console.log('Validation passed, creating product...');
     try {
       setSaving(true);
 
@@ -319,9 +322,15 @@ export default function CreateProductPage() {
           // Extract attributeValueIds from attributeAssignments
           const attributeValueIds = Object.values(variant.attributeAssignments);
 
+          // Fix SKU if it was generated with empty product code (starts with "-")
+          let finalSku = variant.sku;
+          if (finalSku.startsWith('-')) {
+            finalSku = `${formData.code}-${i + 1}`;
+          }
+
           const variantDto: CreateProductVariantDto = {
             productId: createdProduct.id,
-            sku: variant.sku,
+            sku: finalSku,
             barcode: variant.barcode || undefined,
             name: variant.name || undefined,
             price: variant.price,
