@@ -17,14 +17,24 @@ export default function ProductDetailPage() {
   const productId = parseInt(params.id as string, 10);
 
   const nextImage = () => {
-    if (product && product.images && product.images.length > 0) {
-      setCurrentImageIndex((prev) => (prev + 1) % product.images!.length);
+    const defaultVariant = product?.variants?.[0];
+    const displayImages = product?.hasVariants
+      ? product.images
+      : (defaultVariant?.images || []);
+
+    if (displayImages && displayImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % displayImages.length);
     }
   };
 
   const prevImage = () => {
-    if (product && product.images && product.images.length > 0) {
-      setCurrentImageIndex((prev) => (prev - 1 + product.images!.length) % product.images!.length);
+    const defaultVariant = product?.variants?.[0];
+    const displayImages = product?.hasVariants
+      ? product.images
+      : (defaultVariant?.images || []);
+
+    if (displayImages && displayImages.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
     }
   };
 
@@ -73,6 +83,11 @@ export default function ProductDetailPage() {
 
   const defaultVariant = product.variants?.[0];
 
+  // Para productos simples (sin variantes), usar las imágenes de la variante
+  const displayImages = product.hasVariants
+    ? product.images
+    : (defaultVariant?.images || []);
+
   // Formatear el precio en moneda local (DOP)
   const formattedPrice = defaultVariant?.price
     ? new Intl.NumberFormat('es-DO', {
@@ -113,16 +128,16 @@ export default function ProductDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Image Carousel - Left */}
         <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
-          {product.images && product.images.length > 0 ? (
+          {displayImages && displayImages.length > 0 ? (
             <div className="space-y-4">
               <div className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden">
                 <Image
-                  src={product.images[currentImageIndex].url}
+                  src={displayImages[currentImageIndex].url}
                   alt={`${product.name} - Imagen ${currentImageIndex + 1}`}
                   fill
                   className="object-contain"
                 />
-                {product.images.length > 1 && (
+                {displayImages.length > 1 && (
                   <>
                     <button
                       onClick={prevImage}
@@ -143,9 +158,9 @@ export default function ProductDetailPage() {
                   </>
                 )}
               </div>
-              {product.images.length > 1 && (
+              {displayImages.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-2">
-                  {product.images.map((image, index) => (
+                  {displayImages.map((image, index) => (
                     <div
                       key={image.id}
                       className={`relative w-20 h-20 flex-shrink-0 cursor-pointer rounded-md overflow-hidden border-2 transition-colors ${index === currentImageIndex
@@ -165,7 +180,7 @@ export default function ProductDetailPage() {
                 </div>
               )}
               <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-                Imagen {currentImageIndex + 1} de {product.images.length}
+                Imagen {currentImageIndex + 1} de {displayImages.length}
               </div>
             </div>
           ) : (
@@ -206,6 +221,21 @@ export default function ProductDetailPage() {
               <p className="text-sm text-gray-500 dark:text-gray-400">Categoría</p>
               <p>{product.category?.name || 'Sin categoría'}</p>
             </div>
+            {!product.hasVariants && defaultVariant?.attributeValues && defaultVariant.attributeValues.length > 0 && (
+              <div className="col-span-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Atributos</p>
+                <div className="flex flex-wrap gap-2">
+                  {defaultVariant.attributeValues.map((av) => (
+                    <span
+                      key={av.id}
+                      className="inline-flex px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium"
+                    >
+                      {av.attributeValue?.attribute?.displayName}: {av.attributeValue?.displayName}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Tipo de Producto</p>
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${product.isStockable ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' : 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100'}`}>
@@ -298,9 +328,9 @@ export default function ProductDetailPage() {
                           {variant.attributeValues.map((av) => (
                             <span
                               key={av.id}
-                              className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs"
+                              className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-medium"
                             >
-                              {av.attribute?.displayName}: {av.displayName}
+                              {av.attributeValue?.attribute?.displayName}: {av.attributeValue?.displayName}
                             </span>
                           ))}
                         </div>

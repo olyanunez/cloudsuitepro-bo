@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -74,6 +74,7 @@ export default function CreateProductPage() {
     cost?: number;
     minStock?: number;
     maxStock?: number;
+    attributeAssignments: Record<number, number>; // attributeId -> attributeValueId
   }>({
     sku: '',
     barcode: '',
@@ -81,7 +82,12 @@ export default function CreateProductPage() {
     cost: undefined,
     minStock: 0,
     maxStock: undefined,
+    attributeAssignments: {},
   });
+
+  // Simple mode: images for single variant
+  const [simpleVariantImages, setSimpleVariantImages] = useState<VariantImagePreview[]>([]);
+  const simpleVariantImageInputRef = useRef<HTMLInputElement>(null);
 
   // Variant mode: manually created variants
   const [variants, setVariants] = useState<VariantFormData[]>([]);
@@ -117,6 +123,16 @@ export default function CreateProductPage() {
     }
     loadData();
   }, []);
+
+  // Auto-generate SKU for simple variant when product code changes
+  useEffect(() => {
+    if (!formData.hasVariants && formData.code) {
+      setSimpleVariant((prev) => ({
+        ...prev,
+        sku: `${formData.code}-DEFAULT`,
+      }));
+    }
+  }, [formData.code, formData.hasVariants]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -178,6 +194,45 @@ export default function CreateProductPage() {
       images: [],
     };
     setVariants((prev) => [...prev, newVariant]);
+  };
+
+  const handleSimpleVariantImageUpload = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const newImages: VariantImagePreview[] = Array.from(files).map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+
+    setSimpleVariantImages((prev) => [...prev, ...newImages]);
+
+    // Reset the input so the same file can be selected again
+    if (simpleVariantImageInputRef.current) {
+      simpleVariantImageInputRef.current.value = '';
+    }
+  };
+
+  const removeSimpleVariantImage = (imageIndex: number) => {
+    setSimpleVariantImages((prev) => {
+      // Revoke the object URL to free memory
+      URL.revokeObjectURL(prev[imageIndex].preview);
+      return prev.filter((_, idx) => idx !== imageIndex);
+    });
+  };
+
+  const updateSimpleVariantAttribute = (attributeId: number, valueId: number | null) => {
+    setSimpleVariant((prev) => {
+      const newAssignments = { ...prev.attributeAssignments };
+      if (valueId === null) {
+        delete newAssignments[attributeId];
+      } else {
+        newAssignments[attributeId] = valueId;
+      }
+      return {
+        ...prev,
+        attributeAssignments: newAssignments,
+      };
+    });
   };
 
   const handleVariantImageUpload = (variantIndex: number, files: FileList | null) => {
@@ -352,6 +407,8 @@ export default function CreateProductPage() {
         }
       } else {
         // Single variant (simple mode)
+        const attributeValueIds = Object.values(simpleVariant.attributeAssignments);
+
         const variantDto: CreateProductVariantDto = {
           productId: createdProduct.id,
           sku: simpleVariant.sku,
@@ -361,9 +418,16 @@ export default function CreateProductPage() {
           minStock: simpleVariant.minStock || 0,
           maxStock: simpleVariant.maxStock || undefined,
           isDefault: true,
+          attributeValueIds: attributeValueIds.length > 0 ? attributeValueIds : undefined,
         };
 
-        await productVariantsService.create(variantDto);
+        const createdVariant = await productVariantsService.create(variantDto);
+
+        // Upload variant images if any
+        if (simpleVariantImages.length > 0) {
+          const imageFiles = simpleVariantImages.map(img => img.file);
+          await productVariantsService.uploadImages(createdVariant.id, imageFiles);
+        }
       }
 
       console.log('Product and variants created successfully');
@@ -514,15 +578,15 @@ export default function CreateProductPage() {
 
                 <div>
                   <Label htmlFor="sku">
-                    SKU <span className="text-red-500">*</span>
+                    SKU <span className="text-xs text-gray-500">(Autogenerado)</span>
                   </Label>
                   <Input
                     id="sku"
                     name="sku"
                     value={simpleVariant.sku}
-                    onChange={handleSimpleVariantChange}
-                    className="mt-1"
-                    placeholder="Ej: PROD-001-DEFAULT"
+                    readOnly
+                    className="mt-1 bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+                    placeholder="Se generará automáticamente"
                   />
                   {errors.sku && (
                     <p className="text-red-500 text-xs mt-1">{errors.sku}</p>
@@ -599,6 +663,94 @@ export default function CreateProductPage() {
                     min="0"
                     placeholder="Opcional"
                   />
+                </div>
+
+                {/* Simple Variant Attributes */}
+                {attributes.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <Label className="text-xs font-semibold mb-2 block">
+                      Atributos del Producto
+                    </Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {attributes.map((attr) => (
+                        <div key={attr.id}>
+                          <Label className="text-xs">{attr.displayName}</Label>
+                          <Select
+                            value={
+                              simpleVariant.attributeAssignments[attr.id]?.toString() || 'none'
+                            }
+                            onValueChange={(value) =>
+                              updateSimpleVariantAttribute(
+                                attr.id,
+                                value === 'none' ? null : Number(value)
+                              )
+                            }
+                          >
+                            <SelectTrigger className="mt-1 h-8 text-sm">
+                              <SelectValue placeholder="Seleccione..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">
+                                <span className="text-gray-400">Sin asignar</span>
+                              </SelectItem>
+                              {attr.values?.map((value) => (
+                                <SelectItem
+                                  key={value.id}
+                                  value={value.id.toString()}
+                                >
+                                  {value.displayName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Simple Variant Images */}
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                  <Label className="text-xs font-semibold mb-2 block">
+                    Imágenes del Producto
+                  </Label>
+
+                  <div className="flex flex-wrap gap-3 mb-3">
+                    {simpleVariantImages.map((img, imgIdx) => (
+                      <div
+                        key={imgIdx}
+                        className="relative w-20 h-20 rounded border border-gray-300 dark:border-gray-600 overflow-hidden group"
+                      >
+                        <Image
+                          src={img.preview}
+                          alt={`Imagen ${imgIdx + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeSimpleVariantImage(imgIdx)}
+                          className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <XIcon className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                    <label className="w-20 h-20 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded cursor-pointer hover:border-primary transition-colors">
+                      <input
+                        ref={simpleVariantImageInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => handleSimpleVariantImageUpload(e.target.files)}
+                      />
+                      <ImageIcon className="h-8 w-8 text-gray-400" />
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Agregue imágenes del producto
+                  </p>
                 </div>
               </div>
             ) : (
@@ -915,9 +1067,29 @@ export default function CreateProductPage() {
           ) : (
             <>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Imágenes generales del producto.
+                Las imágenes del producto se configuran en la variante.
               </p>
-              <ProductImageUpload images={images} onChange={setImages} maxImages={10} />
+              {simpleVariantImages.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {simpleVariantImages.map((img, imgIdx) => (
+                    <div
+                      key={imgIdx}
+                      className="relative aspect-square rounded border border-gray-300 dark:border-gray-600 overflow-hidden"
+                    >
+                      <Image
+                        src={img.preview}
+                        alt={`Imagen ${imgIdx + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                  No hay imágenes del producto. Agregue imágenes en la sección de configuración de variantes arriba.
+                </p>
+              )}
             </>
           )}
         </div>

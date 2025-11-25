@@ -344,8 +344,18 @@ export default function ProductsPage() {
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {paginatedProducts.map((product) => {
-                const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
                 const defaultVariant = product.variants?.[0];
+
+                // For simple products (no hasVariants), use variant images; otherwise use product images
+                let imagesToUse = product.hasVariants ? product.images : null;
+
+                // If product has no images, look for images in variants (in order)
+                if (!imagesToUse || imagesToUse.length === 0) {
+                  const variantWithImages = product.variants?.find(v => v.images && v.images.length > 0);
+                  imagesToUse = variantWithImages?.images || null;
+                }
+
+                const primaryImage = imagesToUse?.find(img => img.isPrimary) || imagesToUse?.[0];
 
                 return (
                   <tr key={product.id}>
