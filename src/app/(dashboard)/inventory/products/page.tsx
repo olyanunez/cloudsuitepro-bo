@@ -319,6 +319,14 @@ export default function ProductsPage() {
                 </th>
                 <th
                   scope="col"
+                  className={getTableCellClass("px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider")}
+                >
+                  <div className="flex items-center justify-center">
+                    Variantes
+                  </div>
+                </th>
+                <th
+                  scope="col"
                   className={getTableCellClass("px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer")}
                   onClick={() => handleSort('isActive')}
                 >
@@ -402,6 +410,11 @@ export default function ProductsPage() {
                     <td className={getTableCellClass("px-6 py-4 whitespace-nowrap")}>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${product.isStockable ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' : 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100'}`}>
                         {product.isStockable ? 'Inventariable' : 'Servicio'}
+                      </span>
+                    </td>
+                    <td className={getTableCellClass("px-6 py-4 whitespace-nowrap text-center")}>
+                      <span className="inline-flex items-center justify-center px-2 py-1 text-sm font-medium text-gray-900 dark:text-white">
+                        {product.variants?.length || 0}
                       </span>
                     </td>
                     <td className={getTableCellClass("px-6 py-4 whitespace-nowrap")}>
