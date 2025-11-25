@@ -139,7 +139,8 @@ export default function EditInventoryItemPage() {
   }
 
   const itemAny = item as any;
-  const product = itemAny.variant?.product || item.product;
+  const variant = itemAny.variant;
+  const product = variant?.product || item.product;
 
   return (
     <div className="container mx-auto py-8">
@@ -166,18 +167,21 @@ export default function EditInventoryItemPage() {
               />
               <p className="text-xs text-gray-500 mt-1">No se puede cambiar el producto</p>
 
-              {/* Product Image Preview */}
+              {/* Product/Variant Image Preview */}
               {product && (() => {
-                const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+                const variantImages = variant?.images || [];
+                const variantPrimaryImage = variantImages.find((img: any) => img.isPrimary) || variantImages[0];
+                const productPrimaryImage = product.images?.find((img: any) => img.isPrimary) || product.images?.[0];
+                const displayImage = variantPrimaryImage || productPrimaryImage;
 
                 return (
                   <div className="mt-3 p-3 border border-gray-200 dark:border-gray-600 rounded-md">
                     <div className="flex items-center gap-3">
                       <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600">
-                        {primaryImage ? (
+                        {displayImage ? (
                           <Image
-                            src={primaryImage.url}
-                            alt={product.name}
+                            src={displayImage.url}
+                            alt={variant?.name || product.name}
                             fill
                             className="object-cover"
                           />
@@ -190,12 +194,13 @@ export default function EditInventoryItemPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                           {product.name}
+                          {variant?.name && <span className="text-gray-500"> - {variant.name}</span>}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Código: {product.code}
+                          {variant ? `SKU: ${variant.sku}` : `Código: ${product.code}`}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Precio: ${product.price}
+                          Precio: ${variant?.price || product.price}
                         </p>
                       </div>
                     </div>

@@ -318,16 +318,25 @@ export default function PurchaseOrderDetailPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                    {purchaseOrder.items?.map((item) => (
+                    {purchaseOrder.items?.map((item) => {
+                      const itemAny = item as any;
+                      const variant = itemAny.variant;
+                      const product = variant?.product || item.product;
+
+                      return (
                       <tr key={item.id}>
                         <td className="px-4 py-3">
-                          <div className="font-medium">{item.product?.name}</div>
+                          <div className="font-medium">{product?.name}</div>
+                          {variant?.name && (
+                            <div className="text-sm text-muted-foreground">{variant.name}</div>
+                          )}
+                          <div className="text-xs text-muted-foreground">SKU: {variant?.sku}</div>
                           {item.notes && (
-                            <div className="text-sm text-muted-foreground">{item.notes}</div>
+                            <div className="text-sm text-muted-foreground mt-1">{item.notes}</div>
                           )}
                         </td>
                         <td className="px-4 py-3 text-sm text-muted-foreground">
-                          {item.product?.code}
+                          {product?.code}
                         </td>
                         <td className="px-4 py-3 text-right font-medium">
                           {item.quantity}
@@ -350,7 +359,8 @@ export default function PurchaseOrderDetailPage() {
                           ${Number(item.total).toFixed(2)}
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -502,15 +512,24 @@ export default function PurchaseOrderDetailPage() {
               </tr>
             </thead>
             <tbody>
-              {purchaseOrder.items?.map((item, index) => (
+              {purchaseOrder.items?.map((item, index) => {
+                const itemAny = item as any;
+                const variant = itemAny.variant;
+                const product = variant?.product || item.product;
+
+                return (
                 <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="border border-gray-300 px-3 py-2">
-                    <div className="font-medium text-gray-900">{item.product?.name}</div>
+                    <div className="font-medium text-gray-900">{product?.name}</div>
+                    {variant?.name && (
+                      <div className="text-sm text-gray-700">{variant.name}</div>
+                    )}
+                    <div className="text-xs text-gray-600">SKU: {variant?.sku}</div>
                     {item.notes && (
                       <div className="text-xs text-gray-600 mt-1">{item.notes}</div>
                     )}
                   </td>
-                  <td className="border border-gray-300 px-3 py-2 text-sm text-gray-700">{item.product?.code}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-sm text-gray-700">{product?.code}</td>
                   <td className="border border-gray-300 px-3 py-2 text-right font-medium">{item.quantity}</td>
                   <td className="border border-gray-300 px-3 py-2 text-right">${Number(item.unitCost).toFixed(2)}</td>
                   <td className="border border-gray-300 px-3 py-2 text-right text-red-600">
@@ -518,7 +537,8 @@ export default function PurchaseOrderDetailPage() {
                   </td>
                   <td className="border border-gray-300 px-3 py-2 text-right font-semibold">${Number(item.total).toFixed(2)}</td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

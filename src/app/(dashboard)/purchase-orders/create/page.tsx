@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeftIcon, SaveIcon, PlusIcon, TrashIcon } from 'lucide-react';
+import { ArrowLeftIcon, SaveIcon, PlusIcon, TrashIcon, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiGet } from '@/lib/services/apiService';
 import { PurchaseOrderService } from '@/lib/services/purchaseOrderService';
@@ -38,6 +39,39 @@ interface Product {
   name: string;
   cost: number;
   barcode?: string;
+  variants?: ProductVariant[];
+}
+
+interface ProductVariant {
+  id: number;
+  sku: string;
+  name?: string;
+  cost?: number;
+  barcode?: string;
+  productId: number;
+  product?: {
+    id: number;
+    name: string;
+    code: string;
+  };
+  images?: Array<{
+    id: number;
+    url: string;
+    isPrimary: boolean;
+  }>;
+  attributeValues?: Array<{
+    id: number;
+    attributeValue?: {
+      id: number;
+      value: string;
+      displayName?: string;
+      attribute?: {
+        id: number;
+        name: string;
+        displayName?: string;
+      };
+    };
+  }>;
 }
 
 export default function CreatePurchaseOrderPage() {
@@ -47,6 +81,7 @@ export default function CreatePurchaseOrderPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [allVariants, setAllVariants] = useState<ProductVariant[]>([]);
   const [orderNumber, setOrderNumber] = useState('');
 
   const [formData, setFormData] = useState({
@@ -59,7 +94,7 @@ export default function CreatePurchaseOrderPage() {
 
   const [items, setItems] = useState<CreatePurchaseOrderItemInput[]>([
     {
-      productId: 0,
+      variantId: 0,
       quantity: 1,
       unitCost: 0,
       discount: 0,
@@ -68,22 +103,27 @@ export default function CreatePurchaseOrderPage() {
     },
   ]);
 
+  // Track selected variant IDs for display purposes
+  const [selectedVariants, setSelectedVariants] = useState<Map<number, string>>(new Map());
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
-        const [suppliersData, warehousesData, productsData, nextOrderNumber] = await Promise.all([
+        const [suppliersData, warehousesData, productsData, variantsData, nextOrderNumber] = await Promise.all([
           apiGet<Supplier[]>('/suppliers/active'),
           apiGet<Warehouse[]>('/warehouses'),
           apiGet<Product[]>('/products'),
+          apiGet<ProductVariant[]>('/product-variants'),
           PurchaseOrderService.generateNextOrderNumber(),
         ]);
 
         setSuppliers(suppliersData);
         setWarehouses(warehousesData);
         setProducts(productsData);
+        setAllVariants(variantsData);
         setOrderNumber(nextOrderNumber);
       } catch (error) {
         console.error('Error loading data:', error);
@@ -119,12 +159,26 @@ export default function CreatePurchaseOrderPage() {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
 
-    // Si cambió el producto, actualizar el costo unitario
-    if (field === 'productId') {
-      const product = products.find(p => p.id === Number(value));
-      if (product) {
-        newItems[index].unitCost = Number(product.cost);
+    // Si cambió el producto/variante, actualizar el costo unitario
+    if (field === 'variantId') {
+      const valueStr = String(value);
+      const newSelectedVariants = new Map(selectedVariants);
+
+      // The value is always a variant ID (format: "variant-{id}")
+      if (valueStr.startsWith('variant-')) {
+        const variantId = Number(valueStr.replace('variant-', ''));
+        const variant = allVariants.find(v => v.id === variantId);
+        if (variant) {
+          // Use variant cost if available, otherwise use product cost
+          newItems[index].unitCost = Number(variant.cost || variant.product?.cost || 0);
+          // Store the variantId
+          newItems[index].variantId = variantId;
+          // Track the variant selection for display
+          newSelectedVariants.set(index, valueStr);
+        }
       }
+
+      setSelectedVariants(newSelectedVariants);
     }
 
     setItems(newItems);
@@ -132,13 +186,55 @@ export default function CreatePurchaseOrderPage() {
 
   const addItem = () => {
     setItems([...items, {
-      productId: 0,
+      variantId: 0,
       quantity: 1,
       unitCost: 0,
       discount: 0,
       tax: 0,
       notes: '',
     }]);
+  };
+
+  const getDisplayInfoForItem = (index: number) => {
+    const item = items[index];
+    const selectedKey = selectedVariants.get(index);
+
+    if (selectedKey && selectedKey.startsWith('variant-')) {
+      const variantId = Number(selectedKey.replace('variant-', ''));
+      const variant = allVariants.find(v => v.id === variantId);
+      if (variant) {
+        const variantImages = variant.images || [];
+        const variantPrimaryImage = variantImages.find(img => img.isPrimary) || variantImages[0];
+        return {
+          name: variant.product?.name || 'Producto',
+          variantName: variant.name,
+          sku: variant.sku,
+          image: variantPrimaryImage?.url,
+          attributes: variant.attributeValues?.map(av => ({
+            name: av.attributeValue?.attribute?.displayName || av.attributeValue?.attribute?.name,
+            value: av.attributeValue?.displayName || av.attributeValue?.value
+          })) || []
+        };
+      }
+    } else if (item.variantId > 0) {
+      const variant = allVariants.find(v => v.id === item.variantId);
+      if (variant) {
+        const variantImages = variant.images || [];
+        const variantPrimaryImage = variantImages.find(img => img.isPrimary) || variantImages[0];
+        return {
+          name: variant.product?.name || 'Producto',
+          variantName: variant.name,
+          sku: variant.sku,
+          image: variantPrimaryImage?.url,
+          attributes: variant.attributeValues?.map(av => ({
+            name: av.attributeValue?.attribute?.displayName || av.attributeValue?.attribute?.name,
+            value: av.attributeValue?.displayName || av.attributeValue?.value
+          })) || []
+        };
+      }
+    }
+
+    return null;
   };
 
   const removeItem = (index: number) => {
@@ -161,7 +257,7 @@ export default function CreatePurchaseOrderPage() {
     let totalTax = 0;
 
     items.forEach(item => {
-      if (item.productId > 0) {
+      if (item.variantId > 0) {
         subtotal += item.quantity * item.unitCost;
         totalDiscount += Number(item.discount) || 0;
         totalTax += Number(item.tax) || 0;
@@ -184,7 +280,7 @@ export default function CreatePurchaseOrderPage() {
       newErrors.warehouseId = 'Debe seleccionar un almacén';
     }
 
-    const validItems = items.filter(item => item.productId > 0);
+    const validItems = items.filter(item => item.variantId > 0);
     if (validItems.length === 0) {
       newErrors.items = 'Debe agregar al menos un producto';
       toast.error('Debe agregar al menos un producto');
@@ -211,7 +307,7 @@ export default function CreatePurchaseOrderPage() {
       return;
     }
 
-    const validItems = items.filter(item => item.productId > 0);
+    const validItems = items.filter(item => item.variantId > 0);
 
     const purchaseOrderData: CreatePurchaseOrderInput = {
       supplierId: Number(formData.supplierId),
@@ -220,7 +316,7 @@ export default function CreatePurchaseOrderPage() {
       paymentTerms: formData.paymentTerms || undefined,
       notes: formData.notes || undefined,
       items: validItems.map(item => ({
-        productId: item.productId,
+        variantId: item.variantId,
         quantity: item.quantity,
         unitCost: item.unitCost,
         discount: item.discount || 0,
@@ -409,22 +505,103 @@ export default function CreatePurchaseOrderPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {items.map((item, index) => (
+                    {items.map((item, index) => {
+                      const displayInfo = getDisplayInfoForItem(index);
+                      const selectedKey = selectedVariants.get(index) || (item.variantId > 0 ? `variant-${item.variantId}` : undefined);
+
+                      return (
                       <tr key={index}>
                         <td className="px-4 py-2">
                           <Select
-                            value={item.productId.toString()}
-                            onValueChange={(value) => handleItemChange(index, 'productId', Number(value))}
+                            value={selectedKey}
+                            onValueChange={(value) => handleItemChange(index, 'variantId', value)}
                           >
-                            <SelectTrigger className="w-full min-w-[200px]">
-                              <SelectValue placeholder="Seleccionar producto" />
+                            <SelectTrigger className="w-full min-w-[280px]">
+                              {displayInfo ? (
+                                <div className="flex items-center gap-2 w-full">
+                                  {displayInfo.image ? (
+                                    <div className="relative w-8 h-8 rounded overflow-hidden flex-shrink-0">
+                                      <Image
+                                        src={displayInfo.image}
+                                        alt={displayInfo.name}
+                                        fill
+                                        className="object-cover"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
+                                      <ImageIcon className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0 text-left">
+                                    <div className="font-medium truncate">{displayInfo.name}</div>
+                                    {displayInfo.variantName && (
+                                      <div className="text-xs text-muted-foreground truncate">
+                                        {displayInfo.variantName} • {displayInfo.sku}
+                                      </div>
+                                    )}
+                                    {!displayInfo.variantName && (
+                                      <div className="text-xs text-muted-foreground truncate">
+                                        {displayInfo.sku}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ) : (
+                                <SelectValue placeholder="Seleccionar producto" />
+                              )}
                             </SelectTrigger>
-                            <SelectContent>
-                              {products.map((product) => (
-                                <SelectItem key={product.id} value={product.id.toString()}>
-                                  {product.name} ({product.code})
-                                </SelectItem>
-                              ))}
+                            <SelectContent className="max-h-[400px]">
+                              {products.map((product) => {
+                                const productVariants = allVariants.filter(v => v.productId === product.id);
+
+                                // Solo mostrar variantes (no productos sin variantes)
+                                return productVariants.map((variant) => {
+                                  const variantImages = variant.images || [];
+                                  const variantPrimaryImage = variantImages.find(img => img.isPrimary) || variantImages[0];
+
+                                  return (
+                                    <SelectItem
+                                      key={`variant-${variant.id}`}
+                                      value={`variant-${variant.id}`}
+                                      textValue={`${product.name} ${variant.name || ''} ${variant.sku}`}
+                                    >
+                                      <div className="flex items-center gap-3 py-1">
+                                        {variantPrimaryImage ? (
+                                          <img
+                                            src={variantPrimaryImage.url}
+                                            alt={variant.name || product.name}
+                                            className="w-10 h-10 rounded object-cover flex-shrink-0"
+                                          />
+                                        ) : (
+                                          <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
+                                            <ImageIcon className="h-5 w-5 text-gray-400" />
+                                          </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                          <div className="font-medium truncate">{product.name}</div>
+                                          <div className="text-xs text-muted-foreground">
+                                            {variant.name && <span>{variant.name} • </span>}
+                                            {variant.sku} • ${Number(variant.cost || product.cost).toFixed(2)}
+                                          </div>
+                                          {variant.attributeValues && variant.attributeValues.length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-1">
+                                              {variant.attributeValues.map((av) => (
+                                                <span
+                                                  key={av.id}
+                                                  className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs"
+                                                >
+                                                  {av.attributeValue?.displayName || av.attributeValue?.value}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </SelectItem>
+                                  );
+                                });
+                              })}
                             </SelectContent>
                           </Select>
                         </td>
@@ -476,7 +653,7 @@ export default function CreatePurchaseOrderPage() {
                           )}
                         </td>
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </div>

@@ -74,7 +74,7 @@ export interface PurchaseOrder {
 }
 
 export interface CreatePurchaseOrderItemInput {
-  productId: number;
+  variantId: number;
   quantity: number;
   unitCost: number;
   discount?: number;
