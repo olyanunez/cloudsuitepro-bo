@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { InventoryMovement, MovementType } from '@/lib/types/inventory';
+import { InventoryMovement, VariantInventoryMovement, MovementType } from '@/lib/types/inventory';
 import { InventoryService } from '@/lib/services/inventoryService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +26,7 @@ import { es } from 'date-fns/locale';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { formatCurrency } from '@/lib/utils';
+import Image from 'next/image';
 
 const MOVEMENT_TYPE_LABELS: Record<MovementType, string> = {
   [MovementType.ENTRADA]: 'Entrada',
@@ -53,7 +54,7 @@ export default function MovementDetailPage() {
   const router = useRouter();
   const movementId = parseInt(params.id as string, 10);
 
-  const [movement, setMovement] = useState<InventoryMovement | null>(null);
+  const [movement, setMovement] = useState<InventoryMovement | VariantInventoryMovement | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -159,55 +160,125 @@ export default function MovementDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Product Information */}
+      {/* Product/Variant Information */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Información del Producto
+            {('variant' in movement && movement.variant) ? 'Información de la Variante' : 'Información del Producto'}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">Código</p>
-              <p className="text-base font-semibold">{movement.product?.code || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">Nombre</p>
-              <p className="text-base font-semibold">{movement.product?.name || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">Cantidad</p>
-              <p className="text-2xl font-bold text-primary">
-                {movement.type === MovementType.SALIDA ? '-' : '+'}{movement.quantity}
-              </p>
-            </div>
-          </div>
+          {(() => {
+            const isVariantMovement = 'variant' in movement && movement.variant;
+            const variant = isVariantMovement ? movement.variant : null;
+            const product = variant?.product || ('product' in movement ? movement.product : null);
 
-          {movement.product?.description && (
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-sm font-medium text-muted-foreground mb-1">Descripción</p>
-              <p className="text-base">{movement.product.description}</p>
-            </div>
-          )}
+            // Determinar la imagen a mostrar
+            const variantImages = variant?.images || [];
+            const variantPrimaryImage = variantImages.find((img: any) => img.isPrimary) || variantImages[0];
+            const productPrimaryImage = product?.images?.find((img: any) => img.isPrimary) || product?.images?.[0];
+            const displayImage = variantPrimaryImage?.url || productPrimaryImage?.url;
 
-          {movement.product?.price && (
-            <div className="mt-4 pt-4 border-t">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Precio Unitario</p>
-                  <p className="text-lg font-semibold">{formatCurrency(movement.product.price)}</p>
+            return (
+              <>
+                <div className="flex gap-6">
+                  {/* Imagen */}
+                  {displayImage && (
+                    <div className="flex-shrink-0">
+                      <div className="relative w-32 h-32 rounded-lg overflow-hidden border bg-muted">
+                        <Image
+                          src={displayImage}
+                          alt={variant?.name || product?.name || 'Producto'}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Información principal */}
+                  <div className="flex-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">
+                          {variant ? 'SKU' : 'Código'}
+                        </p>
+                        <p className="text-base font-semibold">
+                          {variant ? variant.sku : product?.code || 'N/A'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Cantidad</p>
+                        <p className="text-2xl font-bold text-primary">
+                          {movement.type === MovementType.SALIDA ? '-' : '+'}{movement.quantity}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Producto</p>
+                      <p className="text-lg font-semibold">
+                        {product?.name || 'N/A'}
+                        {variant?.name && <span className="text-muted-foreground"> - {variant.name}</span>}
+                      </p>
+                    </div>
+
+                    {/* Atributos de la variante */}
+                    {variant?.attributeValues && variant.attributeValues.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Atributos</p>
+                        <div className="flex flex-wrap gap-2">
+                          {variant.attributeValues.map((av: any) => (
+                            <Badge key={av.id} variant="secondary">
+                              {av.attributeValue?.attribute?.displayName || av.attributeValue?.attribute?.name}: {av.attributeValue?.displayName || av.attributeValue?.value}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {movement.product.cost && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Costo Unitario</p>
-                    <p className="text-lg font-semibold">{formatCurrency(movement.product.cost)}</p>
+
+                {product?.description && (
+                  <div className="mt-6 pt-6 border-t">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Descripción</p>
+                    <p className="text-base">{product.description}</p>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
+
+                {/* Precios y costos */}
+                {(variant?.price || product?.price) && (
+                  <div className="mt-6 pt-6 border-t">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Precio Unitario</p>
+                        <p className="text-lg font-semibold">
+                          {formatCurrency(variant?.price || product?.price || 0)}
+                        </p>
+                      </div>
+                      {(variant?.cost || product?.cost) && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Costo Unitario</p>
+                          <p className="text-lg font-semibold">
+                            {formatCurrency(variant?.cost || product?.cost || 0)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Código de barras */}
+                {(variant?.barcode || product?.barcode) && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Código de Barras</p>
+                    <p className="text-base font-mono">{variant?.barcode || product?.barcode}</p>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </CardContent>
       </Card>
 

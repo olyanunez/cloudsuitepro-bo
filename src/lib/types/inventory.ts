@@ -266,6 +266,70 @@ export interface CreateInventoryMovementDto {
   location?: string;
 }
 
+// New variant-based inventory movement interfaces
+export interface VariantInventoryMovement {
+  id: number;
+  type: MovementType;
+  variantId: number;
+  variant?: {
+    id: number;
+    sku: string;
+    barcode?: string;
+    name?: string;
+    price?: number;
+    cost?: number;
+    imageUrl?: string;
+    product?: {
+      id: number;
+      code: string;
+      name: string;
+    };
+    attributeValues?: Array<{
+      id: number;
+      attributeValue?: {
+        id: number;
+        value: string;
+        displayName: string;
+        attribute?: {
+          id: number;
+          name: string;
+          displayName: string;
+        };
+      };
+    }>;
+  };
+  sourceWarehouseId?: number;
+  sourceWarehouse?: Warehouse;
+  destinationWarehouseId?: number;
+  destinationWarehouse?: Warehouse;
+  quantity: number;
+  reference?: string;
+  notes?: string;
+  batchMovements?: BatchMovement[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateVariantInventoryMovementDto {
+  type: MovementType;
+  variantId: number;
+  sourceWarehouseId?: number;
+  destinationWarehouseId?: number;
+  quantity: number;
+  reference?: string;
+  notes?: string;
+  // Batch-related fields
+  existingBatchId?: number;
+  batchNumber?: string;
+  unitCost?: number;
+  expirationDate?: string;
+  manufacturingDate?: string;
+  supplierName?: string;
+  purchaseOrderRef?: string;
+  location?: string;
+}
+
 // Interfaces para reportes
 
 export interface StockValuationItem {

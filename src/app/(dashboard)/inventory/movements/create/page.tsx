@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MovementType, Product, Warehouse } from '@/lib/types/inventory';
-import { InventoryService, ProductService, WarehouseService } from '@/lib/services/inventoryService';
+import { MovementType, Warehouse, CreateVariantInventoryMovementDto } from '@/lib/types/inventory';
+import { InventoryService, WarehouseService } from '@/lib/services/inventoryService';
 import { BatchService } from '@/lib/services/batchService';
 import { Batch } from '@/lib/types/batch';
+import { ProductVariant, Product } from '@/lib/types/product';
+import { productVariantsService } from '@/lib/services/product-variants.service';
+import { ProductService } from '@/lib/services/inventoryService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,20 +23,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'react-hot-toast';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import Link from 'next/link';
-import { CreateInventoryMovementDto } from '@/lib/types/inventory';
 
 export default function CreateMovementPage() {
   const router = useRouter();
 
   // Data state
   const [products, setProducts] = useState<Product[]>([]);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [filteredVariants, setFilteredVariants] = useState<ProductVariant[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]); // Todos los almacenes (para destino)
   const [userWarehouses, setUserWarehouses] = useState<Warehouse[]>([]); // Almacenes del usuario (para origen)
   const [availableSourceWarehouses, setAvailableSourceWarehouses] = useState<Warehouse[]>([]);
 
   // Form state
   const [movementType, setMovementType] = useState<string>('');
-  const [productId, setProductId] = useState<string>('');
+  const [selectedProductId, setSelectedProductId] = useState<string>(''); // Para filtrar variantes
+  const [variantId, setVariantId] = useState<string>('');
   const [sourceWarehouseId, setSourceWarehouseId] = useState<string>('');
   const [destinationWarehouseId, setDestinationWarehouseId] = useState<string>('');
   const [quantity, setQuantity] = useState<string>('');
@@ -59,7 +64,7 @@ export default function CreateMovementPage() {
   const [saving, setSaving] = useState<boolean>(false);
   const [errors, setErrors] = useState<{
     type?: string;
-    productId?: string;
+    variantId?: string;
     sourceWarehouseId?: string;
     destinationWarehouseId?: string;
     quantity?: string;
@@ -72,13 +77,15 @@ export default function CreateMovementPage() {
     async function loadData() {
       try {
         setLoading(true);
-        const [productsData, allWarehousesData, userWarehousesData] = await Promise.all([
+        const [productsData, variantsData, allWarehousesData, userWarehousesData] = await Promise.all([
           ProductService.getProducts(),
+          productVariantsService.getAll(), // Cargar todas las variantes
           WarehouseService.getWarehouses(), // Todos los almacenes para destino
           WarehouseService.getUserWarehouses() // Almacenes del usuario para origen
         ]);
 
         setProducts(productsData);
+        setVariants(variantsData);
         setWarehouses(allWarehousesData);
         setUserWarehouses(userWarehousesData);
       } catch (error) {
@@ -92,22 +99,32 @@ export default function CreateMovementPage() {
     loadData();
   }, []);
 
-  // Cargar almacenes con stock del producto seleccionado
+  // Filter variants when a product is selected
+  useEffect(() => {
+    if (!selectedProductId || selectedProductId === 'all') {
+      setFilteredVariants(variants);
+    } else {
+      const filtered = variants.filter(v => v.productId === Number(selectedProductId));
+      setFilteredVariants(filtered);
+    }
+  }, [selectedProductId, variants]);
+
+  // Cargar almacenes con stock de la variante seleccionada
   useEffect(() => {
     async function loadWarehousesWithStock() {
-      if (!productId) {
+      if (!variantId) {
         setAvailableSourceWarehouses([]);
         return;
       }
 
       try {
-        // Obtener items de inventario para el producto seleccionado
-        const inventoryItems = await InventoryService.getItems(undefined, Number(productId));
+        // Obtener información de stock de la variante
+        const stockInfo = await productVariantsService.getTotalStock(Number(variantId));
 
-        // Filtrar almacenes que tienen stock (cantidad > 0)
-        const warehouseIdsWithStock = inventoryItems
-          .filter(item => item.quantity > 0)
-          .map(item => item.warehouseId);
+        // Obtener IDs de almacenes que tienen stock
+        const warehouseIdsWithStock = stockInfo.byWarehouse
+          .filter(wh => wh.quantity > 0)
+          .map(wh => wh.warehouse.id);
 
         // Filtrar la lista de almacenes del usuario para incluir solo los que tienen stock
         const warehousesWithStock = userWarehouses.filter(warehouse =>
@@ -128,29 +145,38 @@ export default function CreateMovementPage() {
     }
 
     loadWarehousesWithStock();
-  }, [productId, userWarehouses, sourceWarehouseId]);
+  }, [variantId, userWarehouses, sourceWarehouseId]);
 
-  // Cargar lotes disponibles cuando se selecciona producto y almacén destino para ENTRADA
+  // Cargar lotes disponibles cuando se selecciona variante y almacén destino para ENTRADA
   useEffect(() => {
     async function loadAvailableBatches() {
-      if (movementType !== MovementType.ENTRADA || !productId || !destinationWarehouseId || batchMode !== 'existing') {
+      if (movementType !== MovementType.ENTRADA || !variantId || !destinationWarehouseId || batchMode !== 'existing') {
         setAvailableBatches([]);
         return;
       }
 
       try {
         setLoadingBatches(true);
-        const batches = await BatchService.getAvailableBatches(Number(productId), Number(destinationWarehouseId));
+        // TODO: Update BatchService to accept variantId instead of productId
+        // For now, use the variant's productId to fetch batches
+        const selectedVariant = variants.find(v => v.id === Number(variantId));
+        if (!selectedVariant) {
+          setAvailableBatches([]);
+          return;
+        }
 
-        // Filtrar solo lotes activos y no vencidos/bloqueados
+        const batches = await BatchService.getAvailableBatches(selectedVariant.productId, Number(destinationWarehouseId));
+
+        // Filtrar solo lotes activos y no vencidos/bloqueados para esta variante específica
         const activeBatches = batches.filter(batch =>
-          batch.status === 'ACTIVE' || batch.status === 'RESERVED'
+          (batch.status === 'ACTIVE' || batch.status === 'RESERVED') &&
+          batch.variantId === Number(variantId)
         );
 
         setAvailableBatches(activeBatches);
 
         if (activeBatches.length === 0) {
-          toast.info('No hay lotes activos para este producto y almacén. Se creará un nuevo lote.');
+          toast.info('No hay lotes activos para esta variante y almacén. Se creará un nuevo lote.');
           setBatchMode('new');
         }
       } catch (error) {
@@ -163,7 +189,7 @@ export default function CreateMovementPage() {
     }
 
     loadAvailableBatches();
-  }, [productId, destinationWarehouseId, movementType, batchMode]);
+  }, [variantId, destinationWarehouseId, movementType, batchMode, variants]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -172,8 +198,8 @@ export default function CreateMovementPage() {
       newErrors.type = 'El tipo de movimiento es requerido';
     }
 
-    if (!productId) {
-      newErrors.productId = 'El producto es requerido';
+    if (!variantId) {
+      newErrors.variantId = 'La variante es requerida';
     }
 
     if ((movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA || movementType === MovementType.AJUSTE) && !sourceWarehouseId) {
@@ -232,9 +258,9 @@ export default function CreateMovementPage() {
     try {
       setSaving(true);
 
-      const movementData: CreateInventoryMovementDto = {
+      const movementData: CreateVariantInventoryMovementDto = {
         type: movementType as MovementType,
-        productId: Number(productId),
+        variantId: Number(variantId),
         quantity: isProductStockable ? Number(quantity) : 0,
         reference: reference || undefined,
         notes: notes || undefined
@@ -324,25 +350,18 @@ export default function CreateMovementPage() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="product" className="text-sm font-medium">
-                  Producto <span className="text-red-500">*</span>
+                <label htmlFor="product-filter" className="text-sm font-medium">
+                  Filtrar por Producto (Opcional)
                 </label>
-                <Select value={productId} onValueChange={(value) => {
-                  setProductId(value);
-                  // Actualizar si el producto es gastable
-                  const selectedProduct = products.find(p => p.id.toString() === value);
-                  if (selectedProduct) {
-                    setIsProductStockable(selectedProduct.isStockable);
-                    // Si el producto no es gastable, limpiar la cantidad
-                    if (!selectedProduct.isStockable) {
-                      setQuantity('');
-                    }
-                  }
+                <Select value={selectedProductId} onValueChange={(value) => {
+                  setSelectedProductId(value);
+                  setVariantId(''); // Reset variant selection when product filter changes
                 }}>
-                  <SelectTrigger id="product" className={errors.productId ? 'border-red-500' : ''}>
-                    <SelectValue placeholder="Seleccionar producto" />
+                  <SelectTrigger id="product-filter">
+                    <SelectValue placeholder="Todos los productos" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">Todos los productos</SelectItem>
                     {products.map(product => (
                       <SelectItem key={product.id} value={product.id.toString()}>
                         {product.name} ({product.code})
@@ -350,7 +369,63 @@ export default function CreateMovementPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.productId && <p className="text-red-500 text-xs mt-1">{errors.productId}</p>}
+                <p className="text-xs text-muted-foreground">
+                  Filtre las variantes por producto para facilitar la búsqueda
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="variant" className="text-sm font-medium">
+                  Variante <span className="text-red-500">*</span>
+                </label>
+                <Select value={variantId} onValueChange={(value) => {
+                  setVariantId(value);
+                  // Actualizar si el producto es gastable
+                  const selectedVariant = variants.find(v => v.id.toString() === value);
+                  if (selectedVariant && selectedVariant.product) {
+                    setIsProductStockable(selectedVariant.product.isStockable);
+                    // Si el producto no es gastable, limpiar la cantidad
+                    if (!selectedVariant.product.isStockable) {
+                      setQuantity('');
+                    }
+                  }
+                }}>
+                  <SelectTrigger id="variant" className={errors.variantId ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Seleccionar variante" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredVariants.length === 0 ? (
+                      <div className="p-2 text-sm text-muted-foreground text-center">
+                        No hay variantes disponibles
+                      </div>
+                    ) : (
+                      filteredVariants.map(variant => {
+                        // Build variant display name
+                        let displayName = variant.product?.name || 'Producto';
+                        if (variant.name) {
+                          displayName += ` - ${variant.name}`;
+                        }
+                        if (variant.attributeValues && variant.attributeValues.length > 0) {
+                          const attrs = variant.attributeValues
+                            .map(av => av.attributeValue?.displayName)
+                            .filter(Boolean)
+                            .join(', ');
+                          if (attrs) {
+                            displayName += ` (${attrs})`;
+                          }
+                        }
+                        displayName += ` [SKU: ${variant.sku}]`;
+
+                        return (
+                          <SelectItem key={variant.id} value={variant.id.toString()}>
+                            {displayName}
+                          </SelectItem>
+                        );
+                      })
+                    )}
+                  </SelectContent>
+                </Select>
+                {errors.variantId && <p className="text-red-500 text-xs mt-1">{errors.variantId}</p>}
               </div>
 
               {(movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA || movementType === MovementType.AJUSTE) && (
@@ -358,14 +433,14 @@ export default function CreateMovementPage() {
                   <label htmlFor="sourceWarehouse" className="text-sm font-medium">
                     Almacén {movementType === MovementType.AJUSTE ? '' : 'de Origen'} <span className="text-red-500">*</span>
                   </label>
-                  <Select value={sourceWarehouseId} onValueChange={setSourceWarehouseId} disabled={!productId}>
+                  <Select value={sourceWarehouseId} onValueChange={setSourceWarehouseId} disabled={!variantId}>
                     <SelectTrigger id="sourceWarehouse" className={errors.sourceWarehouseId ? 'border-red-500' : ''}>
-                      <SelectValue placeholder={!productId ? "Primero seleccione un producto" : `Seleccionar almacén ${movementType === MovementType.AJUSTE ? '' : 'de origen'}`} />
+                      <SelectValue placeholder={!variantId ? "Primero seleccione una variante" : `Seleccionar almacén ${movementType === MovementType.AJUSTE ? '' : 'de origen'}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableSourceWarehouses.length === 0 && productId ? (
+                      {availableSourceWarehouses.length === 0 && variantId ? (
                         <SelectItem value="no-stock" disabled>
-                          No hay almacenes con stock de este producto
+                          No hay almacenes con stock de esta variante
                         </SelectItem>
                       ) : (
                         availableSourceWarehouses.map(warehouse => (

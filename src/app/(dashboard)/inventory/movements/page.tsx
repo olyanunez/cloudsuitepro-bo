@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { InventoryMovement, MovementType, Product, Warehouse } from '@/lib/types/inventory';
+import { InventoryMovement, VariantInventoryMovement, MovementType, Product, Warehouse } from '@/lib/types/inventory';
 import { InventoryService, ProductService, WarehouseService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -21,8 +21,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { toast } from 'react-hot-toast';
 
+// Type guard to check if movement is variant-based
+function isVariantMovement(movement: InventoryMovement | VariantInventoryMovement): movement is VariantInventoryMovement {
+  return 'variantId' in movement && movement.variantId !== undefined;
+}
+
 export default function MovementsPage() {
-  const [movements, setMovements] = useState<InventoryMovement[]>([]);
+  const [movements, setMovements] = useState<(InventoryMovement | VariantInventoryMovement)[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -117,15 +122,37 @@ export default function MovementsPage() {
     return movements
       .filter(movement => {
         const searchTermLower = searchTerm.toLowerCase();
-        const productName = movement.product?.name?.toLowerCase() || '';
-        const reference = movement.reference?.toLowerCase() || '';
-        const notes = movement.notes?.toLowerCase() || '';
 
-        return (
-          productName.includes(searchTermLower) ||
-          reference.includes(searchTermLower) ||
-          notes.includes(searchTermLower)
-        );
+        // Get product/variant name based on movement type
+        let productName = '';
+        if (isVariantMovement(movement)) {
+          // New variant-based movement
+          productName = movement.variant?.product?.name?.toLowerCase() || '';
+          const variantSku = movement.variant?.sku?.toLowerCase() || '';
+          const variantName = movement.variant?.name?.toLowerCase() || '';
+
+          const reference = movement.reference?.toLowerCase() || '';
+          const notes = movement.notes?.toLowerCase() || '';
+
+          return (
+            productName.includes(searchTermLower) ||
+            variantSku.includes(searchTermLower) ||
+            variantName.includes(searchTermLower) ||
+            reference.includes(searchTermLower) ||
+            notes.includes(searchTermLower)
+          );
+        } else {
+          // Old product-based movement
+          productName = movement.product?.name?.toLowerCase() || '';
+          const reference = movement.reference?.toLowerCase() || '';
+          const notes = movement.notes?.toLowerCase() || '';
+
+          return (
+            productName.includes(searchTermLower) ||
+            reference.includes(searchTermLower) ||
+            notes.includes(searchTermLower)
+          );
+        }
       })
       .sort((a, b) => {
         if (sortField === 'createdAt') {
@@ -198,7 +225,7 @@ export default function MovementsPage() {
   };
 
   // Helper function to get batch numbers from movement
-  const getBatchNumbers = (movement: InventoryMovement) => {
+  const getBatchNumbers = (movement: InventoryMovement | VariantInventoryMovement) => {
     if (!movement.batchMovements || movement.batchMovements.length === 0) {
       return '-';
     }
@@ -407,10 +434,32 @@ export default function MovementsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {movement.product?.name || `Producto ID: ${movement.productId}`}
-                      </div>
-                      <div className="text-xs text-gray-500">{movement.product?.code || ''}</div>
+                      {isVariantMovement(movement) ? (
+                        <>
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {movement.variant?.product?.name || 'Producto'}
+                            {movement.variant?.name && ` - ${movement.variant.name}`}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            SKU: {movement.variant?.sku || 'N/A'}
+                            {movement.variant?.attributeValues && movement.variant.attributeValues.length > 0 && (
+                              <span className="ml-2">
+                                ({movement.variant.attributeValues
+                                  .map(av => av.attributeValue?.displayName)
+                                  .filter(Boolean)
+                                  .join(', ')})
+                              </span>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {movement.product?.name || `Producto ID: ${movement.productId}`}
+                          </div>
+                          <div className="text-xs text-gray-500">{movement.product?.code || ''}</div>
+                        </>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                       {movement.quantity}

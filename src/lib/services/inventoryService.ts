@@ -5,11 +5,13 @@ import {
   CreateBranchDto,
   CreateInventoryItemDto,
   CreateInventoryMovementDto,
+  CreateVariantInventoryMovementDto,
   CreateProductCategoryDto,
   CreateProductDto,
   CreateWarehouseDto,
   InventoryItem,
   InventoryMovement,
+  VariantInventoryMovement,
   LowStockReport,
   MovementType,
   Product,
@@ -250,7 +252,7 @@ export const InventoryService = {
     return apiGet(`/inventory/movements/${id}`);
   },
 
-  createMovement: async (data: CreateInventoryMovementDto): Promise<InventoryMovement> => {
+  createMovement: async (data: CreateInventoryMovementDto | CreateVariantInventoryMovementDto): Promise<InventoryMovement | VariantInventoryMovement> => {
     return apiPost('/inventory/movements', data);
   },
 
