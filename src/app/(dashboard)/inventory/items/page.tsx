@@ -82,9 +82,11 @@ export default function InventoryItemsPage() {
     return items
       .filter(item => {
         const searchTermLower = searchTerm.toLowerCase();
+        const productName = (item as any).variant?.product?.name || item.product?.name || '';
+        const warehouseName = item.warehouse?.name || '';
         return (
-          (item.product?.name?.toLowerCase().includes(searchTermLower) || false) ||
-          (item.warehouse?.name?.toLowerCase().includes(searchTermLower) || false)
+          productName.toLowerCase().includes(searchTermLower) ||
+          warehouseName.toLowerCase().includes(searchTermLower)
         );
       })
       .sort((a, b) => {
@@ -92,8 +94,8 @@ export default function InventoryItemsPage() {
         let fieldB: string | number | Date;
 
         if (sortField === 'product.name') {
-          fieldA = a.product?.name?.toLowerCase() || '';
-          fieldB = b.product?.name?.toLowerCase() || '';
+          fieldA = ((a as any).variant?.product?.name || a.product?.name || '').toLowerCase();
+          fieldB = ((b as any).variant?.product?.name || b.product?.name || '').toLowerCase();
         } else if (sortField === 'warehouse.name') {
           fieldA = a.warehouse?.name?.toLowerCase() || '';
           fieldB = b.warehouse?.name?.toLowerCase() || '';
@@ -241,7 +243,9 @@ export default function InventoryItemsPage() {
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {paginatedItems.map((item) => {
-                const primaryImage = item.product?.images?.find(img => img.isPrimary) || item.product?.images?.[0];
+                const itemAny = item as any;
+                const product = itemAny.variant?.product || item.product;
+                const primaryImage = product?.images?.find((img: any) => img.isPrimary) || product?.images?.[0];
 
                 return (
                   <tr key={item.id}>
@@ -250,7 +254,7 @@ export default function InventoryItemsPage() {
                         {primaryImage ? (
                           <Image
                             src={primaryImage.url}
-                            alt={item.product?.name || 'Producto'}
+                            alt={product?.name || 'Producto'}
                             fill
                             className="object-cover"
                           />
@@ -263,10 +267,10 @@ export default function InventoryItemsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {item.product?.name || 'N/A'}
+                        {product?.name || 'N/A'}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {item.product?.code || 'Sin código'}
+                        {product?.code || 'Sin código'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">

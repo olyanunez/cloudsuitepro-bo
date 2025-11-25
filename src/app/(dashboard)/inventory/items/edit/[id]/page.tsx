@@ -138,6 +138,9 @@ export default function EditInventoryItemPage() {
     );
   }
 
+  const itemAny = item as any;
+  const product = itemAny.variant?.product || item.product;
+
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6 flex items-center">
@@ -157,15 +160,15 @@ export default function EditInventoryItemPage() {
               <Label htmlFor="product">Producto</Label>
               <Input
                 id="product"
-                value={item.product?.name || 'N/A'}
+                value={product?.name || 'N/A'}
                 disabled
                 className="mt-1 bg-gray-100 dark:bg-gray-700"
               />
               <p className="text-xs text-gray-500 mt-1">No se puede cambiar el producto</p>
 
               {/* Product Image Preview */}
-              {item.product && (() => {
-                const primaryImage = item.product.images?.find(img => img.isPrimary) || item.product.images?.[0];
+              {product && (() => {
+                const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
 
                 return (
                   <div className="mt-3 p-3 border border-gray-200 dark:border-gray-600 rounded-md">
@@ -174,7 +177,7 @@ export default function EditInventoryItemPage() {
                         {primaryImage ? (
                           <Image
                             src={primaryImage.url}
-                            alt={item.product.name}
+                            alt={product.name}
                             fill
                             className="object-cover"
                           />
@@ -186,13 +189,13 @@ export default function EditInventoryItemPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {item.product.name}
+                          {product.name}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Código: {item.product.code}
+                          Código: {product.code}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Precio: ${item.product.price}
+                          Precio: ${product.price}
                         </p>
                       </div>
                     </div>

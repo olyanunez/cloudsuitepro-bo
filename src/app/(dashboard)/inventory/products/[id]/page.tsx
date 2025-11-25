@@ -71,17 +71,23 @@ export default function ProductDetailPage() {
     );
   }
 
+  const defaultVariant = product.variants?.[0];
+
   // Formatear el precio en moneda local (DOP)
-  const formattedPrice = new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP'
-  }).format(product.price);
+  const formattedPrice = defaultVariant?.price
+    ? new Intl.NumberFormat('es-DO', {
+        style: 'currency',
+        currency: 'DOP'
+      }).format(defaultVariant.price)
+    : 'N/A';
 
   // Formatear el costo en moneda local (DOP)
-  const formattedCost = new Intl.NumberFormat('es-DO', {
-    style: 'currency',
-    currency: 'DOP'
-  }).format(product.cost || 0);
+  const formattedCost = defaultVariant?.cost
+    ? new Intl.NumberFormat('es-DO', {
+        style: 'currency',
+        currency: 'DOP'
+      }).format(defaultVariant.cost)
+    : 'N/A';
 
   return (
     <div className="container mx-auto py-8">
@@ -216,6 +222,125 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
+      {/* Variants Section */}
+      {product.variants && product.variants.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">
+            {product.hasVariants ? 'Variantes del Producto' : 'Información de Variante'}
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    SKU
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Nombre
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Código de Barras
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Atributos
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Precio
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Costo
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Estado
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {product.variants.map((variant) => (
+                  <tr key={variant.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        {variant.images && variant.images.length > 0 ? (
+                          <div className="relative w-12 h-12 flex-shrink-0 rounded overflow-hidden border border-gray-200 dark:border-gray-600">
+                            <Image
+                              src={variant.images.find(img => img.isPrimary)?.url || variant.images[0].url}
+                              alt={variant.name || variant.sku}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 flex-shrink-0 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                            <ImageIcon className="h-6 w-6 text-gray-400" />
+                          </div>
+                        )}
+                        <div>
+                          <div className="text-sm font-mono text-gray-900 dark:text-white">
+                            {variant.sku}
+                          </div>
+                          {variant.isDefault && (
+                            <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100 rounded px-2 py-0.5">
+                              Por defecto
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {variant.name || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-white">
+                      {variant.barcode || '-'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                      {variant.attributeValues && variant.attributeValues.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {variant.attributeValues.map((av) => (
+                            <span
+                              key={av.id}
+                              className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs"
+                            >
+                              {av.attribute?.displayName}: {av.displayName}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {variant.price
+                        ? new Intl.NumberFormat('es-DO', {
+                            style: 'currency',
+                            currency: 'DOP'
+                          }).format(variant.price)
+                        : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      {variant.cost
+                        ? new Intl.NumberFormat('es-DO', {
+                            style: 'currency',
+                            currency: 'DOP'
+                          }).format(variant.cost)
+                        : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        variant.isActive
+                          ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                          : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                      }`}>
+                        {variant.isActive ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Bottom Section: Additional Information - Full Width */}
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4">Información Adicional</h2>
@@ -229,8 +354,12 @@ export default function ProductDetailPage() {
             <p>{product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : 'N/A'}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Código de Barras</p>
-            <p className="font-mono">{product.barcode || 'N/A'}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Código de Barras (Variante Principal)</p>
+            <p className="font-mono">{defaultVariant?.barcode || 'N/A'}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Total de Variantes</p>
+            <p>{product.variants?.length || 0}</p>
           </div>
         </div>
       </div>

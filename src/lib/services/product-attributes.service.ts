@@ -1,4 +1,6 @@
-import axios from 'axios';
+"use client";
+
+import { apiGet, apiPost, apiPatch, apiDelete } from './apiService';
 import {
   ProductAttribute,
   CreateProductAttributeDto,
@@ -7,36 +9,29 @@ import {
   UpdateAttributeValueDto,
 } from '../types/product';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
 export const productAttributesService = {
   async getAll(): Promise<ProductAttribute[]> {
-    const response = await axios.get(`${API_URL}/product-attributes`);
-    return response.data;
+    return await apiGet<ProductAttribute[]>('/product-attributes');
   },
 
   async getById(id: number): Promise<ProductAttribute> {
-    const response = await axios.get(`${API_URL}/product-attributes/${id}`);
-    return response.data;
+    return await apiGet<ProductAttribute>(`/product-attributes/${id}`);
   },
 
   async create(data: CreateProductAttributeDto): Promise<ProductAttribute> {
-    const response = await axios.post(`${API_URL}/product-attributes`, data);
-    return response.data;
+    return await apiPost<ProductAttribute>('/product-attributes', data);
   },
 
   async update(id: number, data: UpdateProductAttributeDto): Promise<ProductAttribute> {
-    const response = await axios.patch(`${API_URL}/product-attributes/${id}`, data);
-    return response.data;
+    return await apiPatch<ProductAttribute>(`/product-attributes/${id}`, data);
   },
 
   async delete(id: number): Promise<void> {
-    await axios.delete(`${API_URL}/product-attributes/${id}`);
+    await apiDelete(`/product-attributes/${id}`);
   },
 
   async addValue(attributeId: number, data: CreateAttributeValueDto): Promise<ProductAttribute> {
-    const response = await axios.post(`${API_URL}/product-attributes/${attributeId}/values`, data);
-    return response.data;
+    return await apiPost<ProductAttribute>(`/product-attributes/${attributeId}/values`, data);
   },
 
   async updateValue(
@@ -44,14 +39,13 @@ export const productAttributesService = {
     valueId: number,
     data: UpdateAttributeValueDto
   ): Promise<ProductAttribute> {
-    const response = await axios.patch(
-      `${API_URL}/product-attributes/${attributeId}/values/${valueId}`,
+    return await apiPatch<ProductAttribute>(
+      `/product-attributes/${attributeId}/values/${valueId}`,
       data
     );
-    return response.data;
   },
 
   async deleteValue(attributeId: number, valueId: number): Promise<void> {
-    await axios.delete(`${API_URL}/product-attributes/${attributeId}/values/${valueId}`);
+    await apiDelete(`/product-attributes/${attributeId}/values/${valueId}`);
   },
 };

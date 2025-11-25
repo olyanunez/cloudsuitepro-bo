@@ -58,8 +58,8 @@ export default function ProductsPage() {
 
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<'name' | 'code' | 'price' | 'createdAt' | 'isActive'>('name');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortField, setSortField] = useState<'name' | 'code' | 'price' | 'createdAt' | 'isActive'>('createdAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -155,12 +155,12 @@ export default function ProductsPage() {
           fieldB = b.createdAt ? new Date(b.createdAt) : new Date(0);
         } else if (sortField === 'isActive') {
           // Manejar el campo booleano
-          fieldA = a.isActive;
-          fieldB = b.isActive;
+          fieldA = a.isActive ?? false;
+          fieldB = b.isActive ?? false;
         } else if (sortField === 'price') {
-          // Manejar el campo numérico
-          fieldA = a.price;
-          fieldB = b.price;
+          // Manejar el campo numérico - obtener precio de la variante por defecto
+          fieldA = a.variants?.[0]?.price || 0;
+          fieldB = b.variants?.[0]?.price || 0;
         } else {
           // Asegurarse de que los campos sean strings
           fieldA = (a[sortField] as string)?.toLowerCase() || '';
@@ -345,6 +345,7 @@ export default function ProductsPage() {
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {paginatedProducts.map((product) => {
                 const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+                const defaultVariant = product.variants?.[0];
 
                 return (
                   <tr key={product.id}>
@@ -374,7 +375,7 @@ export default function ProductsPage() {
                     </td>
                     <td className={getTableCellClass("px-6 py-4 whitespace-nowrap")}>
                       <div className="text-sm font-mono text-gray-900 dark:text-white">
-                        {product.barcode || 'N/A'}
+                        {defaultVariant?.barcode || 'N/A'}
                       </div>
                     </td>
                     <td className={getTableCellClass("px-6 py-4 whitespace-nowrap")}>
@@ -383,7 +384,7 @@ export default function ProductsPage() {
                       </div>
                     </td>
                     <td className={getTableCellClass("px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300")}>
-                      {formatCurrency(product.price)}
+                      {defaultVariant?.price ? formatCurrency(defaultVariant.price) : 'N/A'}
                     </td>
                     <td className={getTableCellClass("px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300")}>
                       {product.category?.name || `Categoría #${product.categoryId}`}

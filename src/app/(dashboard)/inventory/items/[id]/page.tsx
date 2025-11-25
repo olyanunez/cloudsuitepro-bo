@@ -60,7 +60,9 @@ export default function InventoryItemDetailPage() {
     );
   }
 
-  const productImages = item.product?.images || [];
+  const itemAny = item as any;
+  const product = itemAny.variant?.product || item.product;
+  const productImages = product?.images || [];
   const hasImages = productImages.length > 0;
 
   const nextImage = () => {
@@ -102,7 +104,7 @@ export default function InventoryItemDetailPage() {
                 <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                   <Image
                     src={productImages[selectedImageIndex].url}
-                    alt={`${item.product?.name} - ${selectedImageIndex + 1}`}
+                    alt={`${product?.name} - ${selectedImageIndex + 1}`}
                     fill
                     className="object-cover"
                   />
@@ -174,8 +176,8 @@ export default function InventoryItemDetailPage() {
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Producto</p>
-                <p className="font-medium">{item.product?.name || 'N/A'}</p>
-                <p className="text-xs text-gray-500">{item.product?.code || 'Sin código'}</p>
+                <p className="font-medium">{product?.name || 'N/A'}</p>
+                <p className="text-xs text-gray-500">{product?.code || 'Sin código'}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Almacén</p>
@@ -214,41 +216,41 @@ export default function InventoryItemDetailPage() {
 
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
             <h2 className="text-xl font-semibold mb-4">Información del Producto</h2>
-            {!item.product ? (
+            {!product ? (
               <p className="text-gray-500 dark:text-gray-400">No hay información disponible sobre el producto.</p>
             ) : (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Nombre del Producto</p>
-                    <p className="font-medium">{item.product.name}</p>
+                    <p className="font-medium">{product.name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Código</p>
-                    <p className="font-medium">{item.product.code}</p>
+                    <p className="font-medium">{product.code}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Precio</p>
-                    <p className="font-medium">{formatCurrency(typeof item.product.price === 'number' ? item.product.price : parseFloat(item.product.price || '0'))}</p>
+                    <p className="font-medium">{formatCurrency(typeof product.price === 'number' ? product.price : parseFloat(product.price || '0'))}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Costo</p>
-                    <p className="font-medium">{formatCurrency(typeof item.product.cost === 'number' ? item.product.cost : parseFloat(item.product.cost || '0'))}</p>
+                    <p className="font-medium">{formatCurrency(typeof product.cost === 'number' ? product.cost : parseFloat(product.cost || '0'))}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Categoría</p>
-                    <p className="font-medium">{item.product.category?.name || 'Sin categoría'}</p>
+                    <p className="font-medium">{product.category?.name || 'Sin categoría'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Estado</p>
-                    <p className="font-medium">{item.product.isActive ? 'Activo' : 'Inactivo'}</p>
+                    <p className="font-medium">{product.isActive ? 'Activo' : 'Inactivo'}</p>
                   </div>
                 </div>
 
-                {item.product.description && (
+                {product.description && (
                   <div className="mt-4">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Descripción</p>
-                    <p className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">{item.product.description}</p>
+                    <p className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">{product.description}</p>
                   </div>
                 )}
               </div>
