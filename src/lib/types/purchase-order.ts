@@ -10,15 +10,21 @@ export enum PurchaseOrderStatus {
 export interface PurchaseOrderItem {
   id: number;
   purchaseOrderId: number;
-  productId: number;
-  product?: {
+  variantId: number;
+  variant: {
     id: number;
-    code: string;
-    name: string;
-    barcode?: string;
-    category?: {
+    sku: string;
+    name: string | null;
+    product: {
       id: number;
+      code: string;
       name: string;
+      description: string;
+      barcode?: string;
+      category?: {
+        id: number;
+        name: string;
+      };
     };
   };
   quantity: number;

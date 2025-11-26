@@ -230,21 +230,16 @@ export default function ReceivePurchaseOrderPage() {
 
                       const pendingQty = orderItem.quantity - orderItem.receivedQty;
 
-                      // Extract variant and product information
-                      const itemAny = orderItem as any;
-                      const variant = itemAny.variant;
-                      const product = variant?.product || orderItem.product;
-
                       return (
                         <tr key={index}>
                           <td className="px-4 py-2">
                             <div>
-                              <div className="font-medium">{product?.name}</div>
-                              {variant?.name && (
-                                <div className="text-sm text-muted-foreground">{variant.name}</div>
+                              <div className="font-medium">{orderItem.variant.product.name}</div>
+                              {orderItem.variant.name && (
+                                <div className="text-sm text-muted-foreground">{orderItem.variant.name}</div>
                               )}
                               <div className="text-xs text-muted-foreground">
-                                SKU: {variant?.sku || product?.code}
+                                SKU: {orderItem.variant.sku}
                               </div>
                             </div>
                           </td>
