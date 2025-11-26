@@ -358,13 +358,12 @@ export function printInvoice({
               ${invoice.items.map(item => {
                 // Calcular ITBIS por item (precio incluye ITBIS)
                 const totalWithItbis = parseFloat(item.total.toString());
-                const itbisAmount = totalWithItbis * (itbisRate / (100 + itbisRate));
+                const itbisAmount = totalWithItbis * (itbisRate / (1 + itbisRate));
 
                 return `
                 <tr>
                   <td>
-                    <div class="product-name">${item.product.name}</div>
-                    <div class="product-code">Cód: ${item.product.code}</div>
+                    <div class="product-name">${item.variant.product.name}${item.variant.name ? ` - ${item.variant.name}` : ''}</div>
                   </td>
                   <td class="text-center">${item.quantity}</td>
                   <td class="text-right">${formatCurrency(item.unitPrice)}</td>
@@ -381,7 +380,7 @@ export function printInvoice({
             ${(() => {
               // Calcular totales con ITBIS
               const totalWithItbis = parseFloat(invoice.total.toString());
-              const totalItbis = totalWithItbis * (itbisRate / (100 + itbisRate));
+              const totalItbis = totalWithItbis * (itbisRate / (1 + itbisRate));
               const subtotalWithoutItbis = totalWithItbis - totalItbis;
 
               return `
@@ -390,7 +389,7 @@ export function printInvoice({
                   <span class="value">${formatCurrency(subtotalWithoutItbis)}</span>
                 </div>
                 <div class="row itbis-row">
-                  <span class="label">ITBIS (${itbisRate}%):</span>
+                  <span class="label">ITBIS (${(itbisRate * 100).toFixed(0)}%):</span>
                   <span class="value">${formatCurrency(totalItbis)}</span>
                 </div>
                 ${parseFloat(invoice.discount) > 0 ? `

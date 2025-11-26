@@ -28,7 +28,7 @@ export interface ProductStock {
 }
 
 export interface InvoiceItem {
-  productId: number;
+  variantId: number;
   quantity: number;
   unitPrice: number;
   discount?: number;
@@ -79,19 +79,23 @@ export interface Invoice {
   updatedAt: string;
   items: Array<{
     id: number;
-    productId: number;
+    variantId: number;
     quantity: number;
     unitPrice: string;
     discount: string;
     subtotal: string;
     tax: string;
     total: string;
-    product: {
+    variant: {
       id: number;
-      code: string;
-      name: string;
-      description: string;
-      price: string;
+      sku: string;
+      name: string | null;
+      product: {
+        id: number;
+        code: string;
+        name: string;
+        description: string;
+      };
     };
   }>;
   branch?: {

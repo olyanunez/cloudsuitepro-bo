@@ -550,7 +550,7 @@ export default function PosPage() {
     setProcessingPayment(true);
     try {
       const items: InvoiceItem[] = cart.map((item) => ({
-        productId: item.id,
+        variantId: item.id,
         quantity: item.cartQuantity,
         unitPrice: parseFloat(item.price),
       }));
@@ -573,8 +573,8 @@ export default function PosPage() {
         customerName: sellAsFinalConsumer
           ? undefined
           : (selectedCustomer
-              ? `${selectedCustomer.name}${selectedCustomer.lastName ? ` ${selectedCustomer.lastName}` : ''}`
-              : (manualCustomerName.trim() || undefined)),
+            ? `${selectedCustomer.name}${selectedCustomer.lastName ? ` ${selectedCustomer.lastName}` : ''}`
+            : (manualCustomerName.trim() || undefined)),
         items,
         cashSessionId: currentSession.id,
         sendEmail,
@@ -757,13 +757,16 @@ export default function PosPage() {
 
   // Función para imprimir la factura
   const handlePrintInvoice = () => {
-    if (!completedInvoice) return;
+    if (!completedInvoice || !ncfConfig) return;
 
     try {
+      // Convertir itbisRate de porcentaje a decimal si es necesario
+      const itbisRate = ncfConfig.itbisRate > 1 ? ncfConfig.itbisRate / 100 : ncfConfig.itbisRate;
+
       printInvoice({
         invoice: completedInvoice,
         tenantInfo,
-        itbisRate: ncfConfig?.itbisRate || 18,
+        itbisRate,
         includeLogo: tenantSettings?.includeLogo ?? true,
         invoiceFooter: tenantSettings?.invoiceFooter || undefined,
         termsAndConditions: tenantSettings?.termsAndConditions || undefined,
@@ -790,6 +793,10 @@ export default function PosPage() {
       CHECK: 'Cheque',
       CREDIT: 'Crédito',
     };
+
+    // Convertir itbisRate de porcentaje a decimal si es necesario
+    const itbisRateRaw = ncfConfig?.itbisRate ?? 18;
+    const itbisRate = itbisRateRaw > 1 ? itbisRateRaw / 100 : itbisRateRaw;
 
     const printContent_OLD = `
       <!DOCTYPE html>
@@ -1025,10 +1032,10 @@ export default function PosPage() {
               <div class="ncf-row">
                 <span class="ncf-label">NCF Válido hasta:</span>
                 <span class="ncf-validity">${new Date(completedInvoice.ncfValidUntil).toLocaleDateString('es-DO', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}</span>
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })}</span>
               </div>
               ` : ''}
             </div>
@@ -1044,9 +1051,9 @@ export default function PosPage() {
                 <div class="row">
                   <span class="label">Fecha:</span>
                   <span class="value">${new Date(completedInvoice.createdAt).toLocaleString('es-DO', {
-                    dateStyle: 'short',
-                    timeStyle: 'short'
-                  })}</span>
+      dateStyle: 'short',
+      timeStyle: 'short'
+    })}</span>
                 </div>
                 <div class="row">
                   <span class="label">Sucursal:</span>
@@ -1102,16 +1109,15 @@ export default function PosPage() {
               </thead>
               <tbody>
                 ${completedInvoice.items.map(item => {
-                  // Calcular ITBIS por item (precio incluye ITBIS)
-                  const totalWithItbis = parseFloat(item.total.toString());
-                  const itbisAmount = totalWithItbis * (itbisRate / (100 + itbisRate));
-                  const subtotalItem = totalWithItbis - itbisAmount;
+      // Calcular ITBIS por item (precio incluye ITBIS)
+      const totalWithItbis = parseFloat(item.total.toString());
+      const itbisAmount = totalWithItbis * (itbisRate / (1 + itbisRate));
+      const subtotalItem = totalWithItbis - itbisAmount;
 
-                  return `
+      return `
                   <tr>
                     <td>
-                      <div class="product-name">${item.product.name}</div>
-                      <div class="product-code">Cód: ${item.product.code}</div>
+                      <div class="product-name">${item.variant.product.name}${item.variant.name ? ` - ${item.variant.name}` : ''}</div>
                     </td>
                     <td class="text-center">${item.quantity}</td>
                     <td class="text-right">${formatCurrency(item.unitPrice)}</td>
@@ -1119,25 +1125,25 @@ export default function PosPage() {
                     <td class="text-right">${formatCurrency(item.total)}</td>
                   </tr>
                   `;
-                }).join('')}
+    }).join('')}
               </tbody>
             </table>
 
             <!-- Totales con desglose de ITBIS -->
             <div class="totals">
               ${(() => {
-                // Calcular totales con ITBIS
-                const totalWithItbis = parseFloat(completedInvoice.total.toString());
-                const totalItbis = totalWithItbis * (itbisRate / (100 + itbisRate));
-                const subtotalWithoutItbis = totalWithItbis - totalItbis;
+        // Calcular totales con ITBIS
+        const totalWithItbis = parseFloat(completedInvoice.total.toString());
+        const totalItbis = totalWithItbis * (itbisRate / (1 + itbisRate));
+        const subtotalWithoutItbis = totalWithItbis - totalItbis;
 
-                return `
+        return `
                   <div class="row">
                     <span class="label">Subtotal (sin ITBIS):</span>
                     <span class="value">${formatCurrency(subtotalWithoutItbis)}</span>
                   </div>
                   <div class="row itbis-row">
-                    <span class="label">ITBIS (${itbisRate}%):</span>
+                    <span class="label">ITBIS (${(itbisRate * 100).toFixed(0)}%):</span>
                     <span class="value">${formatCurrency(totalItbis)}</span>
                   </div>
                   ${parseFloat(completedInvoice.discount) > 0 ? `
@@ -1151,7 +1157,7 @@ export default function PosPage() {
                     <span class="value">${formatCurrency(completedInvoice.total)}</span>
                   </div>
                 `;
-              })()}
+      })()}
             </div>
 
             <!-- Footer -->
@@ -1202,927 +1208,932 @@ export default function PosPage() {
           icon="shopping-cart"
           description={`Sucursal: ${userBranches.find((ub) => ub.branch.id === activeBranchId)?.branch.name || 'No seleccionada'}`}
         >
-        <div className="flex flex-col items-end gap-2">
-          {currentSession && (
-            <div className="flex items-center gap-2">
-              <div className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded-md text-sm font-medium">
-                Sesión #{currentSession.sessionNumber} - Abierta
-              </div>
-              <span className="text-xs text-muted-foreground">
-                Apertura: {formatCurrency(currentSession.openingAmount)}
-              </span>
-            </div>
-          )}
-          <div className="flex gap-2">
-          {/* Botón de toggle de sonidos */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleToggleSound}
-            className="shadow-sm"
-            title={soundEnabled ? 'Silenciar sonidos' : 'Activar sonidos'}
-          >
-            {soundEnabled ? (
-              <Volume2 className="h-4 w-4" />
-            ) : (
-              <VolumeX className="h-4 w-4 text-muted-foreground" />
-            )}
-          </Button>
-
-          {!currentSession ? (
-            <Button
-              onClick={handleOpenSession}
-              disabled={loadingSession}
-            // className="bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all"
-            >
-              <LogIn className="h-4 w-4 mr-2" />
-              Abrir Caja
-            </Button>
-          ) : (
-            <Button
-              onClick={handleCloseSession}
-            // className="bg-orange-600 hover:bg-orange-700 text-white shadow-md hover:shadow-lg transition-all"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Cerrar Caja
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            onClick={openCancelDialog}
-            className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground shadow-sm"
-          >
-            <XCircle className="h-4 w-4 mr-2" />
-            Cancelar Factura
-          </Button>
-          </div>
-        </div>
-      </PageHeader>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Panel de búsqueda y productos */}
-        <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Search className="h-5 w-5" />
-                Buscar Productos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative">
-                <Input
-                  placeholder="Buscar o escanear código de barras..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full ${isScannerDetected ? 'ring-2 ring-green-500' : ''}`}
-                  autoFocus
-                />
-                {loading && (
-                  <div className="absolute right-3 top-3">
-                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-                  </div>
-                )}
-                {isScannerDetected && (
-                  <div className="absolute right-3 top-3">
-                    <div className="h-4 w-4 bg-green-500 rounded-full flex items-center justify-center">
-                      <svg className="h-3 w-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                        <path d="M5 13l4 4L19 7"></path>
-                      </svg>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Resultados de búsqueda */}
-              {searchQuery.trim() && !loading && searchResults.length === 0 && (
-                <div className="mt-4 border rounded-lg p-8 text-center">
-                  <Search className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-30" />
-                  <p className="text-muted-foreground font-medium">No se encontraron productos</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Intenta con otro término de búsqueda
-                  </p>
+          <div className="flex flex-col items-end gap-2">
+            {currentSession && (
+              <div className="flex items-center gap-2">
+                <div className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded-md text-sm font-medium">
+                  Sesión #{currentSession.sessionNumber} - Abierta
                 </div>
+                <span className="text-xs text-muted-foreground">
+                  Apertura: {formatCurrency(currentSession.openingAmount)}
+                </span>
+              </div>
+            )}
+            <div className="flex gap-2">
+              {/* Botón de toggle de sonidos */}
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleToggleSound}
+                className="shadow-sm"
+                title={soundEnabled ? 'Silenciar sonidos' : 'Activar sonidos'}
+              >
+                {soundEnabled ? (
+                  <Volume2 className="h-4 w-4" />
+                ) : (
+                  <VolumeX className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+
+              {!currentSession ? (
+                <Button
+                  onClick={handleOpenSession}
+                  disabled={loadingSession}
+                // className="bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Abrir Caja
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleCloseSession}
+                // className="bg-orange-600 hover:bg-orange-700 text-white shadow-md hover:shadow-lg transition-all"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Cerrar Caja
+                </Button>
               )}
+              <Button
+                variant="outline"
+                onClick={openCancelDialog}
+                className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground shadow-sm"
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Cancelar Factura
+              </Button>
+            </div>
+          </div>
+        </PageHeader>
 
-              {searchResults.length > 0 && (
-                <div className="mt-4 border rounded-lg divide-y max-h-96 overflow-y-auto">
-                  {searchResults.map((product) => {
-                    const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Panel de búsqueda y productos */}
+          <div className="lg:col-span-2 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Search className="h-5 w-5" />
+                  Buscar Productos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="relative">
+                  <Input
+                    placeholder="Buscar o escanear código de barras..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={`w-full ${isScannerDetected ? 'ring-2 ring-green-500' : ''}`}
+                    autoFocus
+                  />
+                  {loading && (
+                    <div className="absolute right-3 top-3">
+                      <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                    </div>
+                  )}
+                  {isScannerDetected && (
+                    <div className="absolute right-3 top-3">
+                      <div className="h-4 w-4 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg className="h-3 w-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                          <path d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                    return (
-                      <div
-                        key={product.id}
-                        className="p-4 hover:bg-muted/50 cursor-pointer transition-colors"
-                        onClick={() => addToCart(product)}
-                      >
-                        <div className="flex items-start gap-4">
-                          {/* Imagen del producto */}
-                          <div className="relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
-                            {primaryImage ? (
-                              <Image
-                                src={primaryImage.url}
-                                alt={product.name}
-                                fill
-                                className="object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <ImageIcon className="h-10 w-10 text-gray-400" />
+                {/* Resultados de búsqueda */}
+                {searchQuery.trim() && !loading && searchResults.length === 0 && (
+                  <div className="mt-4 border rounded-lg p-8 text-center">
+                    <Search className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-30" />
+                    <p className="text-muted-foreground font-medium">No se encontraron productos</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Intenta con otro término de búsqueda
+                    </p>
+                  </div>
+                )}
+
+                {searchResults.length > 0 && (
+                  <div className="mt-4 border rounded-lg divide-y max-h-96 overflow-y-auto">
+                    {searchResults.map((product) => {
+                      const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+
+                      return (
+                        <div
+                          key={product.id}
+                          className="p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                          onClick={() => addToCart(product)}
+                        >
+                          <div className="flex items-start gap-4">
+                            {/* Imagen del producto */}
+                            <div className="relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
+                              {primaryImage ? (
+                                <Image
+                                  src={primaryImage.url}
+                                  alt={product.name}
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <ImageIcon className="h-10 w-10 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Información del producto */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium">{product.name}</p>
+                                <Badge variant="outline">{product.code}</Badge>
                               </div>
-                            )}
-                          </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {product.description}
+                              </p>
+                              <div className="flex items-center gap-3 mt-2">
+                                <Badge variant="secondary">
+                                  {product.category.name}
+                                </Badge>
+                                <span className="text-sm text-muted-foreground">
+                                  Stock: {product.stock.quantity}
+                                </span>
+                              </div>
+                            </div>
 
-                          {/* Información del producto */}
-                          <div className="flex-1 min-w-0">
+                            {/* Precio */}
+                            <div className="text-right flex-shrink-0">
+                              <p className="text-lg font-bold text-primary">
+                                {formatCurrency(product.price)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Panel del carrito */}
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <ShoppingCart className="h-5 w-5" />
+                    Carrito
+                  </span>
+                  {cart.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearCart}
+                      className="text-destructive"
+                    >
+                      Limpiar
+                    </Button>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {cart.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                    <p>El carrito está vacío</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                      {cart.map((item) => (
+                        <div key={item.id} className="border rounded-lg p-3">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{item.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {formatCurrency(item.price)} c/u
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-destructive shrink-0"
+                              onClick={() => removeFromCart(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <p className="font-medium">{product.name}</p>
-                              <Badge variant="outline">{product.code}</Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {product.description}
-                            </p>
-                            <div className="flex items-center gap-3 mt-2">
-                              <Badge variant="secondary">
-                                {product.category.name}
-                              </Badge>
-                              <span className="text-sm text-muted-foreground">
-                                Stock: {product.stock.quantity}
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => decreaseQuantity(item.id)}
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <span className="w-8 text-center font-medium">
+                                {item.cartQuantity}
                               </span>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => increaseQuantity(item.id)}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
                             </div>
-                          </div>
-
-                          {/* Precio */}
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-lg font-bold text-primary">
-                              {formatCurrency(product.price)}
+                            <p className="font-bold">
+                              {formatCurrency(parseFloat(item.price) * item.cartQuantity)}
                             </p>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                      ))}
+                    </div>
 
-        {/* Panel del carrito */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <ShoppingCart className="h-5 w-5" />
-                  Carrito
-                </span>
-                {cart.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearCart}
-                    className="text-destructive"
-                  >
-                    Limpiar
-                  </Button>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {cart.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                  <p>El carrito está vacío</p>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {cart.map((item) => (
-                      <div key={item.id} className="border rounded-lg p-3">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{item.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {formatCurrency(item.price)} c/u
-                            </p>
+                    <Separator />
+
+                    {/* Totales */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Subtotal:</span>
+                        <span>{formatCurrency(subtotal)}</span>
+                      </div>
+                      {tax > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Impuesto:</span>
+                          <span>{formatCurrency(tax)}</span>
+                        </div>
+                      )}
+                      {discount > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Descuento:</span>
+                          <span className="text-destructive">
+                            -{formatCurrency(discount).replace('RD$', '')}
+                          </span>
+                        </div>
+                      )}
+                      <Separator />
+                      <div className="flex justify-between text-lg font-bold">
+                        <span>Total:</span>
+                        <span className="text-primary">{formatCurrency(total)}</span>
+                      </div>
+                    </div>
+
+                    {/* Buscador de clientes */}
+                    <div className="space-y-2">
+                      <Label>Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}</Label>
+                      {selectedCustomer ? (
+                        <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
+                          <div className="flex items-center gap-2">
+                            <UserIcon className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium text-sm">
+                                {selectedCustomer.name}{selectedCustomer.lastName ? ` ${selectedCustomer.lastName}` : ''}
+                              </p>
+                              <p className="text-xs text-muted-foreground">{selectedCustomer.code}</p>
+                            </div>
                           </div>
                           <Button
                             variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-destructive shrink-0"
-                            onClick={() => removeFromCart(item.id)}
+                            size="sm"
+                            onClick={() => {
+                              setSelectedCustomer(null);
+                              setCustomerSearch('');
+                              setCustomerSearchResults([]);
+                              setSellAsFinalConsumer(false);
+                            }}
+                            className="h-7 w-7 p-0"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => decreaseQuantity(item.id)}
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <span className="w-8 text-center font-medium">
-                              {item.cartQuantity}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => increaseQuantity(item.id)}
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          <p className="font-bold">
-                            {formatCurrency(parseFloat(item.price) * item.cartQuantity)}
+                      ) : (
+                        <div className="relative">
+                          <Input
+                            placeholder="Buscar cliente..."
+                            value={customerSearch}
+                            onChange={(e) => setCustomerSearch(e.target.value)}
+                            className="w-full"
+                          />
+                          {loadingCustomers && (
+                            <div className="absolute right-3 top-3">
+                              <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                            </div>
+                          )}
+                          {customerSearchResults.length > 0 && (
+                            <div className="absolute z-10 w-full mt-1 border rounded-md bg-background shadow-lg max-h-48 overflow-y-auto">
+                              {customerSearchResults.map((customer) => (
+                                <button
+                                  key={customer.id}
+                                  className="w-full px-3 py-2 text-left hover:bg-muted/50 flex items-center gap-2 border-b last:border-b-0"
+                                  onClick={() => {
+                                    setSelectedCustomer(customer);
+                                    setCustomerSearch('');
+                                    setCustomerSearchResults([]);
+                                  }}
+                                >
+                                  <UserIcon className="h-4 w-4 text-muted-foreground" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm truncate">
+                                      {customer.name}{customer.lastName ? ` ${customer.lastName}` : ''}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">{customer.code}</p>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Checkbox para vender como consumidor final */}
+                    {selectedCustomer && selectedCustomer.taxId && (
+                      <div className="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                        <input
+                          type="checkbox"
+                          id="sellAsFinalConsumer"
+                          checked={sellAsFinalConsumer}
+                          onChange={(e) => setSellAsFinalConsumer(e.target.checked)}
+                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <Label htmlFor="sellAsFinalConsumer" className="cursor-pointer text-sm font-medium">
+                          Vender como consumidor final (sin NCF B01)
+                        </Label>
+                      </div>
+                    )}
+
+                    {/* Campos para cliente no registrado (solo si no hay cliente seleccionado) */}
+                    {!selectedCustomer && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="manualCustomerRnc">
+                            RNC / Cédula (Opcional)
+                          </Label>
+                          <Input
+                            id="manualCustomerRnc"
+                            placeholder="Ej: 131793916 o 00112345678"
+                            value={manualCustomerRnc}
+                            onChange={(e) => setManualCustomerRnc(e.target.value)}
+                            maxLength={11}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Ingrese RNC (9 dígitos) o Cédula (11 dígitos) para generar NCF tipo B01
                           </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="manualCustomerName">
+                            Nombre del Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}
+                          </Label>
+                          <Input
+                            id="manualCustomerName"
+                            placeholder="Ej: Juan Pérez"
+                            value={manualCustomerName}
+                            onChange={(e) => setManualCustomerName(e.target.value)}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Nombre para incluir en el comprobante fiscal
+                          </p>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Campo de NCF manual (solo si está permitido) */}
+                    {ncfConfig?.allowManualNcf && (
+                      <div className="space-y-2">
+                        <Label htmlFor="manualNcf">
+                          NCF Manual {ncfConfig?.requireNcfForInvoice && !ncfConfig?.autoAssignNcf ? '*' : '(Opcional)'}
+                        </Label>
+                        <Input
+                          id="manualNcf"
+                          placeholder="Ej: E01000000123"
+                          value={manualNcf}
+                          onChange={(e) => setManualNcf(e.target.value.toUpperCase())}
+                          className="font-mono"
+                          maxLength={13}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Formato: E + 2 dígitos de tipo + 8 dígitos de secuencia
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Checkbox para enviar factura por email */}
+                    <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-md">
+                      <input
+                        type="checkbox"
+                        id="sendEmail"
+                        checked={sendEmail}
+                        onChange={(e) => setSendEmail(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor="sendEmail" className="cursor-pointer text-sm font-medium">
+                        Enviar factura por correo electrónico
+                      </Label>
+                    </div>
+
+                    {/* Campo de email (solo si checkbox está marcado) */}
+                    {sendEmail && (
+                      <div className="space-y-2">
+                        <Label htmlFor="customerEmail">
+                          Correo Electrónico {!selectedCustomer?.email ? '*' : '(Opcional)'}
+                        </Label>
+                        <Input
+                          id="customerEmail"
+                          type="email"
+                          placeholder="Ej: cliente@ejemplo.com"
+                          value={customerEmail}
+                          onChange={(e) => setCustomerEmail(e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {selectedCustomer?.email
+                            ? 'Email del cliente pre-llenado. Puede modificarlo si el cliente lo desea.'
+                            : 'Ingrese el correo electrónico donde se enviará la factura.'}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Método de pago */}
+                    <div className="space-y-2">
+                      <Label>Método de Pago</Label>
+                      <Select
+                        value={paymentMethod}
+                        onValueChange={(value: any) => {
+                          setPaymentMethod(value);
+                          // Limpiar referencia al cambiar método de pago
+                          if (value === 'CASH') {
+                            setPaymentReference('');
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="CASH">
+                            <div className="flex items-center gap-2">
+                              <Banknote className="h-4 w-4" />
+                              Efectivo
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="CARD">
+                            <div className="flex items-center gap-2">
+                              <CreditCard className="h-4 w-4" />
+                              Tarjeta
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="TRANSFER">
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="h-4 w-4" />
+                              Transferencia
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Campo de referencia para tarjeta o transferencia */}
+                    {(paymentMethod === 'CARD' || paymentMethod === 'TRANSFER') && (
+                      <div className="space-y-2">
+                        <Label htmlFor="paymentReference">
+                          {paymentMethod === 'CARD' ? 'Número de Voucher *' : 'Referencia de Transferencia *'}
+                        </Label>
+                        <Input
+                          id="paymentReference"
+                          placeholder={
+                            paymentMethod === 'CARD'
+                              ? 'Ej: 123456'
+                              : 'Ej: TRANS-2024-001'
+                          }
+                          value={paymentReference}
+                          onChange={(e) => setPaymentReference(e.target.value)}
+                          className="font-mono"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {paymentMethod === 'CARD'
+                            ? 'Ingrese el número del voucher de la transacción con tarjeta'
+                            : 'Ingrese la referencia bancaria de la transferencia'}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Botón de pagar */}
+                    <Button
+                      className="w-full"
+                      size="lg"
+                      onClick={handlePaymentClick}
+                      disabled={processingPayment}
+                    >
+                      {processingPayment ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                          Procesando...
+                        </>
+                      ) : (
+                        <>
+                          <DollarSign className="h-5 w-5 mr-2" />
+                          Procesar Pago ({formatCurrency(total)})
+                        </>
+                      )}
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Diálogo para buscar factura a cancelar */}
+        <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Cancelar Factura</DialogTitle>
+              <DialogDescription>
+                Ingrese el número de factura que desea cancelar. Solo puede cancelar facturas del día actual creadas por usted.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="invoiceNumber">Número de Factura</Label>
+                <Input
+                  id="invoiceNumber"
+                  placeholder="Ej: INV-0001"
+                  value={cancelInvoiceNumber}
+                  onChange={(e) => setCancelInvoiceNumber(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !searchingInvoice) {
+                      searchInvoiceToCancel();
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowCancelDialog(false)}
+                disabled={searchingInvoice}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="outline"
+                onClick={searchInvoiceToCancel}
+                disabled={searchingInvoice || !cancelInvoiceNumber.trim()}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {searchingInvoice ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                    Buscando...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4 mr-2" />
+                    Buscar
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Diálogo de confirmación de cancelación */}
+        <AlertDialog open={showCancelConfirmation} onOpenChange={setShowCancelConfirmation}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Confirmar cancelación?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción cancelará la factura y restaurará el inventario. No se puede deshacer.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            {invoiceToCancel && (
+              <div className="space-y-3 py-4">
+                <div className="border rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Factura:</span>
+                    <span className="font-medium">{invoiceToCancel.invoiceNumber}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Total:</span>
+                    <span className="font-medium">
+                      {formatCurrency(invoiceToCancel.total)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Cliente:</span>
+                    <span className="font-medium">
+                      {invoiceToCancel.customer?.name || 'Sin cliente'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Fecha:</span>
+                    <span className="font-medium">
+                      {new Date(invoiceToCancel.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={closeCancelDialogs}>
+                No, mantener factura
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmCancelInvoice}
+                disabled={cancellingInvoice}
+                className="!bg-destructive !text-white hover:!bg-destructive/90"
+              >
+                {cancellingInvoice ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                    Cancelando...
+                  </>
+                ) : (
+                  'Sí, cancelar factura'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Diálogo de confirmación de pago */}
+        <AlertDialog open={showPaymentConfirmation} onOpenChange={setShowPaymentConfirmation}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-xl">
+                <DollarSign className="h-6 w-6 text-primary" />
+                ¿Confirmar procesamiento del pago?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Por favor, revise los detalles antes de confirmar la venta.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <div className="space-y-4 py-4">
+              {/* Método de pago */}
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <span className="text-sm font-medium text-muted-foreground">Método de pago:</span>
+                <Badge variant="secondary" className="text-base">
+                  {paymentMethod === 'CASH' ? (
+                    <>
+                      <Banknote className="h-4 w-4 mr-1" />
+                      Efectivo
+                    </>
+                  ) : paymentMethod === 'CARD' ? (
+                    <>
+                      <CreditCard className="h-4 w-4 mr-1" />
+                      Tarjeta
+                    </>
+                  ) : (
+                    'Transferencia'
+                  )}
+                </Badge>
+              </div>
+
+              {/* Referencia de pago si aplica */}
+              {paymentReference && (
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <span className="text-sm font-medium text-muted-foreground">Referencia:</span>
+                  <span className="font-mono font-medium">{paymentReference}</span>
+                </div>
+              )}
+
+              {/* Cantidad de productos */}
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <span className="text-sm font-medium text-muted-foreground">Productos:</span>
+                <span className="font-medium">{cart.length} {cart.length === 1 ? 'artículo' : 'artículos'}</span>
+              </div>
+
+              {/* Total a cobrar */}
+              <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border-2 border-primary">
+                <span className="text-lg font-semibold">TOTAL A COBRAR:</span>
+                <span className="text-2xl font-bold text-primary">{formatCurrency(total)}</span>
+              </div>
+            </div>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={processingPayment}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={processPayment}
+                disabled={processingPayment}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {processingPayment ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Confirmar Pago
+                  </>
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Modales de sesión de caja */}
+        {activeBranchId && (
+          <OpenCashSessionModal
+            open={showOpenSessionModal}
+            onOpenChange={setShowOpenSessionModal}
+            onSuccess={handleSessionOpened}
+            branchId={activeBranchId}
+            branchName={userBranches.find((ub) => ub.branch.id === activeBranchId)?.branch.name || 'Sin nombre'}
+            warehouseId={activeWarehouseId || undefined}
+            warehouseName={activeWarehouseName || undefined}
+          />
+        )}
+
+        <CloseCashSessionModal
+          open={showCloseSessionModal}
+          onOpenChange={setShowCloseSessionModal}
+          session={currentSession}
+          onSuccess={handleSessionClosed}
+        />
+
+        {/* Modal de factura completada */}
+        <Dialog open={showInvoiceModal} onOpenChange={setShowInvoiceModal}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-2xl">
+                <CheckCircle className="h-7 w-7 text-green-500" />
+                ¡Venta completada exitosamente!
+              </DialogTitle>
+              <DialogDescription>
+                Factura generada correctamente. Puede imprimirla o cerrar esta ventana.
+              </DialogDescription>
+            </DialogHeader>
+
+            {completedInvoice && (
+              <div className="space-y-4">
+                {/* Información de la factura */}
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Número de Factura:</span>
+                    <span className="font-bold text-lg">{completedInvoice.invoiceNumber}</span>
+                  </div>
+                  {completedInvoice.ncf && (
+                    <>
+                      <div className="flex justify-between items-center bg-yellow-50 dark:bg-yellow-900/20 -mx-4 px-4 py-2">
+                        <span className="text-sm font-semibold">NCF:</span>
+                        <span className="font-bold text-lg font-mono tracking-wider">{completedInvoice.ncf}</span>
+                      </div>
+                      {completedInvoice.ncfType && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">Tipo de NCF:</span>
+                          <span className="font-medium text-sm">{ncfTypeLabels[completedInvoice.ncfType as NcfType]}</span>
+                        </div>
+                      )}
+                      {completedInvoice.ncfValidUntil && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">NCF Válido hasta:</span>
+                          <span className="font-medium text-sm">
+                            {new Date(completedInvoice.ncfValidUntil).toLocaleDateString('es-DO', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {completedInvoice.customerName && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Cliente:</span>
+                      <span className="font-medium">{completedInvoice.customerName}</span>
+                    </div>
+                  )}
+                  {completedInvoice.customerRnc && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">RNC/Cédula:</span>
+                      <span className="font-medium font-mono">{completedInvoice.customerRnc}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Fecha:</span>
+                    <span className="font-medium">
+                      {new Date(completedInvoice.createdAt).toLocaleString('es-ES', {
+                        dateStyle: 'short',
+                        timeStyle: 'short'
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Sucursal:</span>
+                    <span className="font-medium">{completedInvoice.branch?.name || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Atendido por:</span>
+                    <span className="font-medium">{completedInvoice.user?.name || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Método de pago:</span>
+                    <Badge variant="secondary">
+                      {completedInvoice.paymentMethod === 'CASH' ? (
+                        <>
+                          <Banknote className="h-3 w-3 mr-1" />
+                          Efectivo
+                        </>
+                      ) : completedInvoice.paymentMethod === 'CARD' ? (
+                        <>
+                          <CreditCard className="h-3 w-3 mr-1" />
+                          Tarjeta
+                        </>
+                      ) : (
+                        'Transferencia'
+                      )}
+                    </Badge>
+                  </div>
+                  {completedInvoice.paymentReference && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Referencia:</span>
+                      <span className="font-medium font-mono">{completedInvoice.paymentReference}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Items de la factura */}
+                <div>
+                  <h4 className="font-semibold mb-3">Productos</h4>
+                  <div className="border rounded-lg divide-y">
+                    {completedInvoice.items.map((item) => (
+                      <div key={item.id} className="p-3 flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-medium">
+                            {item.variant.product.name}
+                            {item.variant.name && ` - ${item.variant.name}`}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            SKU: {item.variant.sku} | Código: {item.variant.product.code}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {item.quantity} x {formatCurrency(item.unitPrice)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold">{formatCurrency(item.total)}</p>
                         </div>
                       </div>
                     ))}
                   </div>
+                </div>
 
+                {/* Totales */}
+                <div className="space-y-2 pt-2">
                   <Separator />
-
-                  {/* Totales */}
-                  <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Subtotal:</span>
+                    <span className="font-medium">{formatCurrency(completedInvoice.subtotal)}</span>
+                  </div>
+                  {parseFloat(completedInvoice.tax) > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal:</span>
-                      <span>{formatCurrency(subtotal)}</span>
+                      <span className="text-muted-foreground">Impuesto:</span>
+                      <span className="font-medium">{formatCurrency(completedInvoice.tax)}</span>
                     </div>
-                    {tax > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Impuesto:</span>
-                        <span>{formatCurrency(tax)}</span>
-                      </div>
-                    )}
-                    {discount > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Descuento:</span>
-                        <span className="text-destructive">
-                          -{formatCurrency(discount).replace('RD$', '')}
-                        </span>
-                      </div>
-                    )}
-                    <Separator />
-                    <div className="flex justify-between text-lg font-bold">
-                      <span>Total:</span>
-                      <span className="text-primary">{formatCurrency(total)}</span>
+                  )}
+                  {parseFloat(completedInvoice.discount) > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Descuento:</span>
+                      <span className="font-medium text-green-600">-{formatCurrency(completedInvoice.discount).replace('RD$', '')}</span>
                     </div>
+                  )}
+                  <Separator />
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>TOTAL:</span>
+                    <span className="text-primary">{formatCurrency(completedInvoice.total)}</span>
                   </div>
-
-                  {/* Buscador de clientes */}
-                  <div className="space-y-2">
-                    <Label>Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}</Label>
-                    {selectedCustomer ? (
-                      <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
-                        <div className="flex items-center gap-2">
-                          <UserIcon className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium text-sm">
-                              {selectedCustomer.name}{selectedCustomer.lastName ? ` ${selectedCustomer.lastName}` : ''}
-                            </p>
-                            <p className="text-xs text-muted-foreground">{selectedCustomer.code}</p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedCustomer(null);
-                            setCustomerSearch('');
-                            setCustomerSearchResults([]);
-                            setSellAsFinalConsumer(false);
-                          }}
-                          className="h-7 w-7 p-0"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="relative">
-                        <Input
-                          placeholder="Buscar cliente..."
-                          value={customerSearch}
-                          onChange={(e) => setCustomerSearch(e.target.value)}
-                          className="w-full"
-                        />
-                        {loadingCustomers && (
-                          <div className="absolute right-3 top-3">
-                            <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-                          </div>
-                        )}
-                        {customerSearchResults.length > 0 && (
-                          <div className="absolute z-10 w-full mt-1 border rounded-md bg-background shadow-lg max-h-48 overflow-y-auto">
-                            {customerSearchResults.map((customer) => (
-                              <button
-                                key={customer.id}
-                                className="w-full px-3 py-2 text-left hover:bg-muted/50 flex items-center gap-2 border-b last:border-b-0"
-                                onClick={() => {
-                                  setSelectedCustomer(customer);
-                                  setCustomerSearch('');
-                                  setCustomerSearchResults([]);
-                                }}
-                              >
-                                <UserIcon className="h-4 w-4 text-muted-foreground" />
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm truncate">
-                                    {customer.name}{customer.lastName ? ` ${customer.lastName}` : ''}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">{customer.code}</p>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Checkbox para vender como consumidor final */}
-                  {selectedCustomer && selectedCustomer.taxId && (
-                    <div className="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-                      <input
-                        type="checkbox"
-                        id="sellAsFinalConsumer"
-                        checked={sellAsFinalConsumer}
-                        onChange={(e) => setSellAsFinalConsumer(e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                      />
-                      <Label htmlFor="sellAsFinalConsumer" className="cursor-pointer text-sm font-medium">
-                        Vender como consumidor final (sin NCF B01)
-                      </Label>
-                    </div>
-                  )}
-
-                  {/* Campos para cliente no registrado (solo si no hay cliente seleccionado) */}
-                  {!selectedCustomer && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="manualCustomerRnc">
-                          RNC / Cédula (Opcional)
-                        </Label>
-                        <Input
-                          id="manualCustomerRnc"
-                          placeholder="Ej: 131793916 o 00112345678"
-                          value={manualCustomerRnc}
-                          onChange={(e) => setManualCustomerRnc(e.target.value)}
-                          maxLength={11}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Ingrese RNC (9 dígitos) o Cédula (11 dígitos) para generar NCF tipo B01
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="manualCustomerName">
-                          Nombre del Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}
-                        </Label>
-                        <Input
-                          id="manualCustomerName"
-                          placeholder="Ej: Juan Pérez"
-                          value={manualCustomerName}
-                          onChange={(e) => setManualCustomerName(e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Nombre para incluir en el comprobante fiscal
-                        </p>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Campo de NCF manual (solo si está permitido) */}
-                  {ncfConfig?.allowManualNcf && (
-                    <div className="space-y-2">
-                      <Label htmlFor="manualNcf">
-                        NCF Manual {ncfConfig?.requireNcfForInvoice && !ncfConfig?.autoAssignNcf ? '*' : '(Opcional)'}
-                      </Label>
-                      <Input
-                        id="manualNcf"
-                        placeholder="Ej: E01000000123"
-                        value={manualNcf}
-                        onChange={(e) => setManualNcf(e.target.value.toUpperCase())}
-                        className="font-mono"
-                        maxLength={13}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Formato: E + 2 dígitos de tipo + 8 dígitos de secuencia
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Checkbox para enviar factura por email */}
-                  <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-md">
-                    <input
-                      type="checkbox"
-                      id="sendEmail"
-                      checked={sendEmail}
-                      onChange={(e) => setSendEmail(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    <Label htmlFor="sendEmail" className="cursor-pointer text-sm font-medium">
-                      Enviar factura por correo electrónico
-                    </Label>
-                  </div>
-
-                  {/* Campo de email (solo si checkbox está marcado) */}
-                  {sendEmail && (
-                    <div className="space-y-2">
-                      <Label htmlFor="customerEmail">
-                        Correo Electrónico {!selectedCustomer?.email ? '*' : '(Opcional)'}
-                      </Label>
-                      <Input
-                        id="customerEmail"
-                        type="email"
-                        placeholder="Ej: cliente@ejemplo.com"
-                        value={customerEmail}
-                        onChange={(e) => setCustomerEmail(e.target.value)}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {selectedCustomer?.email
-                          ? 'Email del cliente pre-llenado. Puede modificarlo si el cliente lo desea.'
-                          : 'Ingrese el correo electrónico donde se enviará la factura.'}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Método de pago */}
-                  <div className="space-y-2">
-                    <Label>Método de Pago</Label>
-                    <Select
-                      value={paymentMethod}
-                      onValueChange={(value: any) => {
-                        setPaymentMethod(value);
-                        // Limpiar referencia al cambiar método de pago
-                        if (value === 'CASH') {
-                          setPaymentReference('');
-                        }
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="CASH">
-                          <div className="flex items-center gap-2">
-                            <Banknote className="h-4 w-4" />
-                            Efectivo
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="CARD">
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="h-4 w-4" />
-                            Tarjeta
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="TRANSFER">
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4" />
-                            Transferencia
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Campo de referencia para tarjeta o transferencia */}
-                  {(paymentMethod === 'CARD' || paymentMethod === 'TRANSFER') && (
-                    <div className="space-y-2">
-                      <Label htmlFor="paymentReference">
-                        {paymentMethod === 'CARD' ? 'Número de Voucher *' : 'Referencia de Transferencia *'}
-                      </Label>
-                      <Input
-                        id="paymentReference"
-                        placeholder={
-                          paymentMethod === 'CARD'
-                            ? 'Ej: 123456'
-                            : 'Ej: TRANS-2024-001'
-                        }
-                        value={paymentReference}
-                        onChange={(e) => setPaymentReference(e.target.value)}
-                        className="font-mono"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {paymentMethod === 'CARD'
-                          ? 'Ingrese el número del voucher de la transacción con tarjeta'
-                          : 'Ingrese la referencia bancaria de la transferencia'}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Botón de pagar */}
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    onClick={handlePaymentClick}
-                    disabled={processingPayment}
-                  >
-                    {processingPayment ? (
-                      <>
-                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                        Procesando...
-                      </>
-                    ) : (
-                      <>
-                        <DollarSign className="h-5 w-5 mr-2" />
-                        Procesar Pago ({formatCurrency(total)})
-                      </>
-                    )}
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Diálogo para buscar factura a cancelar */}
-      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cancelar Factura</DialogTitle>
-            <DialogDescription>
-              Ingrese el número de factura que desea cancelar. Solo puede cancelar facturas del día actual creadas por usted.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="invoiceNumber">Número de Factura</Label>
-              <Input
-                id="invoiceNumber"
-                placeholder="Ej: INV-0001"
-                value={cancelInvoiceNumber}
-                onChange={(e) => setCancelInvoiceNumber(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !searchingInvoice) {
-                    searchInvoiceToCancel();
-                  }
-                }}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowCancelDialog(false)}
-              disabled={searchingInvoice}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="outline"
-              onClick={searchInvoiceToCancel}
-              disabled={searchingInvoice || !cancelInvoiceNumber.trim()}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {searchingInvoice ? (
-                <>
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                  Buscando...
-                </>
-              ) : (
-                <>
-                  <Search className="h-4 w-4 mr-2" />
-                  Buscar
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Diálogo de confirmación de cancelación */}
-      <AlertDialog open={showCancelConfirmation} onOpenChange={setShowCancelConfirmation}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Confirmar cancelación?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción cancelará la factura y restaurará el inventario. No se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {invoiceToCancel && (
-            <div className="space-y-3 py-4">
-              <div className="border rounded-lg p-4 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Factura:</span>
-                  <span className="font-medium">{invoiceToCancel.invoiceNumber}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Total:</span>
-                  <span className="font-medium">
-                    {formatCurrency(invoiceToCancel.total)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Cliente:</span>
-                  <span className="font-medium">
-                    {invoiceToCancel.customer?.name || 'Sin cliente'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Fecha:</span>
-                  <span className="font-medium">
-                    {new Date(invoiceToCancel.createdAt).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={closeCancelDialogs}>
-              No, mantener factura
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmCancelInvoice}
-              disabled={cancellingInvoice}
-              className="!bg-destructive !text-white hover:!bg-destructive/90"
-            >
-              {cancellingInvoice ? (
-                <>
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                  Cancelando...
-                </>
-              ) : (
-                'Sí, cancelar factura'
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Diálogo de confirmación de pago */}
-      <AlertDialog open={showPaymentConfirmation} onOpenChange={setShowPaymentConfirmation}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-xl">
-              <DollarSign className="h-6 w-6 text-primary" />
-              ¿Confirmar procesamiento del pago?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Por favor, revise los detalles antes de confirmar la venta.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <div className="space-y-4 py-4">
-            {/* Método de pago */}
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <span className="text-sm font-medium text-muted-foreground">Método de pago:</span>
-              <Badge variant="secondary" className="text-base">
-                {paymentMethod === 'CASH' ? (
-                  <>
-                    <Banknote className="h-4 w-4 mr-1" />
-                    Efectivo
-                  </>
-                ) : paymentMethod === 'CARD' ? (
-                  <>
-                    <CreditCard className="h-4 w-4 mr-1" />
-                    Tarjeta
-                  </>
-                ) : (
-                  'Transferencia'
-                )}
-              </Badge>
-            </div>
-
-            {/* Referencia de pago si aplica */}
-            {paymentReference && (
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <span className="text-sm font-medium text-muted-foreground">Referencia:</span>
-                <span className="font-mono font-medium">{paymentReference}</span>
               </div>
             )}
 
-            {/* Cantidad de productos */}
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <span className="text-sm font-medium text-muted-foreground">Productos:</span>
-              <span className="font-medium">{cart.length} {cart.length === 1 ? 'artículo' : 'artículos'}</span>
-            </div>
-
-            {/* Total a cobrar */}
-            <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border-2 border-primary">
-              <span className="text-lg font-semibold">TOTAL A COBRAR:</span>
-              <span className="text-2xl font-bold text-primary">{formatCurrency(total)}</span>
-            </div>
-          </div>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={processingPayment}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={processPayment}
-              disabled={processingPayment}
-              className="bg-primary hover:bg-primary/90"
-            >
-              {processingPayment ? (
-                <>
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                  Procesando...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Confirmar Pago
-                </>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Modales de sesión de caja */}
-      {activeBranchId && (
-        <OpenCashSessionModal
-          open={showOpenSessionModal}
-          onOpenChange={setShowOpenSessionModal}
-          onSuccess={handleSessionOpened}
-          branchId={activeBranchId}
-          branchName={userBranches.find((ub) => ub.branch.id === activeBranchId)?.branch.name || 'Sin nombre'}
-          warehouseId={activeWarehouseId || undefined}
-          warehouseName={activeWarehouseName || undefined}
-        />
-      )}
-
-      <CloseCashSessionModal
-        open={showCloseSessionModal}
-        onOpenChange={setShowCloseSessionModal}
-        session={currentSession}
-        onSuccess={handleSessionClosed}
-      />
-
-      {/* Modal de factura completada */}
-      <Dialog open={showInvoiceModal} onOpenChange={setShowInvoiceModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-2xl">
-              <CheckCircle className="h-7 w-7 text-green-500" />
-              ¡Venta completada exitosamente!
-            </DialogTitle>
-            <DialogDescription>
-              Factura generada correctamente. Puede imprimirla o cerrar esta ventana.
-            </DialogDescription>
-          </DialogHeader>
-
-          {completedInvoice && (
-            <div className="space-y-4">
-              {/* Información de la factura */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Número de Factura:</span>
-                  <span className="font-bold text-lg">{completedInvoice.invoiceNumber}</span>
-                </div>
-                {completedInvoice.ncf && (
-                  <>
-                    <div className="flex justify-between items-center bg-yellow-50 dark:bg-yellow-900/20 -mx-4 px-4 py-2">
-                      <span className="text-sm font-semibold">NCF:</span>
-                      <span className="font-bold text-lg font-mono tracking-wider">{completedInvoice.ncf}</span>
-                    </div>
-                    {completedInvoice.ncfType && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Tipo de NCF:</span>
-                        <span className="font-medium text-sm">{ncfTypeLabels[completedInvoice.ncfType as NcfType]}</span>
-                      </div>
-                    )}
-                    {completedInvoice.ncfValidUntil && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">NCF Válido hasta:</span>
-                        <span className="font-medium text-sm">
-                          {new Date(completedInvoice.ncfValidUntil).toLocaleDateString('es-DO', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </span>
-                      </div>
-                    )}
-                  </>
-                )}
-                {completedInvoice.customerName && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Cliente:</span>
-                    <span className="font-medium">{completedInvoice.customerName}</span>
-                  </div>
-                )}
-                {completedInvoice.customerRnc && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">RNC/Cédula:</span>
-                    <span className="font-medium font-mono">{completedInvoice.customerRnc}</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Fecha:</span>
-                  <span className="font-medium">
-                    {new Date(completedInvoice.createdAt).toLocaleString('es-ES', {
-                      dateStyle: 'short',
-                      timeStyle: 'short'
-                    })}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Sucursal:</span>
-                  <span className="font-medium">{completedInvoice.branch?.name || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Atendido por:</span>
-                  <span className="font-medium">{completedInvoice.user?.name || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Método de pago:</span>
-                  <Badge variant="secondary">
-                    {completedInvoice.paymentMethod === 'CASH' ? (
-                      <>
-                        <Banknote className="h-3 w-3 mr-1" />
-                        Efectivo
-                      </>
-                    ) : completedInvoice.paymentMethod === 'CARD' ? (
-                      <>
-                        <CreditCard className="h-3 w-3 mr-1" />
-                        Tarjeta
-                      </>
-                    ) : (
-                      'Transferencia'
-                    )}
-                  </Badge>
-                </div>
-                {completedInvoice.paymentReference && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Referencia:</span>
-                    <span className="font-medium font-mono">{completedInvoice.paymentReference}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Items de la factura */}
-              <div>
-                <h4 className="font-semibold mb-3">Productos</h4>
-                <div className="border rounded-lg divide-y">
-                  {completedInvoice.items.map((item) => (
-                    <div key={item.id} className="p-3 flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="font-medium">{item.product.name}</p>
-                        <p className="text-sm text-muted-foreground">{item.product.code}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {item.quantity} x {formatCurrency(item.unitPrice)}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold">{formatCurrency(item.total)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Totales */}
-              <div className="space-y-2 pt-2">
-                <Separator />
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal:</span>
-                  <span className="font-medium">{formatCurrency(completedInvoice.subtotal)}</span>
-                </div>
-                {parseFloat(completedInvoice.tax) > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Impuesto:</span>
-                    <span className="font-medium">{formatCurrency(completedInvoice.tax)}</span>
-                  </div>
-                )}
-                {parseFloat(completedInvoice.discount) > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Descuento:</span>
-                    <span className="font-medium text-green-600">-{formatCurrency(completedInvoice.discount).replace('RD$', '')}</span>
-                  </div>
-                )}
-                <Separator />
-                <div className="flex justify-between text-lg font-bold">
-                  <span>TOTAL:</span>
-                  <span className="text-primary">{formatCurrency(completedInvoice.total)}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowInvoiceModal(false)}
-            >
-              Cerrar
-            </Button>
-            <Button
-              onClick={handlePrintInvoice}
-              className="gap-2"
-            >
-              <Printer className="h-4 w-4" />
-              Imprimir Factura
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowInvoiceModal(false)}
+              >
+                Cerrar
+              </Button>
+              <Button
+                onClick={handlePrintInvoice}
+                className="gap-2"
+              >
+                <Printer className="h-4 w-4" />
+                Imprimir Factura
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </ProtectedPage>
   );
 }
