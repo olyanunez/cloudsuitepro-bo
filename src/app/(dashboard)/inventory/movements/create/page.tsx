@@ -2,8 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MovementType, Product, Warehouse } from '@/lib/types/inventory';
-import { InventoryService, ProductService, WarehouseService } from '@/lib/services/inventoryService';
+import { MovementType, Warehouse, CreateVariantInventoryMovementDto } from '@/lib/types/inventory';
+import { InventoryService, WarehouseService } from '@/lib/services/inventoryService';
+import { BatchService } from '@/lib/services/batchService';
+import { Batch } from '@/lib/types/batch';
+import { ProductVariant, Product } from '@/lib/types/product';
+import { productVariantsService } from '@/lib/services/product-variants.service';
+import { ProductService } from '@/lib/services/inventoryService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,19 +23,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'react-hot-toast';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import Link from 'next/link';
-import { CreateInventoryMovementDto } from '@/lib/types/inventory';
 
 export default function CreateMovementPage() {
   const router = useRouter();
 
   // Data state
   const [products, setProducts] = useState<Product[]>([]);
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [filteredVariants, setFilteredVariants] = useState<ProductVariant[]>([]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]); // Todos los almacenes (para destino)
+  const [userWarehouses, setUserWarehouses] = useState<Warehouse[]>([]); // Almacenes del usuario (para origen)
   const [availableSourceWarehouses, setAvailableSourceWarehouses] = useState<Warehouse[]>([]);
 
   // Form state
   const [movementType, setMovementType] = useState<string>('');
-  const [productId, setProductId] = useState<string>('');
+  const [selectedProductId, setSelectedProductId] = useState<string>(''); // Para filtrar variantes
+  const [variantId, setVariantId] = useState<string>('');
   const [sourceWarehouseId, setSourceWarehouseId] = useState<string>('');
   const [destinationWarehouseId, setDestinationWarehouseId] = useState<string>('');
   const [quantity, setQuantity] = useState<string>('');
@@ -38,15 +46,30 @@ export default function CreateMovementPage() {
   const [notes, setNotes] = useState<string>('');
   const [isProductStockable, setIsProductStockable] = useState<boolean>(true);
 
+  // Batch-related fields
+  const [batchMode, setBatchMode] = useState<'new' | 'existing'>('new');
+  const [existingBatchId, setExistingBatchId] = useState<string>('');
+  const [availableBatches, setAvailableBatches] = useState<Batch[]>([]);
+  const [loadingBatches, setLoadingBatches] = useState<boolean>(false);
+  const [unitCost, setUnitCost] = useState<string>('');
+  const [expirationDate, setExpirationDate] = useState<string>('');
+  const [manufacturingDate, setManufacturingDate] = useState<string>('');
+  const [supplierName, setSupplierName] = useState<string>('');
+  const [purchaseOrderRef, setPurchaseOrderRef] = useState<string>('');
+  const [location, setLocation] = useState<string>('');
+  const [batchNumber, setBatchNumber] = useState<string>('');
+
   // UI state
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [errors, setErrors] = useState<{
     type?: string;
-    productId?: string;
+    variantId?: string;
     sourceWarehouseId?: string;
     destinationWarehouseId?: string;
     quantity?: string;
+    unitCost?: string;
+    existingBatchId?: string;
     general?: string;
   }>({});
 
@@ -54,13 +77,17 @@ export default function CreateMovementPage() {
     async function loadData() {
       try {
         setLoading(true);
-        const [productsData, warehousesData] = await Promise.all([
+        const [productsData, variantsData, allWarehousesData, userWarehousesData] = await Promise.all([
           ProductService.getProducts(),
-          WarehouseService.getWarehouses()
+          productVariantsService.getAll(), // Cargar todas las variantes
+          WarehouseService.getWarehouses(), // Todos los almacenes para destino
+          WarehouseService.getUserWarehouses() // Almacenes del usuario para origen
         ]);
 
         setProducts(productsData);
-        setWarehouses(warehousesData);
+        setVariants(variantsData);
+        setWarehouses(allWarehousesData);
+        setUserWarehouses(userWarehousesData);
       } catch (error) {
         console.error('Error loading data:', error);
         toast.error('Error al cargar los datos necesarios');
@@ -72,25 +99,35 @@ export default function CreateMovementPage() {
     loadData();
   }, []);
 
-  // Cargar almacenes con stock del producto seleccionado
+  // Filter variants when a product is selected
+  useEffect(() => {
+    if (!selectedProductId || selectedProductId === 'all') {
+      setFilteredVariants(variants);
+    } else {
+      const filtered = variants.filter(v => v.productId === Number(selectedProductId));
+      setFilteredVariants(filtered);
+    }
+  }, [selectedProductId, variants]);
+
+  // Cargar almacenes con stock de la variante seleccionada
   useEffect(() => {
     async function loadWarehousesWithStock() {
-      if (!productId) {
+      if (!variantId) {
         setAvailableSourceWarehouses([]);
         return;
       }
 
       try {
-        // Obtener items de inventario para el producto seleccionado
-        const inventoryItems = await InventoryService.getItems(undefined, Number(productId));
+        // Obtener información de stock de la variante
+        const stockInfo = await productVariantsService.getTotalStock(Number(variantId));
 
-        // Filtrar almacenes que tienen stock (cantidad > 0)
-        const warehouseIdsWithStock = inventoryItems
-          .filter(item => item.quantity > 0)
-          .map(item => item.warehouseId);
+        // Obtener IDs de almacenes que tienen stock
+        const warehouseIdsWithStock = stockInfo.byWarehouse
+          .filter(wh => wh.quantity > 0)
+          .map(wh => wh.warehouse.id);
 
-        // Filtrar la lista de almacenes para incluir solo los que tienen stock
-        const warehousesWithStock = warehouses.filter(warehouse =>
+        // Filtrar la lista de almacenes del usuario para incluir solo los que tienen stock
+        const warehousesWithStock = userWarehouses.filter(warehouse =>
           warehouseIdsWithStock.includes(warehouse.id)
         );
 
@@ -108,7 +145,51 @@ export default function CreateMovementPage() {
     }
 
     loadWarehousesWithStock();
-  }, [productId, warehouses, sourceWarehouseId]);
+  }, [variantId, userWarehouses, sourceWarehouseId]);
+
+  // Cargar lotes disponibles cuando se selecciona variante y almacén destino para ENTRADA
+  useEffect(() => {
+    async function loadAvailableBatches() {
+      if (movementType !== MovementType.ENTRADA || !variantId || !destinationWarehouseId || batchMode !== 'existing') {
+        setAvailableBatches([]);
+        return;
+      }
+
+      try {
+        setLoadingBatches(true);
+        // TODO: Update BatchService to accept variantId instead of productId
+        // For now, use the variant's productId to fetch batches
+        const selectedVariant = variants.find(v => v.id === Number(variantId));
+        if (!selectedVariant) {
+          setAvailableBatches([]);
+          return;
+        }
+
+        const batches = await BatchService.getAvailableBatches(selectedVariant.productId, Number(destinationWarehouseId));
+
+        // Filtrar solo lotes activos y no vencidos/bloqueados para esta variante específica
+        const activeBatches = batches.filter(batch =>
+          (batch.status === 'ACTIVE' || batch.status === 'RESERVED') &&
+          batch.variantId === Number(variantId)
+        );
+
+        setAvailableBatches(activeBatches);
+
+        if (activeBatches.length === 0) {
+          toast.info('No hay lotes activos para esta variante y almacén. Se creará un nuevo lote.');
+          setBatchMode('new');
+        }
+      } catch (error) {
+        console.error('Error loading available batches:', error);
+        toast.error('Error al cargar los lotes disponibles');
+        setAvailableBatches([]);
+      } finally {
+        setLoadingBatches(false);
+      }
+    }
+
+    loadAvailableBatches();
+  }, [variantId, destinationWarehouseId, movementType, batchMode, variants]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -117,8 +198,8 @@ export default function CreateMovementPage() {
       newErrors.type = 'El tipo de movimiento es requerido';
     }
 
-    if (!productId) {
-      newErrors.productId = 'El producto es requerido';
+    if (!variantId) {
+      newErrors.variantId = 'La variante es requerida';
     }
 
     if ((movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA || movementType === MovementType.AJUSTE) && !sourceWarehouseId) {
@@ -142,6 +223,27 @@ export default function CreateMovementPage() {
       }
     }
 
+    // Validar costo unitario para entradas (solo para nuevos lotes)
+    if (movementType === MovementType.ENTRADA && batchMode === 'new') {
+      if (!unitCost) {
+        newErrors.unitCost = 'El costo unitario es requerido para entradas';
+      } else if (isNaN(Number(unitCost)) || Number(unitCost) <= 0) {
+        newErrors.unitCost = 'El costo unitario debe ser un número mayor que cero';
+      }
+    }
+
+    // Validar selección de lote existente
+    if (movementType === MovementType.ENTRADA && batchMode === 'existing') {
+      if (!existingBatchId) {
+        newErrors.existingBatchId = 'Debe seleccionar un lote existente';
+      }
+      if (!unitCost) {
+        newErrors.unitCost = 'El costo unitario es requerido';
+      } else if (isNaN(Number(unitCost)) || Number(unitCost) <= 0) {
+        newErrors.unitCost = 'El costo unitario debe ser un número mayor que cero';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -156,9 +258,9 @@ export default function CreateMovementPage() {
     try {
       setSaving(true);
 
-      const movementData: CreateInventoryMovementDto = {
+      const movementData: CreateVariantInventoryMovementDto = {
         type: movementType as MovementType,
-        productId: Number(productId),
+        variantId: Number(variantId),
         quantity: isProductStockable ? Number(quantity) : 0,
         reference: reference || undefined,
         notes: notes || undefined
@@ -170,6 +272,24 @@ export default function CreateMovementPage() {
 
       if (movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA || movementType === MovementType.AJUSTE) {
         movementData.sourceWarehouseId = Number(sourceWarehouseId);
+      }
+
+      // Add batch-related fields for ENTRADA
+      if (movementType === MovementType.ENTRADA) {
+        movementData.unitCost = Number(unitCost);
+
+        if (batchMode === 'existing') {
+          // Agregar a lote existente
+          movementData.existingBatchId = Number(existingBatchId);
+        } else {
+          // Crear nuevo lote
+          if (expirationDate) movementData.expirationDate = expirationDate;
+          if (manufacturingDate) movementData.manufacturingDate = manufacturingDate;
+          if (supplierName) movementData.supplierName = supplierName;
+          if (purchaseOrderRef) movementData.purchaseOrderRef = purchaseOrderRef;
+          if (location) movementData.location = location;
+          if (batchNumber) movementData.batchNumber = batchNumber;
+        }
       }
 
       await InventoryService.createMovement(movementData);
@@ -230,25 +350,18 @@ export default function CreateMovementPage() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="product" className="text-sm font-medium">
-                  Producto <span className="text-red-500">*</span>
+                <label htmlFor="product-filter" className="text-sm font-medium">
+                  Filtrar por Producto (Opcional)
                 </label>
-                <Select value={productId} onValueChange={(value) => {
-                  setProductId(value);
-                  // Actualizar si el producto es gastable
-                  const selectedProduct = products.find(p => p.id.toString() === value);
-                  if (selectedProduct) {
-                    setIsProductStockable(selectedProduct.isStockable);
-                    // Si el producto no es gastable, limpiar la cantidad
-                    if (!selectedProduct.isStockable) {
-                      setQuantity('');
-                    }
-                  }
+                <Select value={selectedProductId} onValueChange={(value) => {
+                  setSelectedProductId(value);
+                  setVariantId(''); // Reset variant selection when product filter changes
                 }}>
-                  <SelectTrigger id="product" className={errors.productId ? 'border-red-500' : ''}>
-                    <SelectValue placeholder="Seleccionar producto" />
+                  <SelectTrigger id="product-filter">
+                    <SelectValue placeholder="Todos los productos" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">Todos los productos</SelectItem>
                     {products.map(product => (
                       <SelectItem key={product.id} value={product.id.toString()}>
                         {product.name} ({product.code})
@@ -256,7 +369,63 @@ export default function CreateMovementPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.productId && <p className="text-red-500 text-xs mt-1">{errors.productId}</p>}
+                <p className="text-xs text-muted-foreground">
+                  Filtre las variantes por producto para facilitar la búsqueda
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="variant" className="text-sm font-medium">
+                  Variante <span className="text-red-500">*</span>
+                </label>
+                <Select value={variantId} onValueChange={(value) => {
+                  setVariantId(value);
+                  // Actualizar si el producto es gastable
+                  const selectedVariant = variants.find(v => v.id.toString() === value);
+                  if (selectedVariant && selectedVariant.product) {
+                    setIsProductStockable(selectedVariant.product.isStockable);
+                    // Si el producto no es gastable, limpiar la cantidad
+                    if (!selectedVariant.product.isStockable) {
+                      setQuantity('');
+                    }
+                  }
+                }}>
+                  <SelectTrigger id="variant" className={errors.variantId ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Seleccionar variante" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredVariants.length === 0 ? (
+                      <div className="p-2 text-sm text-muted-foreground text-center">
+                        No hay variantes disponibles
+                      </div>
+                    ) : (
+                      filteredVariants.map(variant => {
+                        // Build variant display name
+                        let displayName = variant.product?.name || 'Producto';
+                        if (variant.name) {
+                          displayName += ` - ${variant.name}`;
+                        }
+                        if (variant.attributeValues && variant.attributeValues.length > 0) {
+                          const attrs = variant.attributeValues
+                            .map(av => av.attributeValue?.displayName)
+                            .filter(Boolean)
+                            .join(', ');
+                          if (attrs) {
+                            displayName += ` (${attrs})`;
+                          }
+                        }
+                        displayName += ` [SKU: ${variant.sku}]`;
+
+                        return (
+                          <SelectItem key={variant.id} value={variant.id.toString()}>
+                            {displayName}
+                          </SelectItem>
+                        );
+                      })
+                    )}
+                  </SelectContent>
+                </Select>
+                {errors.variantId && <p className="text-red-500 text-xs mt-1">{errors.variantId}</p>}
               </div>
 
               {(movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA || movementType === MovementType.AJUSTE) && (
@@ -264,14 +433,14 @@ export default function CreateMovementPage() {
                   <label htmlFor="sourceWarehouse" className="text-sm font-medium">
                     Almacén {movementType === MovementType.AJUSTE ? '' : 'de Origen'} <span className="text-red-500">*</span>
                   </label>
-                  <Select value={sourceWarehouseId} onValueChange={setSourceWarehouseId} disabled={!productId}>
+                  <Select value={sourceWarehouseId} onValueChange={setSourceWarehouseId} disabled={!variantId}>
                     <SelectTrigger id="sourceWarehouse" className={errors.sourceWarehouseId ? 'border-red-500' : ''}>
-                      <SelectValue placeholder={!productId ? "Primero seleccione un producto" : `Seleccionar almacén ${movementType === MovementType.AJUSTE ? '' : 'de origen'}`} />
+                      <SelectValue placeholder={!variantId ? "Primero seleccione una variante" : `Seleccionar almacén ${movementType === MovementType.AJUSTE ? '' : 'de origen'}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableSourceWarehouses.length === 0 && productId ? (
+                      {availableSourceWarehouses.length === 0 && variantId ? (
                         <SelectItem value="no-stock" disabled>
-                          No hay almacenes con stock de este producto
+                          No hay almacenes con stock de esta variante
                         </SelectItem>
                       ) : (
                         availableSourceWarehouses.map(warehouse => (
@@ -296,7 +465,8 @@ export default function CreateMovementPage() {
                       <SelectValue placeholder="Seleccionar almacén de destino" />
                     </SelectTrigger>
                     <SelectContent>
-                      {warehouses.map(warehouse => (
+                      {/* Para ENTRADA: solo almacenes del usuario. Para TRANSFERENCIA: todos los almacenes */}
+                      {(movementType === MovementType.ENTRADA ? userWarehouses : warehouses).map(warehouse => (
                         <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
                           {warehouse.name}
                         </SelectItem>
@@ -337,6 +507,167 @@ export default function CreateMovementPage() {
                   placeholder="Referencia o número de documento"
                 />
               </div>
+
+              {movementType === MovementType.ENTRADA && (
+                <>
+                  {/* Batch Mode Selection */}
+                  <div className="space-y-2 p-4 border rounded-lg bg-muted/30">
+                    <label htmlFor="batchMode" className="text-sm font-medium">
+                      Modo de Lote
+                    </label>
+                    <Select value={batchMode} onValueChange={(value: 'new' | 'existing') => {
+                      setBatchMode(value);
+                      setExistingBatchId('');
+                    }}>
+                      <SelectTrigger id="batchMode">
+                        <SelectValue placeholder="Seleccionar modo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">Crear nuevo lote</SelectItem>
+                        <SelectItem value="existing">Agregar a lote existente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {batchMode === 'new'
+                        ? 'Se creará un nuevo lote con la información proporcionada'
+                        : 'Seleccione un lote existente para agregar inventario'}
+                    </p>
+                  </div>
+
+                  {/* Existing Batch Selection */}
+                  {batchMode === 'existing' && (
+                    <div className="space-y-2">
+                      <label htmlFor="existingBatch" className="text-sm font-medium">
+                        Seleccionar Lote <span className="text-red-500">*</span>
+                      </label>
+                      <Select value={existingBatchId} onValueChange={setExistingBatchId} disabled={loadingBatches}>
+                        <SelectTrigger id="existingBatch" className={errors.existingBatchId ? 'border-red-500' : ''}>
+                          <SelectValue placeholder={loadingBatches ? "Cargando lotes..." : "Seleccionar lote existente"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableBatches.length === 0 ? (
+                            <div className="p-2 text-sm text-muted-foreground text-center">
+                              No hay lotes disponibles
+                            </div>
+                          ) : (
+                            availableBatches.map(batch => (
+                              <SelectItem key={batch.id} value={batch.id.toString()}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{batch.batchNumber}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    Stock: {batch.currentQuantity} | Costo: ${Number(batch.unitCost).toFixed(2)}
+                                    {batch.expirationDate && ` | Vence: ${new Date(batch.expirationDate).toLocaleDateString()}`}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {errors.existingBatchId && <p className="text-red-500 text-xs mt-1">{errors.existingBatchId}</p>}
+                      <p className="text-xs text-muted-foreground">
+                        Seleccione un lote existente para agregar más inventario
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label htmlFor="unitCost" className="text-sm font-medium">
+                      Costo Unitario <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      id="unitCost"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={unitCost}
+                      onChange={(e) => setUnitCost(e.target.value)}
+                      placeholder="Costo por unidad"
+                      className={errors.unitCost ? 'border-red-500' : ''}
+                    />
+                    {errors.unitCost && <p className="text-red-500 text-xs mt-1">{errors.unitCost}</p>}
+                  </div>
+
+                  {batchMode === 'new' && (
+                    <>
+                  <div className="space-y-2">
+                    <label htmlFor="expirationDate" className="text-sm font-medium">
+                      Fecha de Caducidad
+                    </label>
+                    <Input
+                      id="expirationDate"
+                      type="date"
+                      value={expirationDate}
+                      onChange={(e) => setExpirationDate(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="manufacturingDate" className="text-sm font-medium">
+                      Fecha de Fabricación
+                    </label>
+                    <Input
+                      id="manufacturingDate"
+                      type="date"
+                      value={manufacturingDate}
+                      onChange={(e) => setManufacturingDate(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="supplierName" className="text-sm font-medium">
+                      Proveedor
+                    </label>
+                    <Input
+                      id="supplierName"
+                      value={supplierName}
+                      onChange={(e) => setSupplierName(e.target.value)}
+                      placeholder="Nombre del proveedor"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="purchaseOrderRef" className="text-sm font-medium">
+                      Orden de Compra
+                    </label>
+                    <Input
+                      id="purchaseOrderRef"
+                      value={purchaseOrderRef}
+                      onChange={(e) => setPurchaseOrderRef(e.target.value)}
+                      placeholder="Referencia de OC"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="location" className="text-sm font-medium">
+                      Ubicación Física
+                    </label>
+                    <Input
+                      id="location"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="Ej: Pasillo A, Estante 3"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="batchNumber" className="text-sm font-medium">
+                      Número de Lote
+                    </label>
+                    <Input
+                      id="batchNumber"
+                      value={batchNumber}
+                      onChange={(e) => setBatchNumber(e.target.value)}
+                      placeholder="Dejar vacío para generarlo automáticamente"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Si se deja vacío, se generará automáticamente con el formato LOTE-YYYY-NNNNNN
+                    </p>
+                  </div>
+                    </>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="space-y-2">

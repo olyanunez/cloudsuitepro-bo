@@ -334,15 +334,19 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
                   invoice.items.map((item) => (
                     <tr key={item.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {item.product?.code || 'N/A'}
+                        {item.variant?.sku || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {item.product?.name || 'Producto sin nombre'}
+                          {item.variant?.product?.name || 'Producto sin nombre'}
+                          {item.variant?.name && ` - ${item.variant.name}`}
                         </div>
-                        {item.product?.description && (
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          Código: {item.variant?.product?.code || 'N/A'}
+                        </div>
+                        {item.variant?.product?.description && (
                           <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {item.product.description}
+                            {item.variant.product.description}
                           </div>
                         )}
                       </td>

@@ -7,10 +7,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { apiGet, apiDelete, apiPatch } from '@/lib/services/apiService';
-import { Plus, Search, Edit, Trash2, Eye, UserCheck, UserX, Mail, Phone } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, UserCheck, UserX, Mail, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePermissions } from '@/lib/hooks/usePermissions';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Customer {
   id: number;
@@ -46,7 +63,10 @@ export default function CustomersPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const limit = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const limit = itemsPerPage;
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<{ id: number; name: string } | null>(null);
 
   const fetchCustomers = async () => {
     try {
@@ -72,21 +92,27 @@ export default function CustomersPage() {
 
   useEffect(() => {
     fetchCustomers();
-  }, [page, search]);
+  }, [page, search, itemsPerPage]);
 
-  const handleDelete = async (id: number, customerName: string) => {
-    if (!confirm(`¿Está seguro de eliminar el cliente "${customerName}"?`)) {
-      return;
-    }
+  const confirmDelete = (id: number, customerName: string) => {
+    setCustomerToDelete({ id, name: customerName });
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!customerToDelete) return;
 
     try {
-      await apiDelete(`/customers/${id}`);
+      await apiDelete(`/customers/${customerToDelete.id}`);
       toast.success('Cliente eliminado exitosamente');
       fetchCustomers();
     } catch (error: any) {
       toast.error('Error al eliminar cliente', {
         description: error.message || 'No se pudo eliminar el cliente',
       });
+    } finally {
+      setCustomerToDelete(null);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -104,15 +130,9 @@ export default function CustomersPage() {
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    fetchCustomers();
-  };
-
   return (
     <ProtectedPage screenCode="CUSTOMERS" requiredPermission="VIEW">
-      <div className="p-6">
+      <div className="container mx-auto py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -131,24 +151,40 @@ export default function CustomersPage() {
           )}
         </div>
 
-      {/* Search */}
-      <Card className="p-4 mb-6">
-        <form onSubmit={handleSearch} className="flex gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                type="text"
-                placeholder="Buscar por código, nombre, email, teléfono o RNC/Cédula..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-          <Button type="submit">Buscar</Button>
-        </form>
-      </Card>
+      {/* Search and filters */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="relative md:col-span-2">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Buscar por código, nombre, email, teléfono o RNC/Cédula..."
+            className="pl-10 w-full"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
+
+        <Select
+          value={itemsPerPage.toString()}
+          onValueChange={(value) => {
+            setItemsPerPage(Number(value));
+            setPage(1);
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Elementos por página" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="5">5 por página</SelectItem>
+            <SelectItem value="10">10 por página</SelectItem>
+            <SelectItem value="25">25 por página</SelectItem>
+            <SelectItem value="50">50 por página</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -286,32 +322,33 @@ export default function CustomersPage() {
                         {customer.isActive ? 'Activo' : 'Inactivo'}
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end space-x-2">
                         <Link href={`/customers/${customer.id}`}>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="outline" size="sm" className="px-2 py-1">
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
                         {canUpdate && (
                           <Link href={`/customers/edit/${customer.id}`}>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="outline" size="sm" className="px-2 py-1">
                               <Edit className="h-4 w-4" />
                             </Button>
                           </Link>
                         )}
                         {canDelete && (
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
+                            className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
                             onClick={() =>
-                              handleDelete(
+                              confirmDelete(
                                 customer.id,
                                 `${customer.name} ${customer.lastName || ''}`
                               )
                             }
                           >
-                            <Trash2 className="h-4 w-4 text-red-600" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -323,31 +360,79 @@ export default function CustomersPage() {
           </table>
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between">
-            <div className="text-sm text-gray-700 dark:text-gray-300">
-              Página {page} de {totalPages} ({total} clientes en total)
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                Anterior
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                Siguiente
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Pagination controls */}
+      <div className="mt-6 flex items-center justify-between">
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          Mostrando {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total} clientes
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+            disabled={page === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            // Show pages around current page
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (page <= 3) {
+              pageNum = i + 1;
+            } else if (page >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = page - 2 + i;
+            }
+
+            return (
+              <Button
+                key={pageNum}
+                variant={page === pageNum ? "default" : "outline"}
+                size="sm"
+                onClick={() => setPage(pageNum)}
+              >
+                {pageNum}
+              </Button>
+            );
+          })}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={page === totalPages || totalPages === 0}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente el cliente
+              &quot;{customerToDelete?.name}&quot; y todos sus datos asociados del sistema.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="!bg-red-500 hover:!bg-red-600 !text-white"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </ProtectedPage>
   );

@@ -18,12 +18,17 @@ export interface CreditNoteItem {
   id: number;
   creditNoteId: number;
   originalInvoiceItemId?: number;
-  productId: number;
-  product: {
+  variantId: number;
+  variant: {
     id: number;
-    code: string;
-    name: string;
-    description?: string;
+    sku: string;
+    name: string | null;
+    product: {
+      id: number;
+      code: string;
+      name: string;
+      description: string;
+    };
   };
   quantity: number;
   unitPrice: number;
@@ -109,7 +114,7 @@ export interface CreditNote {
 
 export interface CreateCreditNoteItemDto {
   originalInvoiceItemId?: number;
-  productId: number;
+  variantId: number;
   quantity: number;
   unitPrice: number;
   discount?: number;

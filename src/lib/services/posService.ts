@@ -28,7 +28,7 @@ export interface ProductStock {
 }
 
 export interface InvoiceItem {
-  productId: number;
+  variantId: number;
   quantity: number;
   unitPrice: number;
   discount?: number;
@@ -49,6 +49,8 @@ export interface CreateInvoicePayload {
   paymentReference?: string; // Voucher de tarjeta o referencia de transferencia
   manualNcf?: string; // NCF manual (solo si está permitido en configuración)
   items: InvoiceItem[];
+  sendEmail?: boolean; // Enviar factura por correo electrónico
+  customerEmail?: string; // Correo del cliente (opcional, si no se proporciona se usa el del cliente registrado)
 }
 
 export interface Invoice {
@@ -77,19 +79,24 @@ export interface Invoice {
   updatedAt: string;
   items: Array<{
     id: number;
-    productId: number;
+    variantId: number;
     quantity: number;
     unitPrice: string;
+    unitCost?: string; // Costo unitario al momento de la venta (para COGS)
     discount: string;
     subtotal: string;
     tax: string;
     total: string;
-    product: {
+    variant: {
       id: number;
-      code: string;
-      name: string;
-      description: string;
-      price: string;
+      sku: string;
+      name: string | null;
+      product: {
+        id: number;
+        code: string;
+        name: string;
+        description: string;
+      };
     };
   }>;
   branch?: {

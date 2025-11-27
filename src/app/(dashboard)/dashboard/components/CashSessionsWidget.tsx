@@ -75,13 +75,20 @@ export function CashSessionsWidget({
       </div>
 
       {/* Tabla de Sesiones Recientes */}
-      {recentSessions.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Sesiones Recientes</CardTitle>
-            <CardDescription>Últimas sesiones de caja del día</CardDescription>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle>Sesiones Recientes</CardTitle>
+          <CardDescription>Últimas sesiones de caja del día</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {recentSessions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Wallet className="h-12 w-12 text-muted-foreground/50 mb-3" />
+              <p className="text-sm text-muted-foreground">
+                No hay sesiones de caja disponibles
+              </p>
+            </div>
+          ) : (
             <div className="space-y-3">
               {recentSessions.slice(0, 5).map((session) => {
                 const totalDiff = session.difference + (session.differenceVouchers || 0);
@@ -129,9 +136,9 @@ export function CashSessionsWidget({
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

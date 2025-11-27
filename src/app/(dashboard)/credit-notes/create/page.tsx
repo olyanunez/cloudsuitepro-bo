@@ -42,7 +42,7 @@ interface Invoice {
 
 interface ReturnItem {
   originalItemId: number;
-  productId: number;
+  variantId: number;
   productName: string;
   maxQuantity: number;
   quantityToReturn: number;
@@ -90,8 +90,8 @@ export default function CreateCreditNotePage() {
       // Inicializar items para devolución usando availableQuantity en lugar de quantity
       const items: ReturnItem[] = invoiceWithAvailableQty.items.map((item: any) => ({
         originalItemId: item.id,
-        productId: item.productId,
-        productName: item.product.name,
+        variantId: item.variantId,
+        productName: item.variant?.product?.name || item.product?.name || 'Producto sin nombre',
         maxQuantity: item.availableQuantity || 0, // Usar availableQuantity que ya resta lo devuelto
         quantityToReturn: 0,
         unitPrice: parseFloat(item.unitPrice.toString()),
@@ -171,7 +171,7 @@ export default function CreateCreditNotePage() {
       notes: notes || undefined,
       items: itemsToReturn.map(item => ({
         originalInvoiceItemId: item.originalItemId,
-        productId: item.productId,
+        variantId: item.variantId,
         quantity: item.quantityToReturn,
         unitPrice: item.unitPrice,
         discount: item.discount * item.quantityToReturn,

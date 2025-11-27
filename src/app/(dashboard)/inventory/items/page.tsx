@@ -82,9 +82,19 @@ export default function InventoryItemsPage() {
     return items
       .filter(item => {
         const searchTermLower = searchTerm.toLowerCase();
+        const itemAny = item as any;
+        const variant = itemAny.variant;
+        const product = variant?.product || item.product;
+        const productName = product?.name || '';
+        const variantSku = variant?.sku || '';
+        const variantName = variant?.name || '';
+        const warehouseName = item.warehouse?.name || '';
+
         return (
-          (item.product?.name?.toLowerCase().includes(searchTermLower) || false) ||
-          (item.warehouse?.name?.toLowerCase().includes(searchTermLower) || false)
+          productName.toLowerCase().includes(searchTermLower) ||
+          variantSku.toLowerCase().includes(searchTermLower) ||
+          variantName.toLowerCase().includes(searchTermLower) ||
+          warehouseName.toLowerCase().includes(searchTermLower)
         );
       })
       .sort((a, b) => {
@@ -92,8 +102,10 @@ export default function InventoryItemsPage() {
         let fieldB: string | number | Date;
 
         if (sortField === 'product.name') {
-          fieldA = a.product?.name?.toLowerCase() || '';
-          fieldB = b.product?.name?.toLowerCase() || '';
+          const aVariant = (a as any).variant;
+          const bVariant = (b as any).variant;
+          fieldA = (aVariant?.product?.name || a.product?.name || '').toLowerCase();
+          fieldB = (bVariant?.product?.name || b.product?.name || '').toLowerCase();
         } else if (sortField === 'warehouse.name') {
           fieldA = a.warehouse?.name?.toLowerCase() || '';
           fieldB = b.warehouse?.name?.toLowerCase() || '';
@@ -148,7 +160,7 @@ export default function InventoryItemsPage() {
           <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             type="text"
-            placeholder="Buscar por producto o almacén..."
+            placeholder="Buscar por producto, SKU, variante o almacén..."
             className="pl-10 w-full"
             value={searchTerm}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
@@ -241,16 +253,24 @@ export default function InventoryItemsPage() {
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {paginatedItems.map((item) => {
-                const primaryImage = item.product?.images?.find(img => img.isPrimary) || item.product?.images?.[0];
+                const itemAny = item as any;
+                const variant = itemAny.variant;
+                const product = variant?.product || item.product;
+
+                // Para productos con variantes, usar la imagen de la variante; si no, usar la del producto
+                const variantImages = variant?.images || [];
+                const variantPrimaryImage = variantImages.find((img: any) => img.isPrimary) || variantImages[0];
+                const productPrimaryImage = product?.images?.find((img: any) => img.isPrimary) || product?.images?.[0];
+                const displayImage = variantPrimaryImage || productPrimaryImage;
 
                 return (
                   <tr key={item.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="relative w-16 h-16 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600">
-                        {primaryImage ? (
+                        {displayImage ? (
                           <Image
-                            src={primaryImage.url}
-                            alt={item.product?.name || 'Producto'}
+                            src={typeof displayImage === 'string' ? displayImage : displayImage.url}
+                            alt={product?.name || 'Producto'}
                             fill
                             className="object-cover"
                           />
@@ -261,14 +281,27 @@ export default function InventoryItemsPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {item.product?.name || 'N/A'}
+                        {product?.name || 'N/A'}
+                        {variant?.name && <span> - {variant.name}</span>}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {item.product?.code || 'Sin código'}
-                    </div>
-                  </td>
+                        {variant ? `SKU: ${variant.sku}` : (product?.code || 'Sin código')}
+                      </div>
+                      {variant?.attributeValues && variant.attributeValues.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {variant.attributeValues.map((av: any) => (
+                            <span
+                              key={av.id}
+                              className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-medium"
+                            >
+                              {av.attributeValue?.displayName}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                     {item.warehouse?.name || 'N/A'}
                   </td>

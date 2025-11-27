@@ -264,11 +264,14 @@ export default function CreditNoteDetailPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {creditNote.items.map((item) => (
+              {creditNote.items.map((item: any) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-mono">{item.product.code}</TableCell>
+                  <TableCell className="font-mono">{item.variant.product.code}</TableCell>
                   <TableCell>
-                    <div>{item.product.name}</div>
+                    <div>{item.variant.product.name}</div>
+                    {item.variant.name && (
+                      <div className="text-sm text-muted-foreground">{item.variant.name}</div>
+                    )}
                     {item.reason && (
                       <div className="text-xs text-muted-foreground">Razón: {item.reason}</div>
                     )}

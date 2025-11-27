@@ -12,7 +12,17 @@ export function TopCustomersWidget() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Cargar datos inicialmente
     loadTopCustomers();
+
+    // Recargar cuando la ventana recibe focus
+    const handleFocus = () => {
+      loadTopCustomers();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadTopCustomers = async () => {
