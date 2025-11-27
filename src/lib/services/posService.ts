@@ -82,6 +82,7 @@ export interface Invoice {
     variantId: number;
     quantity: number;
     unitPrice: string;
+    unitCost?: string; // Costo unitario al momento de la venta (para COGS)
     discount: string;
     subtotal: string;
     tax: string;
