@@ -47,11 +47,11 @@ const menuItems = [
     icon: 'calculator',
     screenCode: null, // Este es un contenedor, no requiere permisos
     submenu: [
-      { name: 'Panel Contable', href: '/accounting', icon: 'layout-dashboard', screenCode: 'FINANCIAL_REPORTS' },
-      { name: 'Plan de Cuentas', href: '/accounting/accounts', icon: 'book-open', screenCode: 'CHART_OF_ACCOUNTS' },
-      { name: 'Asientos Contables', href: '/accounting/journal-entries', icon: 'file-text', screenCode: 'JOURNAL_ENTRIES' },
-      { name: 'Balance General', href: '/accounting/reports/balance-sheet', icon: 'bar-chart-3', screenCode: 'FINANCIAL_REPORTS' },
-      { name: 'Estado de Resultados', href: '/accounting/reports/income-statement', icon: 'trending-up', screenCode: 'FINANCIAL_REPORTS' },
+      { name: 'Panel Contable', href: '/accounting', icon: 'layout-dashboard', screenCode: 'ACCOUNTING' },
+      { name: 'Plan de Cuentas', href: '/accounting/accounts', icon: 'book-open', screenCode: 'ACCOUNTING' },
+      { name: 'Asientos Contables', href: '/accounting/journal-entries', icon: 'file-text', screenCode: 'ACCOUNTING' },
+      { name: 'Balance General', href: '/accounting/reports/balance-sheet', icon: 'bar-chart-3', screenCode: 'ACCOUNTING' },
+      { name: 'Estado de Resultados', href: '/accounting/reports/income-statement', icon: 'trending-up', screenCode: 'ACCOUNTING' },
     ]
   },
   {
@@ -73,12 +73,23 @@ const menuItems = [
     screenCode: null, // Este es un contenedor, no requiere permisos
     submenu: [
       { name: 'Inventario', href: '/inventory/items', icon: 'box', screenCode: 'INVENTORY' },
+      { name: 'Lotes', href: '/inventory/batches', icon: 'layers', screenCode: 'INVENTORY' },
       { name: 'Categorías', href: '/inventory/categories', icon: 'tag', screenCode: 'PRODUCT_CATEGORY' },
       { name: 'Productos', href: '/inventory/products', icon: 'shopping-bag', screenCode: 'PRODUCTS' },
       { name: 'Sucursales', href: '/inventory/branches', icon: 'building-2', screenCode: 'BRANCH' },
       { name: 'Almacenes', href: '/inventory/warehouses', icon: 'building', screenCode: 'WAREHOUSE' },
       { name: 'Movimientos', href: '/inventory/movements', icon: 'repeat', screenCode: 'MOVEMENTS' },
       { name: 'Reportes', href: '/inventory/reports', icon: 'bar-chart-2', screenCode: 'INVENTORY_REPORT' },
+    ]
+  },
+  {
+    name: 'Compras',
+    href: '/purchases',
+    icon: 'truck',
+    screenCode: null, // Este es un contenedor, no requiere permisos
+    submenu: [
+      { name: 'Proveedores', href: '/suppliers', icon: 'truck', screenCode: 'SUPPLIERS' },
+      { name: 'Órdenes de Compra', href: '/purchase-orders', icon: 'file-text', screenCode: 'PURCHASE_ORDERS' },
     ]
   },
   {
@@ -204,8 +215,19 @@ export default function Navbar() {
   React.useEffect(() => {
     const newOpenSubmenus: Record<string, boolean> = {}
     filteredMenuItems.forEach(item => {
-      if (item && item.submenu && (pathname === item.href || pathname.startsWith(item.href + '/'))) {
-        newOpenSubmenus[item.href] = true
+      if (item && item.submenu) {
+        // Verificar si la ruta actual coincide con el item padre
+        const isParentActive = pathname === item.href || pathname.startsWith(item.href + '/')
+
+        // Verificar si algún sub-item coincide con la ruta actual
+        const isSubItemActive = item.submenu.some(subItem =>
+          pathname === subItem.href || pathname.startsWith(subItem.href + '/')
+        )
+
+        // Abrir el submenú si el padre o algún hijo está activo
+        if (isParentActive || isSubItemActive) {
+          newOpenSubmenus[item.href] = true
+        }
       }
     })
     setOpenSubmenus(newOpenSubmenus)
@@ -392,7 +414,7 @@ export default function Navbar() {
 
       {/* Drawer para móvil */}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="w-[240px] sm:w-[300px] flex flex-col">
+        <SheetContent side="left" className="w-[240px] sm:w-[300px] flex flex-col rounded-r-[30px]">
           {/* Logo en el sidebar */}
           <div className="flex items-center justify-center  border-b border-gray-200 dark:border-gray-800">
             <Image

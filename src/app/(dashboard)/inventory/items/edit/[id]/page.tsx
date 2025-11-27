@@ -138,6 +138,10 @@ export default function EditInventoryItemPage() {
     );
   }
 
+  const itemAny = item as any;
+  const variant = itemAny.variant;
+  const product = variant?.product || item.product;
+
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6 flex items-center">
@@ -157,24 +161,27 @@ export default function EditInventoryItemPage() {
               <Label htmlFor="product">Producto</Label>
               <Input
                 id="product"
-                value={item.product?.name || 'N/A'}
+                value={product?.name || 'N/A'}
                 disabled
                 className="mt-1 bg-gray-100 dark:bg-gray-700"
               />
               <p className="text-xs text-gray-500 mt-1">No se puede cambiar el producto</p>
 
-              {/* Product Image Preview */}
-              {item.product && (() => {
-                const primaryImage = item.product.images?.find(img => img.isPrimary) || item.product.images?.[0];
+              {/* Product/Variant Image Preview */}
+              {product && (() => {
+                const variantImages = variant?.images || [];
+                const variantPrimaryImage = variantImages.find((img: any) => img.isPrimary) || variantImages[0];
+                const productPrimaryImage = product.images?.find((img: any) => img.isPrimary) || product.images?.[0];
+                const displayImage = variantPrimaryImage || productPrimaryImage;
 
                 return (
                   <div className="mt-3 p-3 border border-gray-200 dark:border-gray-600 rounded-md">
                     <div className="flex items-center gap-3">
                       <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600">
-                        {primaryImage ? (
+                        {displayImage ? (
                           <Image
-                            src={primaryImage.url}
-                            alt={item.product.name}
+                            src={displayImage.url}
+                            alt={variant?.name || product.name}
                             fill
                             className="object-cover"
                           />
@@ -186,13 +193,14 @@ export default function EditInventoryItemPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {item.product.name}
+                          {product.name}
+                          {variant?.name && <span className="text-gray-500"> - {variant.name}</span>}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Código: {item.product.code}
+                          {variant ? `SKU: ${variant.sku}` : `Código: ${product.code}`}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Precio: ${item.product.price}
+                          Precio: ${variant?.price || product.price}
                         </p>
                       </div>
                     </div>

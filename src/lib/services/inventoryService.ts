@@ -5,11 +5,13 @@ import {
   CreateBranchDto,
   CreateInventoryItemDto,
   CreateInventoryMovementDto,
+  CreateVariantInventoryMovementDto,
   CreateProductCategoryDto,
   CreateProductDto,
   CreateWarehouseDto,
   InventoryItem,
   InventoryMovement,
+  VariantInventoryMovement,
   LowStockReport,
   MovementType,
   Product,
@@ -161,12 +163,20 @@ export const ProductService = {
   deleteProduct: async (id: number): Promise<void> => {
     return apiDelete(`/products/${id}`);
   },
+
+  generateBarcode: async (): Promise<{ barcode: string }> => {
+    return apiGet('/products/generate-barcode');
+  },
 };
 
 // Servicio para almacenes
 export const WarehouseService = {
   getWarehouses: async (): Promise<Warehouse[]> => {
     return apiGet('/warehouses');
+  },
+
+  getUserWarehouses: async (): Promise<Warehouse[]> => {
+    return apiGet('/warehouses/user/my-warehouses');
   },
 
   getWarehouseById: async (id: number): Promise<Warehouse> => {
@@ -242,7 +252,7 @@ export const InventoryService = {
     return apiGet(`/inventory/movements/${id}`);
   },
 
-  createMovement: async (data: CreateInventoryMovementDto): Promise<InventoryMovement> => {
+  createMovement: async (data: CreateInventoryMovementDto | CreateVariantInventoryMovementDto): Promise<InventoryMovement | VariantInventoryMovement> => {
     return apiPost('/inventory/movements', data);
   },
 

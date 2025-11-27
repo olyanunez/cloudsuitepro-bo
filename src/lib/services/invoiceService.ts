@@ -3,19 +3,23 @@
 import { apiGet, apiPost } from './apiService';
 
 /**
- * Interfaz para el producto en un item de factura
+ * Interfaz para el producto dentro de una variante
  */
 export interface InvoiceItemProduct {
   id: number;
   code: string;
   name: string;
-  description?: string;
-  price: number;
-  cost?: number;
-  category?: {
-    id: number;
-    name: string;
-  };
+  description: string;
+}
+
+/**
+ * Interfaz para la variante en un item de factura
+ */
+export interface InvoiceItemVariant {
+  id: number;
+  sku: string;
+  name: string | null;
+  product: InvoiceItemProduct;
 }
 
 /**
@@ -23,14 +27,15 @@ export interface InvoiceItemProduct {
  */
 export interface InvoiceItem {
   id: number;
-  productId: number;
+  variantId: number;
   quantity: number;
   unitPrice: number;
+  unitCost?: number; // Costo unitario al momento de la venta (para COGS)
   subtotal: number;
   tax: number;
   discount: number;
   total: number;
-  product: InvoiceItemProduct;
+  variant: InvoiceItemVariant;
 }
 
 /**
@@ -75,25 +80,32 @@ export interface InvoiceUser {
 export interface Invoice {
   id: number;
   invoiceNumber: string;
+  ncf: string | null;
+  ncfType: string | null;
+  ncfValidUntil: string | null;
+  customerId: number | null;
+  customerName: string | null;
+  customerRnc: string | null;
   branchId: number;
   warehouseId: number;
-  customerId: number;
   userId: number;
-  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
-  paymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | 'OTHER';
+  tenantId: number;
+  status: string;
+  paymentMethod: string;
   subtotal: number;
   tax: number;
   discount: number;
   total: number;
-  notes?: string;
+  notes: string | null;
+  paymentReference: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
   items: InvoiceItem[];
-  customer: InvoiceCustomer;
-  branch: InvoiceBranch;
-  warehouse: InvoiceWarehouse;
-  user: InvoiceUser;
+  customer?: InvoiceCustomer;
+  branch?: InvoiceBranch;
+  warehouse?: InvoiceWarehouse;
+  user?: InvoiceUser;
 }
 
 /**

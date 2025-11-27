@@ -167,7 +167,7 @@ const SheetContent = React.forwardRef<HTMLDivElement, SheetContentProps>(
           className={`${sheetVariants({ side })} ${className}`}
           {...props}
         >
-          <SheetClose className="absolute right-4 top-4" />
+          {/* <SheetClose className="absolute right-4 top-4" /> */}
           {children}
         </div>
       </div>

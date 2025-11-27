@@ -1,5 +1,8 @@
 // Interfaces para el módulo de inventario
 
+// Re-export new variant-based types from product.ts
+export type { Product, InventoryItem, CreateProductDto, UpdateProductDto } from './product';
+
 export interface ProductCategory {
   id: number;
   name: string;
@@ -20,7 +23,12 @@ export interface ProductImage {
   updatedAt: string;
 }
 
-export interface Product {
+/**
+ * @deprecated Use Product from './product.ts' instead.
+ * This interface is kept for backward compatibility but will be removed in future versions.
+ * Products now support variants - see ProductVariant in './product.ts'
+ */
+export interface ProductLegacy {
   id: number;
   code: string;
   name: string;
@@ -35,7 +43,7 @@ export interface Product {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  inventoryItems?: InventoryItem[];
+  inventoryItems?: InventoryItemLegacy[];
 }
 
 export interface Branch {
@@ -64,10 +72,15 @@ export interface Warehouse {
   updatedAt: string;
 }
 
-export interface InventoryItem {
+/**
+ * @deprecated Use InventoryItem from './product.ts' instead.
+ * This interface is kept for backward compatibility.
+ * Inventory is now tracked at variant level, not product level.
+ */
+export interface InventoryItemLegacy {
   id: number;
   productId: number;
-  product?: Product;
+  product?: ProductLegacy;
   warehouseId: number;
   warehouse?: Warehouse;
   quantity: number;
@@ -85,11 +98,44 @@ export enum MovementType {
   TRANSFERENCIA = 'TRANSFERENCIA',
 }
 
+export interface BatchMovement {
+  id: number;
+  batchId: number;
+  batch: {
+    id: number;
+    batchNumber: string;
+    unitCost: number;
+    totalCost: number;
+    initialQuantity: number;
+    currentQuantity: number;
+    reservedQuantity: number;
+    status: string;
+    expirationDate?: string;
+    manufacturingDate?: string;
+    supplierName?: string;
+    purchaseOrderRef?: string;
+    location?: string;
+  };
+  type: string;
+  quantity: number;
+  quantityBefore: number;
+  quantityAfter: number;
+  inventoryMovementId?: number;
+  reference?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * @deprecated This interface uses the old product-based inventory.
+ * New implementations should use variant-based inventory movements.
+ */
 export interface InventoryMovement {
   id: number;
   type: MovementType;
   productId: number;
-  product?: Product;
+  product?: ProductLegacy;
   sourceWarehouseId?: number;
   sourceWarehouse?: Warehouse;
   destinationWarehouseId?: number;
@@ -97,6 +143,7 @@ export interface InventoryMovement {
   quantity: number;
   reference?: string;
   notes?: string;
+  batchMovements?: BatchMovement[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -115,7 +162,11 @@ export interface UpdateProductCategoryDto {
   isActive?: boolean;
 }
 
-export interface CreateProductDto {
+/**
+ * @deprecated Use CreateProductDto from './product.ts' instead.
+ * Products now support variants.
+ */
+export interface CreateProductDtoLegacy {
   code: string;
   name: string;
   description?: string;
@@ -126,7 +177,11 @@ export interface CreateProductDto {
   categoryId: number;
 }
 
-export interface UpdateProductDto {
+/**
+ * @deprecated Use UpdateProductDto from './product.ts' instead.
+ * Products now support variants.
+ */
+export interface UpdateProductDtoLegacy {
   code?: string;
   name?: string;
   description?: string;
@@ -171,6 +226,9 @@ export interface UpdateWarehouseDto {
   address?: string;
 }
 
+/**
+ * @deprecated Inventory items are now created automatically when variants are created.
+ */
 export interface CreateInventoryItemDto {
   productId: number;
   warehouseId: number;
@@ -185,6 +243,10 @@ export interface UpdateInventoryItemDto {
   maxStock?: number;
 }
 
+/**
+ * @deprecated Use variant-based inventory movements instead.
+ * Replace productId with variantId in new implementations.
+ */
 export interface CreateInventoryMovementDto {
   type: MovementType;
   productId: number;
@@ -193,6 +255,79 @@ export interface CreateInventoryMovementDto {
   quantity: number;
   reference?: string;
   notes?: string;
+  // Batch-related fields
+  existingBatchId?: number;
+  batchNumber?: string;
+  unitCost?: number;
+  expirationDate?: string;
+  manufacturingDate?: string;
+  supplierName?: string;
+  purchaseOrderRef?: string;
+  location?: string;
+}
+
+// New variant-based inventory movement interfaces
+export interface VariantInventoryMovement {
+  id: number;
+  type: MovementType;
+  variantId: number;
+  variant?: {
+    id: number;
+    sku: string;
+    barcode?: string;
+    name?: string;
+    price?: number;
+    cost?: number;
+    imageUrl?: string;
+    product?: {
+      id: number;
+      code: string;
+      name: string;
+    };
+    attributeValues?: Array<{
+      id: number;
+      attributeValue?: {
+        id: number;
+        value: string;
+        displayName: string;
+        attribute?: {
+          id: number;
+          name: string;
+          displayName: string;
+        };
+      };
+    }>;
+  };
+  sourceWarehouseId?: number;
+  sourceWarehouse?: Warehouse;
+  destinationWarehouseId?: number;
+  destinationWarehouse?: Warehouse;
+  quantity: number;
+  reference?: string;
+  notes?: string;
+  batchMovements?: BatchMovement[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateVariantInventoryMovementDto {
+  type: MovementType;
+  variantId: number;
+  sourceWarehouseId?: number;
+  destinationWarehouseId?: number;
+  quantity: number;
+  reference?: string;
+  notes?: string;
+  // Batch-related fields
+  existingBatchId?: number;
+  batchNumber?: string;
+  unitCost?: number;
+  expirationDate?: string;
+  manufacturingDate?: string;
+  supplierName?: string;
+  purchaseOrderRef?: string;
+  location?: string;
 }
 
 // Interfaces para reportes

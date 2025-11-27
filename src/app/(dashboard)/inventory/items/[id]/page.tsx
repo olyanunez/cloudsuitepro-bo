@@ -6,6 +6,7 @@ import { InventoryService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ArrowLeftIcon, PencilIcon, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
@@ -60,15 +61,22 @@ export default function InventoryItemDetailPage() {
     );
   }
 
-  const productImages = item.product?.images || [];
-  const hasImages = productImages.length > 0;
+  const itemAny = item as any;
+  const variant = itemAny.variant;
+  const product = variant?.product || item.product;
+
+  // Determinar las imágenes a mostrar: primero variante, luego producto
+  const variantImages = variant?.images || [];
+  const productImages = product?.images || [];
+  const displayImages = variantImages.length > 0 ? variantImages : productImages;
+  const hasImages = displayImages.length > 0;
 
   const nextImage = () => {
-    setSelectedImageIndex((prev) => (prev + 1) % productImages.length);
+    setSelectedImageIndex((prev) => (prev + 1) % displayImages.length);
   };
 
   const prevImage = () => {
-    setSelectedImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
+    setSelectedImageIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
   };
 
   return (
@@ -92,21 +100,23 @@ export default function InventoryItemDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Product Images Carousel - Left Side */}
+        {/* Product/Variant Images Carousel - Left Side */}
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Imágenes del Producto</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {variant ? 'Imagen de la Variante' : 'Imágenes del Producto'}
+            </h2>
             {hasImages ? (
               <div className="space-y-4">
                 {/* Main Image */}
                 <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                   <Image
-                    src={productImages[selectedImageIndex].url}
-                    alt={`${item.product?.name} - ${selectedImageIndex + 1}`}
+                    src={displayImages[selectedImageIndex].url}
+                    alt={`${variant?.name || product?.name} - ${selectedImageIndex + 1}`}
                     fill
                     className="object-cover"
                   />
-                  {productImages.length > 1 && (
+                  {displayImages.length > 1 && (
                     <>
                       <button
                         onClick={prevImage}
@@ -129,11 +139,11 @@ export default function InventoryItemDetailPage() {
                 </div>
 
                 {/* Thumbnails */}
-                {productImages.length > 1 && (
+                {displayImages.length > 1 && (
                   <div className="grid grid-cols-4 gap-2">
-                    {productImages.map((image, index) => (
+                    {displayImages.map((image, index) => (
                       <button
-                        key={index}
+                        key={image.id || index}
                         onClick={() => setSelectedImageIndex(index)}
                         className={`relative aspect-square rounded-md overflow-hidden border-2 transition-all ${
                           index === selectedImageIndex
@@ -153,7 +163,7 @@ export default function InventoryItemDetailPage() {
                 )}
 
                 <div className="text-center text-sm text-gray-500 dark:text-gray-400">
-                  {productImages.length} {productImages.length === 1 ? 'imagen' : 'imágenes'}
+                  {displayImages.length} {displayImages.length === 1 ? 'imagen' : 'imágenes'}
                 </div>
               </div>
             ) : (
@@ -174,9 +184,38 @@ export default function InventoryItemDetailPage() {
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Producto</p>
-                <p className="font-medium">{item.product?.name || 'N/A'}</p>
-                <p className="text-xs text-gray-500">{item.product?.code || 'Sin código'}</p>
+                <p className="font-medium">
+                  {product?.name || 'N/A'}
+                  {variant?.name && <span className="text-muted-foreground"> - {variant.name}</span>}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {variant ? `SKU: ${variant.sku}` : (product?.code || 'Sin código')}
+                </p>
               </div>
+
+              {variant?.attributeValues && variant.attributeValues.length > 0 && (
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Atributos de la Variante</p>
+                  <div className="flex flex-wrap gap-2">
+                    {variant.attributeValues.map((av: any) => (
+                      <span
+                        key={av.id}
+                        className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium"
+                      >
+                        {av.attributeValue?.attribute?.displayName || av.attributeValue?.attribute?.name}: {av.attributeValue?.displayName || av.attributeValue?.value}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {variant?.barcode && (
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Código de Barras</p>
+                  <p className="font-medium font-mono">{variant.barcode}</p>
+                </div>
+              )}
+
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Almacén</p>
                 <p className="font-medium">{item.warehouse?.name || 'N/A'}</p>
@@ -213,42 +252,76 @@ export default function InventoryItemDetailPage() {
           </div>
 
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Información del Producto</h2>
-            {!item.product ? (
+            <h2 className="text-xl font-semibold mb-4">
+              {variant ? 'Información de Precio y Producto' : 'Información del Producto'}
+            </h2>
+            {!product ? (
               <p className="text-gray-500 dark:text-gray-400">No hay información disponible sobre el producto.</p>
             ) : (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Nombre del Producto</p>
-                    <p className="font-medium">{item.product.name}</p>
+                    <p className="font-medium">{product.name}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Código</p>
-                    <p className="font-medium">{item.product.code}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Código del Producto</p>
+                    <p className="font-medium">{product.code}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Precio</p>
-                    <p className="font-medium">{formatCurrency(typeof item.product.price === 'number' ? item.product.price : parseFloat(item.product.price || '0'))}</p>
+                    <p className="font-medium">
+                      {formatCurrency(
+                        typeof (variant?.price || product.price) === 'number'
+                          ? (variant?.price || product.price)
+                          : parseFloat((variant?.price || product.price) as string || '0')
+                      )}
+                    </p>
+                    {variant && variant.price !== undefined && (
+                      <p className="text-xs text-gray-500">
+                        {variant.price !== product.price ? 'Precio específico de variante' : 'Precio del producto base'}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Costo</p>
-                    <p className="font-medium">{formatCurrency(typeof item.product.cost === 'number' ? item.product.cost : parseFloat(item.product.cost || '0'))}</p>
+                    <p className="font-medium">
+                      {formatCurrency(
+                        typeof (variant?.cost || product.cost) === 'number'
+                          ? (variant?.cost || product.cost)
+                          : parseFloat((variant?.cost || product.cost) as string || '0')
+                      )}
+                    </p>
+                    {variant && variant.cost !== undefined && (
+                      <p className="text-xs text-gray-500">
+                        {variant.cost !== product.cost ? 'Costo específico de variante' : 'Costo del producto base'}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Categoría</p>
-                    <p className="font-medium">{item.product.category?.name || 'Sin categoría'}</p>
+                    <p className="font-medium">{product.category?.name || 'Sin categoría'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Estado</p>
-                    <p className="font-medium">{item.product.isActive ? 'Activo' : 'Inactivo'}</p>
+                    <p className="font-medium">{product.isActive ? 'Activo' : 'Inactivo'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Tipo de Producto</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                      product.isStockable
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100'
+                        : 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100'
+                    }`}>
+                      {product.isStockable ? 'Inventariable' : 'Servicio'}
+                    </span>
                   </div>
                 </div>
 
-                {item.product.description && (
+                {product.description && (
                   <div className="mt-4">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Descripción</p>
-                    <p className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">{item.product.description}</p>
+                    <p className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">{product.description}</p>
                   </div>
                 )}
               </div>
