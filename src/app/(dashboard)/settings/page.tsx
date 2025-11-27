@@ -2,12 +2,11 @@
 
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, User, Briefcase, Settings as SettingsIcon, CreditCard } from 'lucide-react';
+import { Building2, User, Briefcase, Settings as SettingsIcon } from 'lucide-react';
 import CompanyTab from './components/CompanyTab';
 import ProfileTab from './components/ProfileTab';
 import BusinessTab from './components/BusinessTab';
 import SystemTab from './components/SystemTab';
-import Link from 'next/link';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('company');
@@ -24,7 +23,7 @@ export default function SettingsPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
           <TabsTrigger value="company" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
             <span className="hidden sm:inline">Empresa</span>
@@ -40,12 +39,6 @@ export default function SettingsPage() {
           <TabsTrigger value="system" className="flex items-center gap-2">
             <SettingsIcon className="h-4 w-4" />
             <span className="hidden sm:inline">Sistema</span>
-          </TabsTrigger>
-          <TabsTrigger value="subscription" asChild>
-            <Link href="/settings/subscription" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              <span className="hidden sm:inline">Suscripción</span>
-            </Link>
           </TabsTrigger>
         </TabsList>
 

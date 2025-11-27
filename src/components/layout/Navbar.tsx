@@ -108,7 +108,17 @@ const menuItems = [
     ]
   },
   { name: 'Clientes', href: '/customers', icon: 'users', screenCode: 'CUSTOMERS' },
-  { name: 'Configuración', href: '/settings', icon: 'settings', screenCode: 'TENANT' },
+  {
+    name: 'Configuración',
+    href: '/settings',
+    icon: 'settings',
+    screenCode: null, // Este es un contenedor, no requiere permisos
+    submenu: [
+      { name: 'General', href: '/settings', icon: 'settings', screenCode: 'TENANT' },
+      { name: 'Suscripción', href: '/settings/subscription', icon: 'credit-card', screenCode: null },
+      { name: 'Facturación', href: '/settings/billing', icon: 'wallet', screenCode: null },
+    ]
+  },
 ]
 
 export default function Navbar() {

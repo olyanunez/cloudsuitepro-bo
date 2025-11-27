@@ -35,18 +35,16 @@ export function TrialBanner() {
           )}
           <div className="flex-1">
             <h3
-              className={`font-semibold ${
-                isEndingSoon ? 'text-red-900' : 'text-blue-900'
-              }`}
+              className={`font-semibold ${isEndingSoon ? 'text-red-900' : 'text-blue-900'
+                }`}
             >
               {isEndingSoon
                 ? '¡Tu período de prueba está por terminar!'
                 : 'Período de prueba activo'}
             </h3>
             <AlertDescription
-              className={`mt-1 ${
-                isEndingSoon ? 'text-red-800' : 'text-blue-700'
-              }`}
+              className={`mt-1 ${isEndingSoon ? 'text-red-800' : 'text-blue-700'
+                }`}
             >
               {trialDaysRemaining === 1 ? (
                 <>
