@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, CreditCard, Calendar, AlertCircle, CheckCircle2, XCircle, Users, Package, Building2, Warehouse } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, CreditCard, Calendar, AlertCircle, CheckCircle2, XCircle, Users, Package, Building2, Warehouse, Check } from 'lucide-react';
 import { SubscriptionService } from '@/lib/services/subscriptionService';
 import { Subscription, Plan, UsageStats } from '@/lib/types/subscription';
 import { toast } from 'react-hot-toast';
@@ -16,6 +17,9 @@ export default function SubscriptionPage() {
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState(false);
+  const [showChangePlanDialog, setShowChangePlanDialog] = useState(false);
+  const [availablePlans, setAvailablePlans] = useState<Plan[]>([]);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
   useEffect(() => {
     loadSubscriptionData();
@@ -41,6 +45,47 @@ export default function SubscriptionPage() {
       toast.error('Error al cargar la información de la suscripción');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAvailablePlans = async () => {
+    try {
+      const plans = await SubscriptionService.getAvailablePlans();
+      setAvailablePlans(plans);
+    } catch (error) {
+      console.error('Error loading plans:', error);
+      toast.error('Error al cargar los planes disponibles');
+    }
+  };
+
+  const handleOpenChangePlan = async () => {
+    await loadAvailablePlans();
+    setShowChangePlanDialog(true);
+  };
+
+  const handleChangePlan = async () => {
+    if (!selectedPlan || !subscription) {
+      toast.error('Por favor selecciona un plan');
+      return;
+    }
+
+    if (selectedPlan.id === subscription.planId) {
+      toast.error('Ya estás suscrito a este plan');
+      return;
+    }
+
+    try {
+      setLoadingAction(true);
+      await SubscriptionService.changePlan(subscription.id, { planId: selectedPlan.id });
+      toast.success(`Plan cambiado exitosamente a ${selectedPlan.name}`);
+      setShowChangePlanDialog(false);
+      setSelectedPlan(null);
+      await loadSubscriptionData();
+    } catch (error: any) {
+      console.error('Error changing plan:', error);
+      toast.error(error.message || 'Error al cambiar el plan');
+    } finally {
+      setLoadingAction(false);
     }
   };
 
@@ -191,7 +236,7 @@ export default function SubscriptionPage() {
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => toast.info('Funcionalidad de cambio de plan próximamente')}
+              onClick={handleOpenChangePlan}
             >
               Cambiar Plan
             </Button>
@@ -199,7 +244,9 @@ export default function SubscriptionPage() {
               <Button
                 variant="outline"
                 className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={() => toast.info('Funcionalidad de cancelación próximamente')}
+                onClick={() => toast('Funcionalidad de cancelación próximamente', {
+                  icon: 'ℹ️',
+                })}
               >
                 Cancelar Suscripción
               </Button>
@@ -406,6 +453,110 @@ export default function SubscriptionPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog para cambiar plan */}
+      <Dialog open={showChangePlanDialog} onOpenChange={setShowChangePlanDialog}>
+        <DialogContent className="max-w-[92vw] w-[92vw] lg:max-w-[1500px] lg:w-[1500px] max-h-[90vh] overflow-y-auto p-10">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-3xl">Cambiar Plan de Suscripción</DialogTitle>
+            <DialogDescription className="text-lg">
+              Selecciona el plan que mejor se adapte a tus necesidades. Los cambios se aplicarán inmediatamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 py-4">
+            {availablePlans.map((plan) => {
+              const isCurrentPlan = subscription?.planId === plan.id;
+              const isSelected = selectedPlan?.id === plan.id;
+
+              return (
+                <Card
+                  key={plan.id}
+                  className={`cursor-pointer transition-all ${isSelected
+                    ? 'ring-2 ring-primary border-primary'
+                    : isCurrentPlan
+                      ? 'border-green-500 bg-green-50'
+                      : 'hover:border-gray-400'
+                    }`}
+                  onClick={() => setSelectedPlan(plan)}
+                >
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-lg">{plan.name}</CardTitle>
+                      {isCurrentPlan && (
+                        <Badge variant="outline" className="bg-green-500 text-white">
+                          Plan Actual
+                        </Badge>
+                      )}
+                      {isSelected && !isCurrentPlan && (
+                        <Check className="h-5 w-5 text-primary" />
+                      )}
+                    </div>
+                    <CardDescription className="text-2xl font-bold">
+                      ${plan.monthlyPrice}
+                      <span className="text-sm font-normal text-muted-foreground">/mes</span>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {plan.description}
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        <span>
+                          {plan.maxUsers ? `${plan.maxUsers} usuarios` : 'Usuarios ilimitados'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4" />
+                        <span>
+                          {plan.maxProducts ? `${plan.maxProducts} productos` : 'Productos ilimitados'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        <span>
+                          {plan.maxBranches ? `${plan.maxBranches} sucursales` : 'Sucursales ilimitadas'}
+                        </span>
+                      </div>
+                      {plan.hasAPIAccess && (
+                        <div className="flex items-center gap-2 text-green-600">
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span>Acceso API</span>
+                        </div>
+                      )}
+                      {plan.hasFullAccounting && (
+                        <div className="flex items-center gap-2 text-green-600">
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span>Contabilidad Completa</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowChangePlanDialog(false)}
+              disabled={loadingAction}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleChangePlan}
+              disabled={!selectedPlan || selectedPlan.id === subscription?.planId || loadingAction}
+            >
+              {loadingAction && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmar Cambio
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

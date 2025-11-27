@@ -33,6 +33,13 @@ export class SubscriptionService {
   }
 
   /**
+   * Alias para getPlans - Obtiene planes disponibles
+   */
+  static async getAvailablePlans(): Promise<Plan[]> {
+    return this.getPlans();
+  }
+
+  /**
    * Obtiene un plan específico por su código
    */
   static async getPlanByCode(code: string): Promise<Plan> {
