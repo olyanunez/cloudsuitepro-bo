@@ -1,0 +1,411 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Loader2, CreditCard, Calendar, AlertCircle, CheckCircle2, XCircle, Users, Package, Building2, Warehouse } from 'lucide-react';
+import { SubscriptionService } from '@/lib/services/subscriptionService';
+import { Subscription, Plan, UsageStats } from '@/lib/types/subscription';
+import { toast } from 'react-hot-toast';
+import { getTenantId } from '@/lib/services/apiService';
+
+export default function SubscriptionPage() {
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingAction, setLoadingAction] = useState(false);
+
+  useEffect(() => {
+    loadSubscriptionData();
+  }, []);
+
+  const loadSubscriptionData = async () => {
+    try {
+      setLoading(true);
+      const tenantId = getTenantId();
+      if (!tenantId) {
+        throw new Error('No se encontró el ID del tenant');
+      }
+
+      const sub = await SubscriptionService.getCurrentSubscription(parseInt(tenantId));
+      setSubscription(sub);
+
+      if (sub) {
+        const stats = await SubscriptionService.getUsageStats(sub.id);
+        setUsageStats(stats);
+      }
+    } catch (error) {
+      console.error('Error loading subscription:', error);
+      toast.error('Error al cargar la información de la suscripción');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const config = {
+      TRIAL: { color: 'bg-blue-500', text: 'Período de Prueba', icon: CheckCircle2 },
+      ACTIVE: { color: 'bg-green-500', text: 'Activa', icon: CheckCircle2 },
+      PAST_DUE: { color: 'bg-yellow-500', text: 'Pago Pendiente', icon: AlertCircle },
+      SUSPENDED: { color: 'bg-orange-500', text: 'Suspendida', icon: XCircle },
+      CANCELLED: { color: 'bg-red-500', text: 'Cancelada', icon: XCircle },
+      EXPIRED: { color: 'bg-gray-500', text: 'Expirada', icon: XCircle },
+    };
+
+    const { color, text, icon: Icon } = config[status as keyof typeof config] || config.EXPIRED;
+
+    return (
+      <Badge className={`${color} text-white`}>
+        <Icon className="h-3 w-3 mr-1" />
+        {text}
+      </Badge>
+    );
+  };
+
+  const getUsagePercentage = (current: number, max: number | null): number => {
+    if (max === null) return 0; // Ilimitado
+    return Math.min((current / max) * 100, 100);
+  };
+
+  const getUsageColor = (percentage: number): string => {
+    if (percentage >= 90) return 'bg-red-500';
+    if (percentage >= 75) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-12 w-12 animate-spin text-yellow-500" />
+      </div>
+    );
+  }
+
+  if (!subscription) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>No hay suscripción activa</CardTitle>
+            <CardDescription>
+              No se encontró una suscripción para tu cuenta. Por favor contacta a soporte.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  const trialDaysRemaining = SubscriptionService.getTrialDaysRemaining(subscription);
+  const isInTrial = SubscriptionService.isInTrial(subscription);
+  const isActive = SubscriptionService.isSubscriptionActive(subscription);
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Suscripción</h1>
+        <p className="text-gray-600 mt-1">
+          Gestiona tu plan y uso de recursos
+        </p>
+      </div>
+
+      {/* Trial Alert */}
+      {isInTrial && trialDaysRemaining !== null && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="pt-6">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-blue-900">
+                  Período de prueba activo
+                </h3>
+                <p className="text-sm text-blue-700 mt-1">
+                  Te quedan <span className="font-bold">{trialDaysRemaining} días</span> de prueba gratis.
+                  Después de este período, necesitarás activar un método de pago para continuar usando el servicio.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Plan Actual */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                Plan {subscription.plan.name}
+                {getStatusBadge(subscription.status)}
+              </CardTitle>
+              <CardDescription className="mt-2">
+                {subscription.plan.description}
+              </CardDescription>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-gray-900">
+                {SubscriptionService.formatPrice(
+                  typeof subscription.amount === 'string'
+                    ? parseFloat(subscription.amount)
+                    : subscription.amount
+                )}
+              </div>
+              <div className="text-sm text-gray-600">
+                / {SubscriptionService.getBillingCycleName(subscription.billingCycle)}
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Fecha de inicio */}
+            <div className="flex items-center space-x-3">
+              <Calendar className="h-5 w-5 text-gray-400" />
+              <div>
+                <p className="text-sm text-gray-600">Fecha de inicio</p>
+                <p className="font-medium">
+                  {new Date(subscription.startDate).toLocaleDateString('es-DO')}
+                </p>
+              </div>
+            </div>
+
+            {/* Próximo pago */}
+            {subscription.nextBillingDate && (
+              <div className="flex items-center space-x-3">
+                <CreditCard className="h-5 w-5 text-gray-400" />
+                <div>
+                  <p className="text-sm text-gray-600">Próximo pago</p>
+                  <p className="font-medium">
+                    {new Date(subscription.nextBillingDate).toLocaleDateString('es-DO')}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Botones de acción */}
+          <div className="flex gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => toast.info('Funcionalidad de cambio de plan próximamente')}
+            >
+              Cambiar Plan
+            </Button>
+            {isActive && (
+              <Button
+                variant="outline"
+                className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => toast.info('Funcionalidad de cancelación próximamente')}
+              >
+                Cancelar Suscripción
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Uso de Recursos */}
+      {usageStats && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Uso de Recursos</CardTitle>
+            <CardDescription>
+              Monitorea el uso de recursos de tu plan
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Usuarios */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm font-medium">Usuarios</span>
+                </div>
+                <span className="text-sm text-gray-600">
+                  {usageStats.currentUsers} / {subscription.currentMaxUsers || '∞'}
+                </span>
+              </div>
+              {subscription.currentMaxUsers && (
+                <Progress
+                  value={getUsagePercentage(usageStats.currentUsers, subscription.currentMaxUsers)}
+                  className="h-2"
+                  indicatorClassName={getUsageColor(
+                    getUsagePercentage(usageStats.currentUsers, subscription.currentMaxUsers)
+                  )}
+                />
+              )}
+            </div>
+
+            {/* Productos */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Package className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm font-medium">Productos</span>
+                </div>
+                <span className="text-sm text-gray-600">
+                  {usageStats.currentProducts} / {subscription.currentMaxProducts || '∞'}
+                </span>
+              </div>
+              {subscription.currentMaxProducts && (
+                <Progress
+                  value={getUsagePercentage(usageStats.currentProducts, subscription.currentMaxProducts)}
+                  className="h-2"
+                  indicatorClassName={getUsageColor(
+                    getUsagePercentage(usageStats.currentProducts, subscription.currentMaxProducts)
+                  )}
+                />
+              )}
+            </div>
+
+            {/* Sucursales */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Building2 className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm font-medium">Sucursales</span>
+                </div>
+                <span className="text-sm text-gray-600">
+                  {usageStats.currentBranches} / {subscription.currentMaxBranches || '∞'}
+                </span>
+              </div>
+              {subscription.currentMaxBranches && (
+                <Progress
+                  value={getUsagePercentage(usageStats.currentBranches, subscription.currentMaxBranches)}
+                  className="h-2"
+                  indicatorClassName={getUsageColor(
+                    getUsagePercentage(usageStats.currentBranches, subscription.currentMaxBranches)
+                  )}
+                />
+              )}
+            </div>
+
+            {/* Almacenes */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Warehouse className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm font-medium">Almacenes</span>
+                </div>
+                <span className="text-sm text-gray-600">
+                  {usageStats.currentWarehouses} / {subscription.currentMaxWarehouses || '∞'}
+                </span>
+              </div>
+              {subscription.currentMaxWarehouses && (
+                <Progress
+                  value={getUsagePercentage(usageStats.currentWarehouses, subscription.currentMaxWarehouses)}
+                  className="h-2"
+                  indicatorClassName={getUsageColor(
+                    getUsagePercentage(usageStats.currentWarehouses, subscription.currentMaxWarehouses)
+                  )}
+                />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Características del Plan */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Características Incluidas</CardTitle>
+          <CardDescription>
+            Funcionalidades disponibles en tu plan actual
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {subscription.plan.hasPOS && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Sistema POS</span>
+              </div>
+            )}
+            {subscription.plan.hasInventory && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Gestión de Inventario</span>
+              </div>
+            )}
+            {subscription.plan.hasBatchTracking && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Seguimiento de Lotes</span>
+              </div>
+            )}
+            {subscription.plan.hasMultiBranch && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Multi-sucursal</span>
+              </div>
+            )}
+            {subscription.plan.hasMultiWarehouse && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Multi-almacén</span>
+              </div>
+            )}
+            {subscription.plan.hasCreditNotes && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Notas de Crédito</span>
+              </div>
+            )}
+            {subscription.plan.hasPurchaseOrders && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Órdenes de Compra</span>
+              </div>
+            )}
+            {subscription.plan.hasSuppliers && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Gestión de Proveedores</span>
+              </div>
+            )}
+            {subscription.plan.hasFullAccounting && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Contabilidad Completa</span>
+              </div>
+            )}
+            {subscription.plan.hasBasicAccounting && !subscription.plan.hasFullAccounting && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Contabilidad Básica</span>
+              </div>
+            )}
+            {subscription.plan.hasCOGS && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Costo de Ventas (COGS)</span>
+              </div>
+            )}
+            {subscription.plan.hasNCF && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Facturación Electrónica (NCF)</span>
+              </div>
+            )}
+            {subscription.plan.hasAdvancedReports && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Reportes Avanzados</span>
+              </div>
+            )}
+            {subscription.plan.hasAPIAccess && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Acceso API</span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

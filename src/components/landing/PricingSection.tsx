@@ -199,7 +199,7 @@ export function PricingSection() {
             <button
               onClick={() => setSelectedBillingCycle(BillingCycle.YEARLY)}
               className={`px-8 py-3 rounded-md font-medium transition-all ${selectedBillingCycle === BillingCycle.YEARLY
-                ? 'bg-yellow-500 text-white shadow-md scale-120 ml-2.5'
+                ? 'bg-yellow-500 text-white shadow-md scale-120 ml0-2.5'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
                 }`}
             >
