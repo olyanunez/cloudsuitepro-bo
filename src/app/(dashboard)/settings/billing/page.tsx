@@ -256,29 +256,36 @@ export default function BillingPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Configura PayPal para continuar después del período de prueba
                 </p>
-                <Button
-                  onClick={handleSetupPayment}
-                  disabled={processingPayment}
-                  className="bg-[#FFC439] hover:bg-[#F7B600] text-black font-semibold flex items-center gap-2"
-                >
-                  {processingPayment ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Procesando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Image
-                        src="/paypal_logo2.png"
-                        alt="PayPal"
-                        width={100}
-                        height={24}
-                        className="object-contain"
-                      />
-                      <span>Configurar</span>
-                    </>
-                  )}
-                </Button>
+                <div className="w-16 flex items-center justify-center mx-auto">
+                  <Button
+                    onClick={handleSetupPayment}
+                    disabled={processingPayment}
+                    className="hover:bg-[#F7B600] text-black font-semibold flex items-center gap-4 py-10 justify-center"
+                  >
+                    {processingPayment ? (
+                      <>
+                        <div className="ml-15">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        </div>
+                        <div className="mr-15">
+                          <span>Procesando...</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="relative w-[130px] h-50 rounded px-1">
+                          <Image
+                            src="/paypal_logo2.png"
+                            alt="PayPal"
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                        <span className='text-[20px]'>Configurar</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
