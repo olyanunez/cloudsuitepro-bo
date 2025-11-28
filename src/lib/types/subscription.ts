@@ -95,6 +95,8 @@ export interface Subscription {
   paypalSubscriptionId: string | null;
   paypalPlanId: string | null;
   paypalStatus: string | null;
+  paypalCustomerId: string | null;
+  paypalSubscriberEmail: string | null;
 
   // Cached limits
   currentMaxUsers: number | null;

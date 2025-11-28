@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -199,19 +200,27 @@ export default function BillingPage() {
             {hasPaymentMethod ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-4 p-4 border rounded-lg bg-blue-50 border-blue-200">
-                  <div className="h-12 w-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <CreditCard className="h-6 w-6 text-white" />
+                  <div className="h-12 w-16 bg-white rounded-lg flex items-center justify-center flex-shrink-0 p-2">
+                    <Image
+                      src="/paypal_logo.png"
+                      alt="PayPal"
+                      width={48}
+                      height={48}
+                      className="object-contain"
+                    />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold">PayPal</p>
+                      <p className="font-semibold">Cuenta</p>
                       <Badge variant="outline" className="bg-green-500 text-white border-green-500">
                         Activo
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      ID: {subscription.paypalSubscriptionId}
-                    </p>
+                    {subscription.paypalSubscriberEmail && (
+                      <p className="text-sm text-muted-foreground">
+                        {subscription.paypalSubscriberEmail}
+                      </p>
+                    )}
                     {subscription.paypalCustomerId && (
                       <p className="text-sm text-muted-foreground">
                         Cliente: {subscription.paypalCustomerId}
@@ -250,9 +259,25 @@ export default function BillingPage() {
                 <Button
                   onClick={handleSetupPayment}
                   disabled={processingPayment}
+                  className="bg-[#FFC439] hover:bg-[#F7B600] text-black font-semibold flex items-center gap-2"
                 >
-                  {processingPayment && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Configurar PayPal
+                  {processingPayment ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Procesando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Image
+                        src="/paypal_logo2.png"
+                        alt="PayPal"
+                        width={100}
+                        height={24}
+                        className="object-contain"
+                      />
+                      <span>Configurar</span>
+                    </>
+                  )}
                 </Button>
               </div>
             )}
