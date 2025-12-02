@@ -1,5 +1,19 @@
 import { apiGet, apiPost } from './apiService';
 
+export interface CashSessionExpense {
+  id: number;
+  amount: string;
+  category: {
+    id: number;
+    code: string;
+    name: string;
+    color?: string;
+  };
+  description: string;
+  receiptNumber?: string;
+  createdAt: string;
+}
+
 export interface CashSession {
   id: number;
   sessionNumber: string;
@@ -17,6 +31,7 @@ export interface CashSession {
   totalCard: string | null;
   totalTransfer: string | null;
   totalOther: string | null;
+  totalExpenses: string | null;
   openedAt: string;
   closedAt: string | null;
   status: 'OPEN' | 'CLOSED';
@@ -39,6 +54,7 @@ export interface CashSession {
   };
   invoices?: any[];
   denominations?: CashDenomination[];
+  expenses?: CashSessionExpense[];
   _count?: {
     invoices: number;
   };

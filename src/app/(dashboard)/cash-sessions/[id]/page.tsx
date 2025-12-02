@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { CashSession, CashSessionService } from '@/lib/services/cashSessionService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Calculator, DollarSign, CreditCard, Wallet, CheckCircle2, AlertTriangle, Clock, User, Building2, Banknote, Coins } from 'lucide-react';
+import { ArrowLeft, Calculator, DollarSign, CreditCard, Wallet, CheckCircle2, AlertTriangle, Clock, User, Building2, Banknote, Coins, Receipt, MinusCircle } from 'lucide-react';
 import PageHeader from '@/components/layout/PageHeader';
 import ProtectedPage from '@/components/ProtectedPage';
 import { toast } from 'sonner';
@@ -93,6 +93,10 @@ export default function CashSessionDetailPage() {
   // Agrupar denominaciones por tipo
   const billDenominations = session.denominations?.filter(d => d.type === 'BILL') || [];
   const coinDenominations = session.denominations?.filter(d => d.type === 'COIN') || [];
+
+  // Gastos de caja
+  const expenses = session.expenses || [];
+  const totalExpenses = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
 
   return (
     <ProtectedPage screenCode="CASH_SESSIONS" requiredPermission="VIEW">
@@ -186,13 +190,13 @@ export default function CashSessionDetailPage() {
                 <p className="text-lg font-semibold">
                   {session.closedAt
                     ? new Date(session.closedAt).toLocaleDateString('es-DO', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
                     : 'Aún no cerrada'}
                 </p>
               </div>
@@ -245,6 +249,73 @@ export default function CashSessionDetailPage() {
           </CardContent>
         </Card>
 
+        {/* Gastos de Caja */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5" />
+              Gastos de Caja
+            </CardTitle>
+            <CardDescription>
+              Retiros de efectivo para gastos operativos
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {expenses.length > 0 ? (
+              <div className="space-y-3">
+                {expenses.map((expense) => (
+                  <div
+                    key={expense.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/30">
+                        <MinusCircle className="h-4 w-4 text-red-600" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className={expense.category?.color || ''}>
+                            {expense.category?.name || 'Sin categoría'}
+                          </Badge>
+                          <span className="font-semibold text-red-600">
+                            -{formatCurrency(parseFloat(expense.amount))}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {expense.description}
+                        </p>
+                        {expense.receiptNumber && (
+                          <p className="text-xs text-muted-foreground">
+                            Recibo: {expense.receiptNumber}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right text-xs text-muted-foreground">
+                      {new Date(expense.createdAt).toLocaleTimeString('es-DO', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </div>
+                  </div>
+                ))}
+                <Separator />
+                <div className="flex justify-between items-center p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200">
+                  <span className="font-semibold">Total Gastos:</span>
+                  <span className="text-xl font-bold text-red-600">
+                    -{formatCurrency(totalExpenses)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Receipt className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No hay gastos registrados en esta sesión</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Cuadre de Caja (solo si está cerrada) */}
         {session.status === 'CLOSED' && (
           <>
@@ -275,6 +346,12 @@ export default function CashSessionDetailPage() {
                           <span>+ Ventas en Efectivo:</span>
                           <span className="font-medium">{formatCurrency(parseFloat(session.totalCash || '0'))}</span>
                         </div>
+                        {totalExpenses > 0 && (
+                          <div className="flex justify-between text-red-600">
+                            <span>- Gastos de Caja:</span>
+                            <span className="font-medium">-{formatCurrency(totalExpenses)}</span>
+                          </div>
+                        )}
                         <Separator />
                         <div className="flex justify-between font-semibold">
                           <span>= Esperado en Caja:</span>
@@ -306,6 +383,12 @@ export default function CashSessionDetailPage() {
                           <span>+ Transferencias:</span>
                           <span className="font-medium">{formatCurrency(parseFloat(session.totalTransfer || '0'))}</span>
                         </div>
+
+                        {totalExpenses > 0 && (
+                          <div className="flex justify-between invisible">
+                            <span>&nbsp;</span>
+                          </div>
+                        )}
                         <Separator />
                         <div className="flex justify-between font-semibold">
                           <span>= Esperado en Vouchers:</span>

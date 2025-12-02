@@ -55,6 +55,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { OpenCashSessionModal } from '@/components/cash-session/OpenCashSessionModal';
 import { CloseCashSessionModal } from '@/components/cash-session/CloseCashSessionModal';
+import CashExpenseModal from '@/components/cash-session/CashExpenseModal';
 import { toast } from 'sonner';
 import {
   Search,
@@ -75,6 +76,7 @@ import {
   X,
   Volume2,
   VolumeX,
+  Receipt,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -119,6 +121,7 @@ export default function PosPage() {
   const [currentSession, setCurrentSession] = useState<CashSession | null>(null);
   const [showOpenSessionModal, setShowOpenSessionModal] = useState(false);
   const [showCloseSessionModal, setShowCloseSessionModal] = useState(false);
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [loadingSession, setLoadingSession] = useState(false);
 
   // Estados para modal de factura
@@ -1245,13 +1248,22 @@ export default function PosPage() {
                   Abrir Caja
                 </Button>
               ) : (
-                <Button
-                  onClick={handleCloseSession}
-                // className="bg-orange-600 hover:bg-orange-700 text-white shadow-md hover:shadow-lg transition-all"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Cerrar Caja
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowExpenseModal(true)}
+                  >
+                    <Receipt className="h-4 w-4 mr-2" />
+                    Gastos
+                  </Button>
+                  <Button
+                    onClick={handleCloseSession}
+                  // className="bg-orange-600 hover:bg-orange-700 text-white shadow-md hover:shadow-lg transition-all"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Cerrar Caja
+                  </Button>
+                </>
               )}
               <Button
                 variant="outline"
@@ -1958,6 +1970,12 @@ export default function PosPage() {
           onOpenChange={setShowCloseSessionModal}
           session={currentSession}
           onSuccess={handleSessionClosed}
+        />
+
+        {/* Modal de gastos de caja */}
+        <CashExpenseModal
+          isOpen={showExpenseModal}
+          onClose={() => setShowExpenseModal(false)}
         />
 
         {/* Modal de factura completada */}
