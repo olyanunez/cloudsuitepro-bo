@@ -87,7 +87,8 @@ interface CartItem extends ProductStock {
 export default function PosPage() {
   const router = useRouter();
   const { activeBranchId, userBranches } = useBranch();
-  const { canView } = usePermissions('POS'); // POS solo necesita VIEW y EXECUTE_SALES, pero EXECUTE_SALES se valida al procesar la venta
+  const { canView, hasPermission } = usePermissions('POS');
+  const canCashExpense = hasPermission('CAN_CASH_EXPENSE');
 
   // Estados
   const [searchQuery, setSearchQuery] = useState('');
@@ -1249,13 +1250,15 @@ export default function PosPage() {
                 </Button>
               ) : (
                 <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowExpenseModal(true)}
-                  >
-                    <Receipt className="h-4 w-4 mr-2" />
-                    Gastos
-                  </Button>
+                  {canCashExpense && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowExpenseModal(true)}
+                    >
+                      <Receipt className="h-4 w-4 mr-2" />
+                      Gastos
+                    </Button>
+                  )}
                   <Button
                     onClick={handleCloseSession}
                   // className="bg-orange-600 hover:bg-orange-700 text-white shadow-md hover:shadow-lg transition-all"
