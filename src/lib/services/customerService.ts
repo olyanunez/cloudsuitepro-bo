@@ -11,6 +11,10 @@ export interface Customer {
   taxId?: string;
   isActive: boolean;
   tenantId: number;
+  // Campos de crédito
+  allowCredit: boolean;
+  creditLimit: number;
+  currentBalance: number;
   createdAt: string;
   updatedAt: string;
   createdBy: number;
@@ -28,6 +32,8 @@ export interface CreateCustomerDto {
   address?: string;
   taxId?: string;
   isActive?: boolean;
+  allowCredit?: boolean;
+  creditLimit?: number;
 }
 
 export interface UpdateCustomerDto {
@@ -37,6 +43,8 @@ export interface UpdateCustomerDto {
   address?: string;
   taxId?: string;
   isActive?: boolean;
+  allowCredit?: boolean;
+  creditLimit?: number;
 }
 
 export interface PaginatedCustomers {

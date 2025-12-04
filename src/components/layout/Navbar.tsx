@@ -109,6 +109,7 @@ const menuItems = [
     ]
   },
   { name: 'Clientes', href: '/customers', icon: 'users', screenCode: 'CUSTOMERS' },
+  { name: 'Créditos', href: '/credit', icon: 'credit-card', screenCode: 'CREDIT' },
   {
     name: 'Configuración',
     href: '/settings',

@@ -89,12 +89,13 @@ export default function PosPage() {
   const { activeBranchId, userBranches } = useBranch();
   const { canView, hasPermission } = usePermissions('POS');
   const canCashExpense = hasPermission('CAN_CASH_EXPENSE');
+  const canSellCredit = hasPermission('CAN_SELL_CREDIT');
 
   // Estados
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ProductStock[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'TRANSFER'>('CASH');
+  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'TRANSFER' | 'CREDIT'>('CASH');
   const [paymentReference, setPaymentReference] = useState('');
   const [loading, setLoading] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
@@ -209,7 +210,7 @@ export default function PosPage() {
 
         // Establecer el método de pago predeterminado
         if (settings.defaultPaymentMethod) {
-          setPaymentMethod(settings.defaultPaymentMethod as 'CASH' | 'CARD' | 'TRANSFER');
+          setPaymentMethod(settings.defaultPaymentMethod as 'CASH' | 'CARD' | 'TRANSFER' | 'CREDIT');
         }
       } catch (error) {
         console.error('Error loading tenant settings:', error);
@@ -466,7 +467,7 @@ export default function PosPage() {
   const clearCart = () => {
     setCart([]);
     // Resetear al método de pago predeterminado de la configuración
-    setPaymentMethod((tenantSettings?.defaultPaymentMethod as 'CASH' | 'CARD' | 'TRANSFER') || 'CASH');
+    setPaymentMethod((tenantSettings?.defaultPaymentMethod as 'CASH' | 'CARD' | 'TRANSFER' | 'CREDIT') || 'CASH');
     setPaymentReference('');
     setManualNcf('');
     setManualCustomerRnc('');
@@ -540,6 +541,32 @@ export default function PosPage() {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(customerEmail.trim())) {
         toast.error('El formato del correo electrónico no es válido');
+        return;
+      }
+    }
+
+    // Validaciones para venta a crédito
+    if (paymentMethod === 'CREDIT') {
+      if (!selectedCustomer) {
+        toast.error('Debe seleccionar un cliente para ventas a crédito');
+        return;
+      }
+
+      if (!selectedCustomer.allowCredit) {
+        toast.error('El cliente seleccionado no tiene crédito habilitado');
+        return;
+      }
+
+      // Verificar límite de crédito
+      const availableCredit = selectedCustomer.creditLimit > 0
+        ? selectedCustomer.creditLimit - selectedCustomer.currentBalance
+        : Infinity;
+
+      if (selectedCustomer.creditLimit > 0 && total > availableCredit) {
+        toast.error(
+          `El monto excede el crédito disponible del cliente. ` +
+          `Disponible: ${formatCurrency(availableCredit)}`
+        );
         return;
       }
     }
@@ -1580,6 +1607,41 @@ export default function PosPage() {
                       </div>
                     )}
 
+                    {/* Información de crédito del cliente */}
+                    {selectedCustomer && selectedCustomer.allowCredit && canSellCredit && (
+                      <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                            Crédito Habilitado
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Límite:</span>
+                            <span className="ml-1 font-medium">
+                              {selectedCustomer.creditLimit > 0
+                                ? formatCurrency(selectedCustomer.creditLimit)
+                                : 'Sin límite'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Saldo:</span>
+                            <span className="ml-1 font-medium text-orange-600">
+                              {formatCurrency(selectedCustomer.currentBalance)}
+                            </span>
+                          </div>
+                          {selectedCustomer.creditLimit > 0 && (
+                            <div className="col-span-2">
+                              <span className="text-muted-foreground">Disponible:</span>
+                              <span className="ml-1 font-medium text-green-600">
+                                {formatCurrency(selectedCustomer.creditLimit - selectedCustomer.currentBalance)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Campos para cliente no registrado (solo si no hay cliente seleccionado) */}
                     {!selectedCustomer && (
                       <>
@@ -1706,6 +1768,14 @@ export default function PosPage() {
                               Transferencia
                             </div>
                           </SelectItem>
+                          {canSellCredit && selectedCustomer?.allowCredit && (
+                            <SelectItem value="CREDIT">
+                              <div className="flex items-center gap-2">
+                                <UserIcon className="h-4 w-4" />
+                                Crédito
+                              </div>
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>

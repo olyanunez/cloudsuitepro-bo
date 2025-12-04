@@ -108,12 +108,14 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
   const handleCancelInvoice = async () => {
     try {
       await InvoiceService.cancelInvoice(invoiceId);
-      toast.success('Factura cancelada exitosamente');
+      toast.success('Factura anulada exitosamente');
       setIsCancelDialogOpen(false);
       loadInvoice(); // Reload to show updated status
-    } catch (error) {
-      console.error('Error cancelling invoice:', error);
-      toast.error('Error al cancelar la factura');
+    } catch (error: any) {
+      console.error('Error voiding invoice:', error);
+      toast.error('Error al anular la factura', {
+        description: error.message || 'Ocurrió un error inesperado',
+      });
     }
   };
 
@@ -171,13 +173,14 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
             <PrinterIcon className="mr-2 h-4 w-4" />
             Imprimir
           </Button>
-          {invoice.status !== 'CANCELLED' && (
+          {invoice.status !== 'VOIDED' && invoice.status !== 'CANCELLED' && (
             <Button
               variant="destructive"
               onClick={() => setIsCancelDialogOpen(true)}
+              className="!bg-red-600 hover:!bg-red-700 !text-white"
             >
               <XCircleIcon className="mr-2 h-4 w-4" />
-              Cancelar Factura
+              Anular Factura
             </Button>
           )}
         </div>
@@ -241,7 +244,11 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
           <CardContent className="space-y-3">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Nombre</p>
-              <p className="text-base font-semibold">{invoice.customer?.name || 'Sin cliente'}</p>
+              <p className="text-base font-semibold">
+                {invoice.customer
+                  ? `${invoice.customer.name}${invoice.customer.lastName ? ` ${invoice.customer.lastName}` : ''}`
+                  : 'Sin cliente'}
+              </p>
             </div>
             {invoice.customer?.email && (
               <div>
@@ -424,20 +431,22 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
         </CardContent>
       </Card>
 
-      {/* Cancel Dialog */}
+      {/* Void Dialog */}
       <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Cancelar esta factura?</AlertDialogTitle>
+            <AlertDialogTitle>¿Anular esta factura?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción cancelará la factura {invoice.invoiceNumber}. Esta operación no se puede deshacer.
+              Esta acción anulará la factura {invoice.invoiceNumber}. Esta operación no se puede deshacer.
               El inventario será restaurado automáticamente.
+              <br /><br />
+              <strong>Nota:</strong> Solo se pueden anular facturas del mismo día, sin NCF y sin pagos asociados.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleCancelInvoice} className="!bg-red-600 hover:!bg-red-700 !text-white border-red-600">
-              Confirmar Cancelación
+              Confirmar Anulación
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
