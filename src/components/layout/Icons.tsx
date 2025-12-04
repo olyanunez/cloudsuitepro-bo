@@ -267,6 +267,16 @@ export const WalletIcon: React.FC<IconWithClassProps> = ({ className }) => (
   </svg>
 )
 
+export const HandCoinsIcon: React.FC<IconWithClassProps> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17"></path>
+    <path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9"></path>
+    <path d="m2 16 6 6"></path>
+    <circle cx="16" cy="9" r="2.9"></circle>
+    <circle cx="6" cy="5" r="3"></circle>
+  </svg>
+)
+
 export const FileCheckIcon: React.FC<IconWithClassProps> = ({ className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
@@ -324,6 +334,7 @@ export const Icon: React.FC<IconProps> = ({ name, className }) => {
     'truck': getIconWithClass(TruckIcon as React.FC<IconWithClassProps>),
     'credit-card': getIconWithClass(CreditCardIcon as React.FC<IconWithClassProps>),
     'wallet': getIconWithClass(WalletIcon as React.FC<IconWithClassProps>),
+    'hand-coins': getIconWithClass(HandCoinsIcon as React.FC<IconWithClassProps>),
   }
 
   return <>{icons[name] || null}</>

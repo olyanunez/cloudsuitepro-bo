@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from 'react'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
@@ -41,7 +42,7 @@ const menuItems = [
   { name: 'Punto de Venta', href: '/pos', icon: 'shopping-cart', screenCode: 'POS' },
   { name: 'Facturas', href: '/invoices', icon: 'file-text', screenCode: 'INVOICE' },
   { name: 'Notas de Crédito', href: '/credit-notes', icon: 'undo-2', screenCode: 'CREDIT_NOTE' },
-  { name: 'Sesiones de Caja', href: '/cash-sessions', icon: 'calculator', screenCode: 'CASH_SESSIONS' },
+  { name: 'Sesiones de Caja', href: '/cash-sessions', icon: 'hand-coins', screenCode: 'CASH_SESSIONS' },
   {
     name: 'Contabilidad',
     href: '/accounting',
@@ -122,6 +123,147 @@ const menuItems = [
     ]
   },
 ]
+
+// Componente para items de submenu en el mini sidebar con portal
+function SidebarSubmenuItem({
+  item,
+  isActive,
+  pathname
+}: {
+  item: typeof menuItems[number];
+  isActive: boolean;
+  pathname: string;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Función para abrir el menú (cancela cualquier cierre pendiente)
+  const openMenu = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsHovered(true);
+  };
+
+  // Función para cerrar el menú con delay
+  const closeMenuWithDelay = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 150); // 150ms de delay para dar tiempo a mover el mouse
+  };
+
+  // Limpiar timeout al desmontar
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isHovered && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.top,
+        left: rect.right + 4,
+      });
+    }
+  }, [isHovered]);
+
+  // Cerrar el menú si se hace click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsHovered(false);
+      }
+    };
+
+    if (isHovered) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isHovered]);
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        title={item.name}
+        onMouseEnter={openMenu}
+        onMouseLeave={closeMenuWithDelay}
+        className={`flex items-center justify-center p-2 rounded-lg transition-colors w-full relative ${isActive
+          ? "bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-100"
+          : "bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+        }`}
+      >
+        <Icon name={item.icon} className="h-5 w-5" />
+        {/* Flecha indicadora */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="10"
+          height="10"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="absolute right-0.5 top-1/2 -translate-y-1/2 opacity-50"
+        >
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+
+      {/* Menú flotante usando Portal */}
+      {isHovered && typeof document !== 'undefined' && createPortal(
+        <div
+          ref={menuRef}
+          style={{
+            position: 'fixed',
+            top: menuPosition.top,
+            left: menuPosition.left,
+            zIndex: 9999,
+          }}
+          onMouseEnter={openMenu}
+          onMouseLeave={closeMenuWithDelay}
+          className="w-48 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
+        >
+          <div className="p-2">
+            <p className="px-2 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">{item.name}</p>
+            {item.submenu?.map((subItem) => (
+              <Link
+                key={subItem.href}
+                href={subItem.href}
+                onClick={() => setIsHovered(false)}
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm ${
+                  pathname === subItem.href || pathname.startsWith(subItem.href + '/')
+                    ? "bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-100 font-medium"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                }`}
+              >
+                <Icon name={subItem.icon} className="h-4 w-4" />
+                <span>{subItem.name}</span>
+              </Link>
+            ))}
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
@@ -424,6 +566,63 @@ export default function Navbar() {
         </div>
       </header>
 
+      {/* Mini Sidebar - Solo iconos (visible en desktop cuando el drawer está cerrado) */}
+      {!open && (
+        <aside className="hidden md:flex fixed left-0 top-16 h-[calc(100vh-4rem)] w-16 flex-col items-center bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 py-4 z-30">
+          <nav className="flex flex-col gap-2 flex-1 w-full px-2 overflow-y-auto">
+            {filteredMenuItems.map((item) => {
+              if (!item) return null;
+
+              let isActive = pathname === item.href || (item.href !== '#' && pathname.startsWith(item.href + '/'));
+
+              if (item.submenu) {
+                isActive = item.submenu.some(subItem =>
+                  pathname === subItem.href || pathname.startsWith(subItem.href + '/')
+                );
+              }
+
+              // Para items con submenú, mostrar menú flotante
+              if (item.submenu) {
+                return (
+                  <SidebarSubmenuItem
+                    key={item.href}
+                    item={item}
+                    isActive={isActive}
+                    pathname={pathname}
+                  />
+                );
+              }
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  title={item.name}
+                  className={`flex items-center justify-center p-2 rounded-lg transition-colors ${isActive
+                    ? "bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-100"
+                    : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                    }`}
+                >
+                  <Icon name={item.icon} className="h-5 w-5" />
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="pt-2 border-t border-gray-200 dark:border-gray-700 w-full px-2">
+            <button
+              onClick={() => setOpen(true)}
+              title="Expandir menú"
+              className="flex items-center justify-center p-2 rounded-lg w-full text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="13 17 18 12 13 7"></polyline>
+                <polyline points="6 17 11 12 6 7"></polyline>
+              </svg>
+            </button>
+          </div>
+        </aside>
+      )}
+
       {/* Drawer para móvil */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-[240px] sm:w-[300px] flex flex-col rounded-r-[30px]">
@@ -438,7 +637,7 @@ export default function Navbar() {
               className="h-20 w-auto"
             />
           </div>
-          <nav className="flex flex-col gap-4 mt-8 overflow-y-auto flex-1 pr-2">
+          <nav className="flex flex-col gap-4 mt-4 overflow-y-auto flex-1 pr-2">
             {filteredMenuItems.map((item) => {
               if (!item) return null;
 
