@@ -73,8 +73,11 @@ export function CloseCashSessionModal({ open, onOpenChange, session, onSuccess }
 
     if (!session) return;
 
-    // Validar que hay al menos una denominación o vouchers
-    if (totalCash === 0 && (!closingVouchers || parseFloat(closingVouchers) === 0)) {
+    const openingAmount = parseFloat(session.openingAmount || '0');
+    const vouchersAmount = parseFloat(closingVouchers) || 0;
+
+    // Validar que hay al menos una denominación o vouchers, excepto si la sesión se abrió con 0
+    if (totalCash === 0 && vouchersAmount === 0 && openingAmount > 0) {
       toast.error('Debe ingresar al menos efectivo o vouchers');
       return;
     }
@@ -103,15 +106,6 @@ export function CloseCashSessionModal({ open, onOpenChange, session, onSuccess }
         });
       }
     });
-
-    // Si no hay denominaciones pero hay efectivo esperado, agregar al menos una entrada vacía
-    if (denominations.length === 0) {
-      denominations.push({
-        type: 'BILL',
-        denomination: 0,
-        quantity: 0,
-      });
-    }
 
     setLoading(true);
     try {
