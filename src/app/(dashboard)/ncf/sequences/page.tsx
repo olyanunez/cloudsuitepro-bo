@@ -30,6 +30,7 @@ import ncfService, {
 } from '@/lib/services/ncfService';
 import { toast } from 'sonner';
 import { PermissionService } from '@/lib/services/permissionService';
+import { ExportButton } from '@/components/ui/export-button';
 
 export default function NcfSequencesPage() {
   const router = useRouter();
@@ -94,6 +95,44 @@ export default function NcfSequencesPage() {
     });
   };
 
+  const handleExport = async (format: 'pdf' | 'excel', startDate?: string, endDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        toast.error('No estás autenticado');
+        return;
+      }
+
+      const params = new URLSearchParams({ format });
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/ncf/export?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `secuencias-ncf-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Archivo ${format.toUpperCase()} descargado exitosamente`);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error al exportar datos');
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
@@ -102,6 +141,7 @@ export default function NcfSequencesPage() {
         icon="hash"
         description="Gestión de Números de Comprobante Fiscal"
       >
+        <ExportButton screenCode="NCF" onExport={handleExport} />
         {canCreateSequence && (
           <Button onClick={() => router.push('/ncf/sequences/create')}>
             <Plus className="mr-2 h-4 w-4" />

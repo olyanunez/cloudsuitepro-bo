@@ -18,6 +18,7 @@ import {
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { ExportButton } from '@/components/ui/export-button';
 
 export default function CashSessionsPage() {
   const [sessions, setSessions] = useState<CashSession[]>([]);
@@ -134,6 +135,44 @@ export default function CashSessionsPage() {
     );
   }
 
+  const handleExport = async (format: 'pdf' | 'excel', startDate?: string, endDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        toast.error('No estás autenticado');
+        return;
+      }
+
+      const params = new URLSearchParams({ format });
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/cash-sessions/export?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sesiones-caja-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Archivo ${format.toUpperCase()} descargado exitosamente`);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error al exportar datos');
+    }
+  };
+
   return (
     <ProtectedPage screenCode="CASH_SESSIONS" requiredPermission="VIEW">
       <div className="container mx-auto py-8">
@@ -141,7 +180,9 @@ export default function CashSessionsPage() {
           title="Sesiones de Caja"
           description="Historial de sesiones de caja y cuadres"
           icon="calculator"
-        />
+        >
+          <ExportButton screenCode="CASH_SESSIONS" onExport={handleExport} />
+        </PageHeader>
 
         {/* Search and filter controls */}
         <div className="mb-6 space-y-4">
@@ -294,12 +335,12 @@ export default function CashSessionsPage() {
                           <div className="text-sm text-gray-500 dark:text-gray-300">
                             {session.closedAt
                               ? new Date(session.closedAt).toLocaleDateString('es-DO', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
                               : '-'}
                           </div>
                         </td>

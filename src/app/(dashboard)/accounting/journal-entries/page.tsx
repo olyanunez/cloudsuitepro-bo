@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { ExportButton } from '@/components/ui/export-button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -145,6 +146,37 @@ export default function JournalEntriesPage() {
     }
   };
 
+  const handleExport = async (format: 'pdf' | 'excel', exportStartDate?: string, exportEndDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const params = new URLSearchParams({ format });
+
+      if (exportStartDate) params.append('startDate', exportStartDate);
+      if (exportEndDate) params.append('endDate', exportEndDate);
+      if (statusFilter !== 'ALL') params.append('status', statusFilter);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/journal-entries/export?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `asientos-contables-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Asientos exportados a ${format.toUpperCase()} exitosamente`);
+    } catch (error: any) {
+      toast.error('Error al exportar', { description: error.message });
+    }
+  };
+
   const openPostDialog = (id: number, entryNumber: string) => {
     setEntryToPost({ id, entryNumber });
     setConfirmDialogOpen(true);
@@ -198,12 +230,15 @@ export default function JournalEntriesPage() {
             Registro y gestión de asientos contables
           </p>
         </div>
-        <Link href="/accounting/journal-entries/create">
-          <Button className="bg-primary hover:bg-primary-600">
-            <Plus className="h-4 w-4 mr-2" />
-            Nuevo Asiento
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <ExportButton screenCode="ACCOUNTING" onExport={handleExport} />
+          <Link href="/accounting/journal-entries/create">
+            <Button className="bg-primary hover:bg-primary-600">
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Asiento
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
