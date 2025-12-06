@@ -54,12 +54,13 @@ export default function AccountingPage() {
       // Obtener cuentas
       const accounts = await apiGet<any[]>('/accounting/accounts');
 
-      // Obtener asientos
-      const journalEntries = await apiGet<any[]>('/accounting/journal-entries');
+      // Obtener asientos (ahora con paginación)
+      const journalEntriesResponse = await apiGet<any>('/accounting/journal-entries?limit=1000');
+      const journalEntries = journalEntriesResponse.data || [];
 
       setStats({
         totalAccounts: accounts.length,
-        totalJournalEntries: journalEntries.length,
+        totalJournalEntries: journalEntriesResponse.meta?.total || journalEntries.length,
         draftEntries: journalEntries.filter((e: any) => e.status === 'DRAFT').length,
         postedEntries: journalEntries.filter((e: any) => e.status === 'POSTED').length,
         totalAssets: 0,
