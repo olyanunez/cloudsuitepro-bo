@@ -42,7 +42,7 @@ export default function TopProductsReport() {
   const totalRevenue = data.reduce((sum, item) => sum + parseFloat(item.totalRevenue as any), 0);
   const totalQuantity = data.reduce((sum, item) => sum + item.quantitySold, 0);
 
-  const handleExport = async (format: 'pdf' | 'excel', startDate?: string, endDate?: string) => {
+  const handleExport = async (format: 'pdf' | 'excel', exportStartDate?: string, exportEndDate?: string) => {
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
@@ -51,8 +51,25 @@ export default function TopProductsReport() {
       }
 
       const params = new URLSearchParams({ format, reportType: 'top-products' });
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
+
+      // Usar las fechas del export dialog si existen, sino usar las del filtro
+      if (exportStartDate && exportEndDate) {
+        params.append('startDate', exportStartDate);
+        params.append('endDate', exportEndDate);
+      } else if (filters.startDate && filters.endDate) {
+        params.append('startDate', filters.startDate);
+        params.append('endDate', filters.endDate);
+      }
+
+      // Agregar periodo si existe
+      if (filters.period && !exportStartDate) {
+        params.append('period', filters.period);
+      }
+
+      // Agregar límite
+      if (filters.limit) {
+        params.append('limit', filters.limit.toString());
+      }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/reports/export?${params.toString()}`,
@@ -67,7 +84,12 @@ export default function TopProductsReport() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `reporte-top-products-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+
+      // Generar nombre descriptivo con periodo y límite
+      const periodText = filters.period || 'personalizado';
+      const limitText = filters.limit || 'todos';
+      a.download = `top-products-${periodText}-limit${limitText}-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -97,7 +119,7 @@ export default function TopProductsReport() {
             </p>
           </div>
         </div>
-        <ExportButton screenCode="REPORTS" onExport={handleExport} />
+        <ExportButton screenCode="REPORTS" onExport={handleExport} requiresDateRange={false} />
       </div>
 
       <ReportFilters
