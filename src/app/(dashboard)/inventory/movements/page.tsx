@@ -5,6 +5,7 @@ import { InventoryMovement, VariantInventoryMovement, MovementType, Product, War
 import { InventoryService, ProductService, WarehouseService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { ExportButton } from '@/components/ui/export-button';
 import { ArrowUpDown, ChevronLeft, ChevronRight, EyeIcon, FilterIcon, PlusIcon, SearchIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -71,6 +72,37 @@ export default function MovementsPage() {
 
     loadData();
   }, []);
+
+  const handleExport = async (format: 'pdf' | 'excel', exportStartDate?: string, exportEndDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const params = new URLSearchParams({ format });
+
+      if (exportStartDate) params.append('startDate', exportStartDate);
+      if (exportEndDate) params.append('endDate', exportEndDate);
+      if (selectedType !== 'all_types') params.append('type', selectedType);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventory/movements/export?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `movimientos-inventario-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Movimientos exportados a ${format.toUpperCase()} exitosamente`);
+    } catch (error: any) {
+      toast.error('Error al exportar', { description: error.message });
+    }
+  };
 
   const applyFilters = async () => {
     try {
@@ -245,12 +277,15 @@ export default function MovementsPage() {
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Movimientos de Inventario</h1>
-        <Link href="/inventory/movements/create">
-          <Button className="bg-primary hover:bg-primary-600">
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Nuevo Movimiento
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <ExportButton screenCode="MOVEMENTS" onExport={handleExport} />
+          <Link href="/inventory/movements/create">
+            <Button className="bg-primary hover:bg-primary-600">
+              <PlusIcon className="mr-2 h-4 w-4" />/>
+              Nuevo Movimiento
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Search and filter controls */}
