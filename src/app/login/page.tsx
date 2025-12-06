@@ -14,12 +14,25 @@ export default function LoginPage() {
   // const [password, setPassword] = useState('admin123');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
   const { setCurrentTenant } = useTenant();
   const { loadUserBranches } = useBranch();
+
+  // Cargar credenciales guardadas al montar el componente
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('remembered_email');
+    const savedPassword = localStorage.getItem('remembered_password');
+
+    if (savedEmail && savedPassword) {
+      setEmail(savedEmail);
+      setPassword(savedPassword);
+      setRememberMe(true);
+    }
+  }, []);
 
   // Verificar si el usuario ya está autenticado
   useEffect(() => {
@@ -97,6 +110,15 @@ export default function LoginPage() {
         email,
         password
       });
+
+      // Guardar o eliminar credenciales según la opción "Recordarme"
+      if (rememberMe) {
+        localStorage.setItem('remembered_email', email);
+        localStorage.setItem('remembered_password', password);
+      } else {
+        localStorage.removeItem('remembered_email');
+        localStorage.removeItem('remembered_password');
+      }
 
       // Actualizar el contexto del tenant con el nombre correcto
       if (response.user && response.user.tenantId && response.user.tenant) {
@@ -235,6 +257,8 @@ export default function LoginPage() {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 className="h-4 w-4 text-primary accent-primary focus:ring-primary focus:ring-offset-primary-50 border-gray-300 rounded"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
