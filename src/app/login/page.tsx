@@ -10,7 +10,7 @@ import { useTenant } from '@/lib/contexts/TenantContext';
 import { useBranch } from '@/lib/contexts/BranchContext';
 
 export default function LoginPage() {
-  // const [email, setEmail] = useState('admin@xotica.com');
+  // const [email, setEmail] = useState('oliverync@gmail.com');
   // const [password, setPassword] = useState('admin123');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
