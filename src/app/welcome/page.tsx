@@ -37,7 +37,7 @@ export default function Welcome() {
               Optimiza tu negocio y toma decisiones inteligentes basadas en datos.
             </p>
             <div className="flex justify-center gap-4">
-              <Link href="/register">
+              <Link href="/precios">
                 <Button
                   size="lg"
                   style={{
@@ -226,7 +226,7 @@ export default function Welcome() {
                     <p className="text-sm">Soporte</p>
                   </div>
                 </div>
-                <Link href="/register">
+                <Link href="/precios">
                   <Button
                     size="lg"
                     style={{
@@ -325,7 +325,7 @@ export default function Welcome() {
           <p className="text-xl text-gray-600 mb-8">
             Crea tu cuenta gratis y empieza a gestionar tu negocio de manera profesional
           </p>
-          <Link href="/register">
+          <Link href="/precios">
             <Button
               size="lg"
               style={{

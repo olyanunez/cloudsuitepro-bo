@@ -154,7 +154,7 @@ export function HowItWorksSection() {
             </div>
           </div>
           <div className="mt-8">
-            <Link href="/register">
+            <Link href="/precios">
               <Button
                 size="lg"
                 style={{
