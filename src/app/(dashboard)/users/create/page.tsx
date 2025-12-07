@@ -72,44 +72,44 @@ export default function CreateUserPage() {
       confirmPassword?: string;
       roleId?: string;
     } = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'El nombre es requerido';
     }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'El correo electrónico es requerido';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'El formato del correo electrónico no es válido';
     }
-    
+
     if (!formData.password) {
       newErrors.password = 'La contraseña es requerida';
     } else if (formData.password.length < 6) {
       newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
     }
-    
+
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Debe confirmar la contraseña';
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Las contraseñas no coinciden';
     }
-    
+
     if (!formData.roleId) {
       newErrors.roleId = 'Debe seleccionar un rol';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     // Preparar datos para enviar (sin incluir confirmPassword)
     const userData: UserCreateInput = {
       name: formData.name,
@@ -180,14 +180,13 @@ export default function CreateUserPage() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
-                      errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                    className={`w-full px-3 py-2 border rounded-md ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
                     placeholder="Nombre completo"
                   />
                   {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                 </div>
-                
+
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium mb-1">
                     Correo Electrónico <span className="text-red-500">*</span>
@@ -198,14 +197,13 @@ export default function CreateUserPage() {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
-                      errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                    className={`w-full px-3 py-2 border rounded-md ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
                     placeholder="correo@ejemplo.com"
                   />
                   {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
                 </div>
-                
+
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium mb-1">
                     Contraseña <span className="text-red-500">*</span>
@@ -216,14 +214,13 @@ export default function CreateUserPage() {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
-                      errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                    className={`w-full px-3 py-2 border rounded-md ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
                     placeholder="Contraseña"
                   />
                   {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
                 </div>
-                
+
                 <div>
                   <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
                     Confirmar Contraseña <span className="text-red-500">*</span>
@@ -234,9 +231,8 @@ export default function CreateUserPage() {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
-                      errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                    className={`w-full px-3 py-2 border rounded-md ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
                     placeholder="Confirmar contraseña"
                   />
                   {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
@@ -248,7 +244,7 @@ export default function CreateUserPage() {
           <div className="md:col-span-1">
             <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">Rol y Permisos</h2>
-              
+
               <div className="space-y-4">
                 <div>
                   <label htmlFor="roleId" className="block text-sm font-medium mb-1">
@@ -259,9 +255,8 @@ export default function CreateUserPage() {
                     name="roleId"
                     value={formData.roleId}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
-                      errors.roleId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                    } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
+                    className={`w-full px-3 py-2 border rounded-md ${errors.roleId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                      } focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700`}
                   >
                     <option value="">Seleccionar rol</option>
                     {roles.map(role => (
@@ -272,7 +267,7 @@ export default function CreateUserPage() {
                   </select>
                   {errors.roleId && <p className="mt-1 text-sm text-red-500">{errors.roleId}</p>}
                 </div>
-                
+
                 {formData.roleId && (
                   <div className="mt-4">
                     <p className="text-sm font-medium mb-2">Descripción del Rol</p>
@@ -292,8 +287,8 @@ export default function CreateUserPage() {
               Cancelar
             </Button>
           </Link>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={saving}
             className="bg-primary hover:bg-primary-600"
           >
