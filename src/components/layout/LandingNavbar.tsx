@@ -91,7 +91,7 @@ export function LandingNavbar() {
                 Iniciar Sesión
               </Button>
             </Link>
-            <Link href="/register">
+            <Link href="/precios">
               <Button
                 style={{
                   backgroundColor: '#eab308',
