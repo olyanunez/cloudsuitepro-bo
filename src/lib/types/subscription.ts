@@ -124,11 +124,19 @@ export interface Subscription {
 }
 
 export interface UsageStats {
+  id?: number;
+  subscriptionId?: number;
   activeUsers: number;
   activeBranches: number;
   activeWarehouses: number;
   activeProducts: number;
-  recordedAt: string;
+  recordedAt?: string;
+  createdAt?: string;
+  // Aliases para compatibilidad con la UI
+  currentUsers?: number;
+  currentBranches?: number;
+  currentWarehouses?: number;
+  currentProducts?: number;
 }
 
 export interface FeatureCheckResponse {

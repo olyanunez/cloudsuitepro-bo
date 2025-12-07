@@ -273,15 +273,15 @@ export default function SubscriptionPage() {
                   <span className="text-sm font-medium">Usuarios</span>
                 </div>
                 <span className="text-sm text-gray-600">
-                  {usageStats.currentUsers} / {subscription.currentMaxUsers || '∞'}
+                  {usageStats.activeUsers} / {subscription.currentMaxUsers || '∞'}
                 </span>
               </div>
               {subscription.currentMaxUsers && (
                 <Progress
-                  value={getUsagePercentage(usageStats.currentUsers, subscription.currentMaxUsers)}
+                  value={getUsagePercentage(usageStats.activeUsers, subscription.currentMaxUsers)}
                   className="h-2"
                   indicatorClassName={getUsageColor(
-                    getUsagePercentage(usageStats.currentUsers, subscription.currentMaxUsers)
+                    getUsagePercentage(usageStats.activeUsers, subscription.currentMaxUsers)
                   )}
                 />
               )}
@@ -295,15 +295,15 @@ export default function SubscriptionPage() {
                   <span className="text-sm font-medium">Productos</span>
                 </div>
                 <span className="text-sm text-gray-600">
-                  {usageStats.currentProducts} / {subscription.currentMaxProducts || '∞'}
+                  {usageStats.activeProducts} / {subscription.currentMaxProducts || '∞'}
                 </span>
               </div>
               {subscription.currentMaxProducts && (
                 <Progress
-                  value={getUsagePercentage(usageStats.currentProducts, subscription.currentMaxProducts)}
+                  value={getUsagePercentage(usageStats.activeProducts, subscription.currentMaxProducts)}
                   className="h-2"
                   indicatorClassName={getUsageColor(
-                    getUsagePercentage(usageStats.currentProducts, subscription.currentMaxProducts)
+                    getUsagePercentage(usageStats.activeProducts, subscription.currentMaxProducts)
                   )}
                 />
               )}
@@ -317,15 +317,15 @@ export default function SubscriptionPage() {
                   <span className="text-sm font-medium">Sucursales</span>
                 </div>
                 <span className="text-sm text-gray-600">
-                  {usageStats.currentBranches} / {subscription.currentMaxBranches || '∞'}
+                  {usageStats.activeBranches} / {subscription.currentMaxBranches || '∞'}
                 </span>
               </div>
               {subscription.currentMaxBranches && (
                 <Progress
-                  value={getUsagePercentage(usageStats.currentBranches, subscription.currentMaxBranches)}
+                  value={getUsagePercentage(usageStats.activeBranches, subscription.currentMaxBranches)}
                   className="h-2"
                   indicatorClassName={getUsageColor(
-                    getUsagePercentage(usageStats.currentBranches, subscription.currentMaxBranches)
+                    getUsagePercentage(usageStats.activeBranches, subscription.currentMaxBranches)
                   )}
                 />
               )}
@@ -339,15 +339,15 @@ export default function SubscriptionPage() {
                   <span className="text-sm font-medium">Almacenes</span>
                 </div>
                 <span className="text-sm text-gray-600">
-                  {usageStats.currentWarehouses} / {subscription.currentMaxWarehouses || '∞'}
+                  {usageStats.activeWarehouses} / {subscription.currentMaxWarehouses || '∞'}
                 </span>
               </div>
               {subscription.currentMaxWarehouses && (
                 <Progress
-                  value={getUsagePercentage(usageStats.currentWarehouses, subscription.currentMaxWarehouses)}
+                  value={getUsagePercentage(usageStats.activeWarehouses, subscription.currentMaxWarehouses)}
                   className="h-2"
                   indicatorClassName={getUsageColor(
-                    getUsagePercentage(usageStats.currentWarehouses, subscription.currentMaxWarehouses)
+                    getUsagePercentage(usageStats.activeWarehouses, subscription.currentMaxWarehouses)
                   )}
                 />
               )}

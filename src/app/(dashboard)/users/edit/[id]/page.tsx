@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 // Usamos elementos HTML estándar en lugar de componentes UI personalizados
 
 export default function EditUserPage() {
@@ -181,10 +182,12 @@ export default function EditUserPage() {
     try {
       setSaving(true);
       await UserService.updateUser(userId, userData, avatarFile);
+      toast.success('Usuario actualizado exitosamente');
       router.push(`/users/${userId}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating user:', error);
-      alert('Ocurrió un error al actualizar el usuario. Por favor intente nuevamente.');
+      const errorMessage = error?.message || 'Ocurrió un error al actualizar el usuario. Por favor intente nuevamente.';
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }

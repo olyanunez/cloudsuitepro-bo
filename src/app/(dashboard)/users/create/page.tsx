@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -121,10 +122,12 @@ export default function CreateUserPage() {
     try {
       setSaving(true);
       await UserService.createUser(userData, avatarFile);
+      toast.success('Usuario creado exitosamente');
       router.push('/users');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating user:', error);
-      alert('Ocurrió un error al crear el usuario. Por favor intente nuevamente.');
+      const errorMessage = error?.message || 'Ocurrió un error al crear el usuario. Por favor intente nuevamente.';
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
