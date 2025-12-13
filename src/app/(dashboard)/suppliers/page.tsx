@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { ExportButton } from '@/components/ui/export-button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { apiGet, apiDelete, apiPatch } from '@/lib/services/apiService';
@@ -99,6 +100,36 @@ export default function SuppliersPage() {
     fetchSuppliers();
   }, [page, search, itemsPerPage]);
 
+  const handleExport = async (format: 'pdf' | 'excel', exportStartDate?: string, exportEndDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const params = new URLSearchParams({ format });
+
+      if (exportStartDate) params.append('startDate', exportStartDate);
+      if (exportEndDate) params.append('endDate', exportEndDate);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/suppliers/export?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `proveedores-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Proveedores exportados a ${format.toUpperCase()} exitosamente`);
+    } catch (error: any) {
+      toast.error('Error al exportar', { description: error.message });
+    }
+  };
+
   const confirmDelete = (id: number, supplierName: string) => {
     setSupplierToDelete({ id, name: supplierName });
     setIsDeleteDialogOpen(true);
@@ -143,6 +174,7 @@ export default function SuppliersPage() {
           description="Gestiona la información de tus proveedores"
           icon="truck"
         >
+          <ExportButton screenCode="SUPPLIERS" onExport={handleExport} />
           {canCreate && (
             <Link href="/suppliers/create">
               <Button className="bg-primary hover:bg-primary-600">
@@ -313,11 +345,10 @@ export default function SuppliersPage() {
                           onClick={() =>
                             handleToggleActive(supplier.id, supplier.isActive)
                           }
-                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            supplier.isActive
+                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${supplier.isActive
                               ? 'bg-green-100 text-green-800'
                               : 'bg-red-100 text-red-800'
-                          }`}
+                            }`}
                         >
                           {supplier.isActive ? 'Activo' : 'Inactivo'}
                         </button>

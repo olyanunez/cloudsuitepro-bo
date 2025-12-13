@@ -2,7 +2,7 @@
 
 ## Resumen
 
-Se han implementado validaciones de permisos en el BackOffice (BO) de Xotica para controlar el acceso a módulos y acciones según los permisos asignados a cada usuario. El sistema valida permisos VIEW, CREATE, UPDATE y DELETE para cada pantalla.
+Se han implementado validaciones de permisos en el BackOffice (BO) de CloudSuite Pro para controlar el acceso a módulos y acciones según los permisos asignados a cada usuario. El sistema valida permisos VIEW, CREATE, UPDATE y DELETE para cada pantalla.
 
 ## Componentes Creados
 

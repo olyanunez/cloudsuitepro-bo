@@ -6,7 +6,9 @@ import { InventoryService } from '@/lib/services/inventoryService';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { ExportButton } from '@/components/ui/export-button';
 import { PencilIcon, TrashIcon, EyeIcon, SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight, ImageIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -56,6 +58,36 @@ export default function InventoryItemsPage() {
 
     loadData();
   }, []);
+
+  const handleExport = async (format: 'pdf' | 'excel', exportStartDate?: string, exportEndDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const params = new URLSearchParams({ format });
+
+      if (exportStartDate) params.append('startDate', exportStartDate);
+      if (exportEndDate) params.append('endDate', exportEndDate);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inventory/export?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `inventario-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Inventario exportado a ${format.toUpperCase()} exitosamente`);
+    } catch (error: any) {
+      toast.error('Error al exportar', { description: error.message });
+    }
+  };
 
   const confirmDelete = (itemId: number) => {
     setItemToDelete(itemId);
@@ -150,8 +182,9 @@ export default function InventoryItemsPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="mb-6">
+      <div className="mb-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">Gestión de Inventario</h1>
+        <ExportButton screenCode="INVENTORY" onExport={handleExport} />
       </div>
 
       {/* Search and filter controls */}
@@ -302,43 +335,43 @@ export default function InventoryItemsPage() {
                         </div>
                       )}
                     </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                    {item.warehouse?.name || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.quantity <= item.minStock ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' : 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'}`}>
-                      {item.quantity} unidades
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                    {item.minStock} unidades
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                    {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end space-x-2">
-                      <Link href={`/inventory/items/${item.id}`}>
-                        <Button variant="outline" size="sm" className="px-2 py-1">
-                          <EyeIcon className="h-4 w-4" />
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                      {item.warehouse?.name || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.quantity <= item.minStock ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' : 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'}`}>
+                        {item.quantity} unidades
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                      {item.minStock} unidades
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                      {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end space-x-2">
+                        <Link href={`/inventory/items/${item.id}`}>
+                          <Button variant="outline" size="sm" className="px-2 py-1">
+                            <EyeIcon className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Link href={`/inventory/items/edit/${item.id}`}>
+                          <Button variant="outline" size="sm" className="px-2 py-1">
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
+                          onClick={() => confirmDelete(item.id)}
+                        >
+                          <TrashIcon className="h-4 w-4" />
                         </Button>
-                      </Link>
-                      <Link href={`/inventory/items/edit/${item.id}`}>
-                        <Button variant="outline" size="sm" className="px-2 py-1">
-                          <PencilIcon className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
-                        onClick={() => confirmDelete(item.id)}
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
+                      </div>
+                    </td>
+                  </tr>
                 );
               })}
             </tbody>

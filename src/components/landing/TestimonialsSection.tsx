@@ -19,7 +19,7 @@ const testimonials: Testimonial[] = [
     role: 'Gerente General',
     company: 'Farmacia Central',
     content:
-      'Xotica transformó completamente la gestión de nuestras 5 sucursales. Ahora podemos ver el inventario en tiempo real y los reportes nos ayudan a tomar mejores decisiones de compra. El ROI fue inmediato.',
+      'CloudSuite Pro transformó completamente la gestión de nuestras 5 sucursales. Ahora podemos ver el inventario en tiempo real y los reportes nos ayudan a tomar mejores decisiones de compra. El ROI fue inmediato.',
     rating: 5,
   },
   {
@@ -74,7 +74,7 @@ export function TestimonialsSection() {
             Lo que dicen nuestros clientes
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Más de 500 empresas confían en Xotica para gestionar sus operaciones diarias
+            Más de 500 empresas confían en CloudSuite Pro para gestionar sus operaciones diarias
           </p>
         </div>
 
@@ -141,7 +141,7 @@ export function TestimonialsSection() {
         {/* Logos Section */}
         <div className="mt-16">
           <p className="text-center text-gray-600 mb-8 font-semibold">
-            Empresas de diversos sectores confían en Xotica
+            Empresas de diversos sectores confían en CloudSuite Pro
           </p>
           <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
             {/* Placeholder for company logos */}

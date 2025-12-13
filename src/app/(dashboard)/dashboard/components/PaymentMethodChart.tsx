@@ -16,6 +16,7 @@ const COLORS = {
   CASH: '#10b981', // green
   CARD: '#3b82f6', // blue
   TRANSFER: '#f59e0b', // amber
+  CREDIT: '#9333ea', // purple - color llamativo para crédito
   OTHER: '#6b7280', // gray
 };
 
@@ -23,6 +24,7 @@ const LABELS = {
   CASH: 'Efectivo',
   CARD: 'Tarjeta',
   TRANSFER: 'Transferencia',
+  CREDIT: 'Crédito',
   OTHER: 'Otros',
 };
 

@@ -1,8 +1,8 @@
-# Xotica - Panel de Administración (Frontend)
+# CloudSuite Pro - Panel de Administración (Frontend)
 
 ## Descripción
 
-Xotica BO es el panel de administración para el sistema Xotica, una aplicación empresarial multi-tenant diseñada para gestionar usuarios, roles y permisos. Este frontend está construido con Next.js 15 y React 19, utilizando tecnologías modernas para ofrecer una experiencia de usuario fluida y responsiva.
+CloudSuite Pro es el panel de administración para el sistema CloudSuite Pro, una aplicación empresarial multi-tenant diseñada para gestionar usuarios, roles y permisos. Este frontend está construido con Next.js 15 y React 19, utilizando tecnologías modernas para ofrecer una experiencia de usuario fluida y responsiva.
 
 ## Tecnologías Principales
 
@@ -43,8 +43,8 @@ src/
 
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/olyanunez/xotica-bo.git
-   cd xotica-bo
+   git clone https://github.com/olyanunez/cloudsuitepro-bo.git
+   cd cloudsuitepro-bo
    ```
 
 2. Instala las dependencias:
@@ -85,7 +85,7 @@ vercel
 
 ## Conexión con el Backend
 
-Este frontend está diseñado para trabajar con el backend Xotica BE. Asegúrate de configurar correctamente la URL del backend en el archivo `.env`.
+Este frontend está diseñado para trabajar con el backend CloudSuite Pro BE. Asegúrate de configurar correctamente la URL del backend en el archivo `.env`.
 
 ## Licencia
 

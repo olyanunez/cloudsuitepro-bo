@@ -18,6 +18,8 @@ import { Search, Plus, FileText, Download, Calendar, DollarSign, TrendingDown } 
 import { creditNoteService, CreditNote, QueryCreditNotesDto, CreditNoteStats } from '@/lib/services/creditNoteService';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import Link from 'next/link';
+import { ExportButton } from '@/components/ui/export-button';
+import { toast } from 'sonner';
 
 export default function CreditNotesPage() {
   const [creditNotes, setCreditNotes] = useState<CreditNote[]>([]);
@@ -98,6 +100,44 @@ export default function CreditNotesPage() {
     return labels[method] || method;
   };
 
+  const handleExport = async (format: 'pdf' | 'excel', startDate?: string, endDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        toast.error('No estás autenticado');
+        return;
+      }
+
+      const params = new URLSearchParams({ format });
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/credit-notes/export?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `notas-credito-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Archivo ${format.toUpperCase()} descargado exitosamente`);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error al exportar datos');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -108,12 +148,15 @@ export default function CreditNotesPage() {
             Gestión de devoluciones y notas de crédito fiscales
           </p>
         </div>
-        <Button asChild>
-          <Link href="/credit-notes/create">
-            <Plus className="mr-2 h-4 w-4" />
-            Nueva Devolución
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <ExportButton screenCode="CREDIT_NOTE" onExport={handleExport} />
+          <Button asChild>
+            <Link href="/credit-notes/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Nueva Devolución
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

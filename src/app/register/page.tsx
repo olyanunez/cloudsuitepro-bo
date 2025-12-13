@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { toast } from 'react-hot-toast';
@@ -12,11 +12,21 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Stepper } from '@/components/ui/stepper';
 import { AuthService } from '@/lib/services/authService';
+import { SubscriptionService } from '@/lib/services/subscriptionService';
+import { Plan, BillingCycle } from '@/lib/types/subscription';
 import { Sparkles, TrendingUp, Shield } from 'lucide-react';
 
-export default function RegisterPage() {
+function RegisterContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   // Estado para controlar el paso actual
   const [currentStep, setCurrentStep] = useState(0);
+
+  // Estados para el plan seleccionado
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [selectedBillingCycle, setSelectedBillingCycle] = useState<BillingCycle>(BillingCycle.MONTHLY);
+  const [loadingPlan, setLoadingPlan] = useState(false);
 
   // Estados para la información de la empresa (Tenant)
   const [companyName, setCompanyName] = useState('');
@@ -34,7 +44,6 @@ export default function RegisterPage() {
 
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
 
   // Definición de los pasos
   const steps = [
@@ -96,6 +105,30 @@ export default function RegisterPage() {
     }
   };
 
+  // Cargar plan seleccionado desde query parameters
+  useEffect(() => {
+    const planCode = searchParams.get('plan');
+    const billingParam = searchParams.get('billing');
+
+    if (planCode) {
+      setLoadingPlan(true);
+      SubscriptionService.getPlanByCode(planCode)
+        .then((plan) => {
+          setSelectedPlan(plan);
+          if (billingParam && Object.values(BillingCycle).includes(billingParam as BillingCycle)) {
+            setSelectedBillingCycle(billingParam as BillingCycle);
+          }
+        })
+        .catch((error) => {
+          console.error('Error loading plan:', error);
+          toast.error('No se pudo cargar el plan seleccionado');
+        })
+        .finally(() => {
+          setLoadingPlan(false);
+        });
+    }
+  }, [searchParams]);
+
   // Función para volver al paso anterior
   const handlePrevStep = () => {
     setError('');
@@ -118,7 +151,7 @@ export default function RegisterPage() {
 
     try {
       // Preparar los datos para el registro
-      const registerData = {
+      const registerData: any = {
         tenant: {
           name: companyName,
           address: companyAddress,
@@ -133,6 +166,12 @@ export default function RegisterPage() {
           password: adminPassword
         }
       };
+
+      // Agregar planId y billingCycle si hay un plan seleccionado
+      if (selectedPlan) {
+        registerData.planId = selectedPlan.id;
+        registerData.billingCycle = selectedBillingCycle;
+      }
 
       // Llamar al servicio de autenticación para registrar
       await AuthService.register(registerData);
@@ -169,6 +208,25 @@ export default function RegisterPage() {
             <div className="mb-6">
               <Stepper steps={steps} currentStep={currentStep} />
             </div>
+
+            {/* Mostrar plan seleccionado */}
+            {selectedPlan && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm font-medium text-blue-900">
+                  Plan seleccionado: <span className="font-bold">{selectedPlan.name}</span>
+                </p>
+                <p className="text-xs text-blue-700 mt-1">
+                  {SubscriptionService.formatPrice(
+                    SubscriptionService.calculatePlanPrice(selectedPlan, selectedBillingCycle)
+                  )} / {SubscriptionService.getBillingCycleName(selectedBillingCycle)}
+                </p>
+                {selectedPlan.trialDays > 0 && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Incluye {selectedPlan.trialDays} días de prueba gratis
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Mensajes de error */}
             {error && (
@@ -388,8 +446,8 @@ export default function RegisterPage() {
           {/* Logo */}
           <div className="mb-2 flex justify-center">
             <Image
-              src="/xotica_logo.png"
-              alt="Xotica Business"
+              src="/cloudsuitepro_logo.png"
+              alt="CloudSuite Pro"
               width={800}
               height={240}
               priority
@@ -467,5 +525,20 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    }>
+      <RegisterContent />
+    </Suspense>
   );
 }

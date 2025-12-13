@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Reportes | Xotica',
+  title: 'Reportes | CloudSuite Pro',
   description: 'Reportes y análisis de ventas',
 };
 

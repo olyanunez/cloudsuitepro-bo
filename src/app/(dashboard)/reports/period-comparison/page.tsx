@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
+import { ExportButton } from '@/components/ui/export-button';
+import { toast } from 'sonner';
 
 export default function PeriodComparisonReport() {
   const [data, setData] = useState<PeriodComparisonData | null>(null);
@@ -32,6 +34,60 @@ export default function PeriodComparisonReport() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const handleExport = async (format: 'pdf' | 'excel', exportStartDate?: string, exportEndDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        toast.error('No estás autenticado');
+        return;
+      }
+
+      const params = new URLSearchParams({ format, reportType: 'period-comparison' });
+
+      // Usar las fechas del export dialog si existen, sino usar las del filtro
+      if (exportStartDate && exportEndDate) {
+        params.append('startDate', exportStartDate);
+        params.append('endDate', exportEndDate);
+      } else if (filters.startDate && filters.endDate) {
+        params.append('startDate', filters.startDate);
+        params.append('endDate', filters.endDate);
+      }
+
+      // Agregar periodo si existe
+      if (filters.period && !exportStartDate) {
+        params.append('period', filters.period);
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/reports/export?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+
+      // Solo PDF para este reporte
+      const periodText = filters.period || 'personalizado';
+      a.download = `comparacion-periodos-${periodText}-${Date.now()}.pdf`;
+
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success('Archivo PDF descargado exitosamente');
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error al exportar datos');
+    }
+  };
 
   const getChangeIndicator = (value: number, isPercentage: boolean = false) => {
     const isPositive = value > 0;
@@ -111,19 +167,27 @@ export default function PeriodComparisonReport() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/reports">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Volver
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Comparación de Períodos</h1>
-          <p className="text-muted-foreground mt-1">
-            Comparar período actual vs período anterior
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/reports">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Volver
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Comparación de Períodos</h1>
+            <p className="text-muted-foreground mt-1">
+              Comparar período actual vs período anterior
+            </p>
+          </div>
         </div>
+        <ExportButton
+          screenCode="REPORTS"
+          onExport={handleExport}
+          requiresDateRange={false}
+          pdfOnly={true}
+        />
       </div>
 
       <ReportFilters
