@@ -19,6 +19,7 @@ import {
   Minus,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ExportButton } from '@/components/ui/export-button';
 
 interface Account {
   id: number;
@@ -127,9 +128,8 @@ export default function AccountsPage() {
     return (
       <div key={account.id}>
         <div
-          className={`flex items-center py-3 px-4 hover:bg-gray-50 border-b ${
-            depth > 0 ? 'bg-gray-50/50' : ''
-          }`}
+          className={`flex items-center py-3 px-4 hover:bg-gray-50 border-b ${depth > 0 ? 'bg-gray-50/50' : ''
+            }`}
           style={{ paddingLeft: `${16 + indent}px` }}
         >
           {/* Expand/Collapse Icon */}
@@ -168,9 +168,8 @@ export default function AccountsPage() {
           {/* Type */}
           <div className="w-28">
             <span
-              className={`px-2 py-1 text-xs font-medium rounded-full ${
-                accountTypeColors[account.accountType]
-              }`}
+              className={`px-2 py-1 text-xs font-medium rounded-full ${accountTypeColors[account.accountType]
+                }`}
             >
               {accountTypeLabels[account.accountType]}
             </span>
@@ -287,6 +286,44 @@ export default function AccountsPage() {
     .filter((a) => a.accountType === 'EQUITY' && !a.isGroup)
     .reduce((sum, account) => sum + Number(account.balance), 0);
 
+  const handleExport = async (format: 'pdf' | 'excel', startDate?: string, endDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        toast.error('No estás autenticado');
+        return;
+      }
+
+      const params = new URLSearchParams({ format });
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/accounting/export?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cuentas-contables-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Archivo ${format.toUpperCase()} descargado exitosamente`);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error al exportar datos');
+    }
+  };
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -297,12 +334,15 @@ export default function AccountsPage() {
             Catálogo de cuentas contables del sistema
           </p>
         </div>
-        <Link href="/accounting/accounts/create">
-          <Button className="bg-primary hover:bg-primary-600">
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Cuenta
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <ExportButton screenCode="ACCOUNTING" onExport={handleExport} />
+          <Link href="/accounting/accounts/create">
+            <Button className="bg-primary hover:bg-primary-600">
+              <Plus className="h-4 w-4 mr-2" />
+              Nueva Cuenta
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}

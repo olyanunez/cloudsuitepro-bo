@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ExportButton } from '@/components/ui/export-button';
 
 export default function BatchesPage() {
   const router = useRouter();
@@ -117,6 +118,44 @@ export default function BatchesPage() {
     return days !== null && days <= 30 && days > 0;
   }).length;
 
+  const handleExport = async (format: 'pdf' | 'excel', startDate?: string, endDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        toast.error('No estás autenticado');
+        return;
+      }
+
+      const params = new URLSearchParams({ format });
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/batches/export?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lotes-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Archivo ${format.toUpperCase()} descargado exitosamente`);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error al exportar datos');
+    }
+  };
+
   return (
     <ProtectedPage screenCode="INVENTORY" requiredPermission="VIEW">
       <div className="container mx-auto py-8">
@@ -128,12 +167,15 @@ export default function BatchesPage() {
               Control de trazabilidad y vencimientos
             </p>
           </div>
-          <Link href="/inventory/batches/create">
-            <Button className="bg-primary hover:bg-primary-600">
-              <PlusIcon className="h-4 w-4 mr-2" />
-              Nuevo Lote
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <ExportButton screenCode="BATCHES" onExport={handleExport} />
+            <Link href="/inventory/batches/create">
+              <Button className="bg-primary hover:bg-primary-600">
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Nuevo Lote
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Search and filter controls */}

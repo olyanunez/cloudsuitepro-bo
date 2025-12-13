@@ -136,8 +136,8 @@ input[type="radio"] {
 }
 
 /* Estilos para botones */
-button:not([class*="outline"]),
-.button:not([class*="outline"]),
+button:not([class*="outline"]):not([class*="bg-transparent"]):not([class*="text-gray"]):not([class*="bg-yellow-100"]),
+.button:not([class*="outline"]):not([class*="bg-transparent"]):not([class*="text-gray"]):not([class*="bg-yellow-100"]),
 input[type="button"]:not([class*="outline"]),
 input[type="submit"]:not([class*="outline"]),
 input[type="reset"]:not([class*="outline"]) {

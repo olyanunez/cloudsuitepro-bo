@@ -10,16 +10,29 @@ import { useTenant } from '@/lib/contexts/TenantContext';
 import { useBranch } from '@/lib/contexts/BranchContext';
 
 export default function LoginPage() {
-  // const [email, setEmail] = useState('admin@xotica.com');
+  // const [email, setEmail] = useState('oliverync@gmail.com');
   // const [password, setPassword] = useState('admin123');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
   const { setCurrentTenant } = useTenant();
   const { loadUserBranches } = useBranch();
+
+  // Cargar credenciales guardadas al montar el componente
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('remembered_email');
+    const savedPassword = localStorage.getItem('remembered_password');
+
+    if (savedEmail && savedPassword) {
+      setEmail(savedEmail);
+      setPassword(savedPassword);
+      setRememberMe(true);
+    }
+  }, []);
 
   // Verificar si el usuario ya está autenticado
   useEffect(() => {
@@ -98,6 +111,15 @@ export default function LoginPage() {
         password
       });
 
+      // Guardar o eliminar credenciales según la opción "Recordarme"
+      if (rememberMe) {
+        localStorage.setItem('remembered_email', email);
+        localStorage.setItem('remembered_password', password);
+      } else {
+        localStorage.removeItem('remembered_email');
+        localStorage.removeItem('remembered_password');
+      }
+
       // Actualizar el contexto del tenant con el nombre correcto
       if (response.user && response.user.tenantId && response.user.tenant) {
         setCurrentTenant(
@@ -168,8 +190,8 @@ export default function LoginPage() {
         <div className="text-center">
           <div className="flex justify-center">
             <Image
-              src="/xotica_logo.png"
-              alt="Xotica Business"
+              src="/cloudsuitepro_logo.png"
+              alt="CloudSuite Pro"
               width={200}
               height={60}
               priority
@@ -211,9 +233,9 @@ export default function LoginPage() {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Contraseña
                 </label>
-                <a href="#" className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-500">
+                <Link href="/forgot-password" className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-500">
                   ¿Olvidaste tu contraseña?
-                </a>
+                </Link>
               </div>
               <input
                 id="password"
@@ -235,6 +257,8 @@ export default function LoginPage() {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 className="h-4 w-4 text-primary accent-primary focus:ring-primary focus:ring-offset-primary-50 border-gray-300 rounded"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
@@ -257,7 +281,7 @@ export default function LoginPage() {
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600 dark:text-gray-400">
             ¿No tienes una cuenta?{' '}
-            <Link href="/register" className="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500">
+            <Link href="/precios" className="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500">
               Regístrate
             </Link>
           </p>

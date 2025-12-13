@@ -255,7 +255,7 @@ export function printInvoice({
           <!-- Header con información de la empresa -->
           <div class="company-header">
             ${includeLogo && tenantInfo?.logo ? `<img src="${tenantInfo.logo}" alt="Logo" class="logo" />` : ''}
-            <h1>${tenantInfo?.name || 'Xotica'}</h1>
+            <h1>${tenantInfo?.name || 'CloudSuite Pro'}</h1>
             ${tenantInfo?.address ? `<p class="company-info">${tenantInfo.address}</p>` : ''}
             ${tenantInfo?.phone ? `<p class="company-info">Tel: ${tenantInfo.phone}</p>` : ''}
             ${tenantInfo?.email ? `<p class="company-info">Email: ${tenantInfo.email}</p>` : ''}
@@ -279,10 +279,10 @@ export function printInvoice({
             <div class="ncf-row">
               <span class="ncf-label">NCF Válido hasta:</span>
               <span class="ncf-validity">${new Date(invoice.ncfValidUntil).toLocaleDateString('es-DO', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}</span>
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })}</span>
             </div>
             ` : ''}
           </div>
@@ -298,9 +298,9 @@ export function printInvoice({
               <div class="row">
                 <span class="label">Fecha:</span>
                 <span class="value">${new Date(invoice.createdAt).toLocaleString('es-DO', {
-                  dateStyle: 'short',
-                  timeStyle: 'short'
-                })}</span>
+    dateStyle: 'short',
+    timeStyle: 'short'
+  })}</span>
               </div>
               <div class="row">
                 <span class="label">Sucursal:</span>
@@ -356,11 +356,11 @@ export function printInvoice({
             </thead>
             <tbody>
               ${invoice.items.map(item => {
-                // Calcular ITBIS por item (precio incluye ITBIS)
-                const totalWithItbis = parseFloat(item.total.toString());
-                const itbisAmount = totalWithItbis * (itbisRate / (1 + itbisRate));
+    // Calcular ITBIS por item (precio incluye ITBIS)
+    const totalWithItbis = parseFloat(item.total.toString());
+    const itbisAmount = totalWithItbis * (itbisRate / (1 + itbisRate));
 
-                return `
+    return `
                 <tr>
                   <td>
                     <div class="product-name">${item.variant.product.name}${item.variant.name ? ` - ${item.variant.name}` : ''}</div>
@@ -371,19 +371,19 @@ export function printInvoice({
                   <td class="text-right">${formatCurrency(item.total)}</td>
                 </tr>
                 `;
-              }).join('')}
+  }).join('')}
             </tbody>
           </table>
 
           <!-- Totales con desglose de ITBIS -->
           <div class="totals">
             ${(() => {
-              // Calcular totales con ITBIS
-              const totalWithItbis = parseFloat(invoice.total.toString());
-              const totalItbis = totalWithItbis * (itbisRate / (1 + itbisRate));
-              const subtotalWithoutItbis = totalWithItbis - totalItbis;
+      // Calcular totales con ITBIS
+      const totalWithItbis = parseFloat(invoice.total.toString());
+      const totalItbis = totalWithItbis * (itbisRate / (1 + itbisRate));
+      const subtotalWithoutItbis = totalWithItbis - totalItbis;
 
-              return `
+      return `
                 <div class="row">
                   <span class="label">Subtotal (sin ITBIS):</span>
                   <span class="value">${formatCurrency(subtotalWithoutItbis)}</span>
@@ -403,7 +403,7 @@ export function printInvoice({
                   <span class="value">${formatCurrency(invoice.total)}</span>
                 </div>
               `;
-            })()}
+    })()}
           </div>
 
           ${termsAndConditions ? `

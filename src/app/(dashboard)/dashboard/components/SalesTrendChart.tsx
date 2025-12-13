@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 
 interface SalesTrendChartProps {
@@ -35,47 +35,70 @@ export function SalesTrendChart({ data }: SalesTrendChartProps) {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis yAxisId="left" />
-            <YAxis yAxisId="right" orientation="right" />
+          <AreaChart data={chartData}>
+            <defs>
+              <linearGradient id="colorIngresos" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05}/>
+              </linearGradient>
+              <linearGradient id="colorFacturas" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0.05}/>
+              </linearGradient>
+              <linearGradient id="colorPromedio" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.05}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+            <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
             <Tooltip
               formatter={(value: any, name: string) => {
-                if (name === 'ingresos' || name === 'promedio') {
+                if (name === 'Ingresos' || name === 'Ticket Promedio') {
                   return formatCurrency(parseFloat(value));
                 }
                 return value;
               }}
               labelFormatter={(label) => `Fecha: ${label}`}
+              contentStyle={{
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              }}
             />
             <Legend />
-            <Line
+            <Area
               yAxisId="left"
               type="monotone"
               dataKey="ingresos"
               stroke="#3b82f6"
               strokeWidth={2}
+              fill="url(#colorIngresos)"
               name="Ingresos"
             />
-            <Line
+            <Area
               yAxisId="right"
               type="monotone"
               dataKey="facturas"
               stroke="#10b981"
               strokeWidth={2}
+              fill="url(#colorFacturas)"
               name="Facturas"
             />
-            <Line
+            <Area
               yAxisId="left"
               type="monotone"
               dataKey="promedio"
               stroke="#f59e0b"
               strokeWidth={2}
               strokeDasharray="5 5"
+              fill="url(#colorPromedio)"
               name="Ticket Promedio"
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { ExportButton } from '@/components/ui/export-button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,8 @@ import {
   XCircle,
   Calendar,
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -52,6 +55,16 @@ interface JournalEntry {
     debitAmount: number;
     creditAmount: number;
   }[];
+}
+
+interface JournalEntriesResponse {
+  data: JournalEntry[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
 const statusLabels: Record<string, string> = {
@@ -90,15 +103,23 @@ export default function JournalEntriesPage() {
   const [endDate, setEndDate] = useState('');
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [entryToPost, setEntryToPost] = useState<{ id: number; entryNumber: string } | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const limit = itemsPerPage;
 
   useEffect(() => {
     fetchEntries();
-  }, [statusFilter, startDate, endDate]);
+  }, [statusFilter, startDate, endDate, page, itemsPerPage]);
 
   const fetchEntries = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
 
       if (statusFilter !== 'ALL') {
         params.append('status', statusFilter);
@@ -110,16 +131,49 @@ export default function JournalEntriesPage() {
         params.append('endDate', endDate);
       }
 
-      const data = await apiGet<JournalEntry[]>(
+      const response = await apiGet<JournalEntriesResponse>(
         `/accounting/journal-entries?${params}`
       );
-      setEntries(data);
+      setEntries(response.data);
+      setTotalPages(response.meta.totalPages);
+      setTotal(response.meta.total);
     } catch (error: any) {
       toast.error('Error al cargar asientos', {
         description: error.message,
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExport = async (format: 'pdf' | 'excel', exportStartDate?: string, exportEndDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const params = new URLSearchParams({ format });
+
+      if (exportStartDate) params.append('startDate', exportStartDate);
+      if (exportEndDate) params.append('endDate', exportEndDate);
+      if (statusFilter !== 'ALL') params.append('status', statusFilter);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounting/journal-entries/export?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `asientos-contables-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Asientos exportados a ${format.toUpperCase()} exitosamente`);
+    } catch (error: any) {
+      toast.error('Error al exportar', { description: error.message });
     }
   };
 
@@ -157,7 +211,7 @@ export default function JournalEntriesPage() {
 
   // Calculate stats
   const stats = {
-    total: entries.length,
+    total: total,
     draft: entries.filter((e) => e.status === 'DRAFT').length,
     posted: entries.filter((e) => e.status === 'POSTED').length,
     void: entries.filter((e) => e.status === 'VOID').length,
@@ -176,12 +230,15 @@ export default function JournalEntriesPage() {
             Registro y gestión de asientos contables
           </p>
         </div>
-        <Link href="/accounting/journal-entries/create">
-          <Button className="bg-primary hover:bg-primary-600">
-            <Plus className="h-4 w-4 mr-2" />
-            Nuevo Asiento
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <ExportButton screenCode="ACCOUNTING" onExport={handleExport} />
+          <Link href="/accounting/journal-entries/create">
+            <Button className="bg-primary hover:bg-primary-600">
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Asiento
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
@@ -240,14 +297,17 @@ export default function JournalEntriesPage() {
       {/* Filters */}
       <Card className="p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          <div className="md:col-span-5">
+          <div className="md:col-span-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 type="text"
                 placeholder="Buscar por número, descripción o referencia..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
                 className="pl-10"
               />
             </div>
@@ -255,7 +315,10 @@ export default function JournalEntriesPage() {
           <div className="md:col-span-2">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
               className="w-full border rounded-md px-3 py-2"
             >
               <option value="ALL">Todos los estados</option>
@@ -268,7 +331,10 @@ export default function JournalEntriesPage() {
             <Input
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                setPage(1);
+              }}
               placeholder="Fecha inicio"
             />
           </div>
@@ -276,14 +342,27 @@ export default function JournalEntriesPage() {
             <Input
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setPage(1);
+              }}
               placeholder="Fecha fin"
             />
           </div>
-          <div className="md:col-span-1">
-            <Button onClick={fetchEntries} className="w-full">
-              <Search className="h-4 w-4" />
-            </Button>
+          <div className="md:col-span-2">
+            <select
+              value={itemsPerPage.toString()}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setPage(1);
+              }}
+              className="w-full border rounded-md px-3 py-2"
+            >
+              <option value="5">5 por página</option>
+              <option value="10">10 por página</option>
+              <option value="25">25 por página</option>
+              <option value="50">50 por página</option>
+            </select>
           </div>
         </div>
       </Card>
@@ -397,6 +476,57 @@ export default function JournalEntriesPage() {
           </table>
         </div>
       </Card>
+
+      {/* Pagination controls */}
+      <div className="mt-6 flex items-center justify-between">
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          Mostrando {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total} asientos
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+            disabled={page === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            // Show pages around current page
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (page <= 3) {
+              pageNum = i + 1;
+            } else if (page >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = page - 2 + i;
+            }
+
+            return (
+              <Button
+                key={pageNum}
+                variant={page === pageNum ? "default" : "outline"}
+                size="sm"
+                onClick={() => setPage(pageNum)}
+              >
+                {pageNum}
+              </Button>
+            );
+          })}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={page === totalPages || totalPages === 0}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
       {/* Confirmation Dialog */}
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>

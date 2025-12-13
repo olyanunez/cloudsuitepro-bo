@@ -44,6 +44,7 @@ export interface InvoiceItem {
 export interface InvoiceCustomer {
   id: number;
   name: string;
+  lastName?: string;
   email?: string;
   phone?: string;
 }
@@ -196,15 +197,17 @@ export class InvoiceService {
   }
 
   /**
-   * Cancela una factura existente
-   * @param invoiceId ID de la factura a cancelar
-   * @returns Promise con la factura cancelada
+   * Anula una factura existente
+   * Solo se permite anular facturas del mismo día, sin NCF y sin pagos asociados
+   * @param invoiceId ID de la factura a anular
+   * @param reason Razón de la anulación (opcional)
+   * @returns Promise con la factura anulada
    */
-  static async cancelInvoice(invoiceId: number): Promise<Invoice> {
+  static async cancelInvoice(invoiceId: number, reason?: string): Promise<Invoice> {
     try {
-      return await apiPost<Invoice>(`/invoices/${invoiceId}/cancel`);
+      return await apiPost<Invoice>(`/invoices/${invoiceId}/void`, { reason });
     } catch (error) {
-      console.error('Error al cancelar factura:', error);
+      console.error('Error al anular factura:', error);
       throw error;
     }
   }

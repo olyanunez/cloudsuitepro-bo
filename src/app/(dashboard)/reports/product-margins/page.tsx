@@ -10,6 +10,8 @@ import { ArrowLeft, TrendingUp, DollarSign, Percent } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
+import { ExportButton } from '@/components/ui/export-button';
+import { toast } from 'sonner';
 
 export default function ProductMarginsReport() {
   const [data, setData] = useState<ProductMarginItem[]>([]);
@@ -37,6 +39,66 @@ export default function ProductMarginsReport() {
     loadData();
   }, [loadData]);
 
+  const handleExport = async (format: 'pdf' | 'excel', exportStartDate?: string, exportEndDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        toast.error('No estás autenticado');
+        return;
+      }
+
+      const params = new URLSearchParams({ format, reportType: 'product-margins' });
+
+      // Usar las fechas del export dialog si existen, sino usar las del filtro
+      if (exportStartDate && exportEndDate) {
+        params.append('startDate', exportStartDate);
+        params.append('endDate', exportEndDate);
+      } else if (filters.startDate && filters.endDate) {
+        params.append('startDate', filters.startDate);
+        params.append('endDate', filters.endDate);
+      }
+
+      // Agregar periodo si existe
+      if (filters.period && !exportStartDate) {
+        params.append('period', filters.period);
+      }
+
+      // Agregar límite
+      if (filters.limit) {
+        params.append('limit', filters.limit.toString());
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/reports/export?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+
+      // Generar nombre descriptivo con periodo y límite
+      const periodText = filters.period || 'personalizado';
+      const limitText = filters.limit || 'todos';
+      a.download = `margenes-productos-${periodText}-limit${limitText}-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Archivo ${format.toUpperCase()} descargado exitosamente`);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error al exportar datos');
+    }
+  };
+
   const totalRevenue = data.reduce((sum, item) => sum + parseFloat(item.totalRevenue as any), 0);
   const totalProfit = data.reduce((sum, item) => sum + parseFloat(item.grossProfit as any), 0);
   const avgMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
@@ -49,19 +111,22 @@ export default function ProductMarginsReport() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/reports">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Volver
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Márgenes de Productos</h1>
-          <p className="text-muted-foreground mt-1">
-            Análisis de rentabilidad y márgenes de ganancia por producto
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/reports">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Volver
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Márgenes de Productos</h1>
+            <p className="text-muted-foreground mt-1">
+              Análisis de rentabilidad y márgenes de ganancia por producto
+            </p>
+          </div>
         </div>
+        <ExportButton screenCode="REPORTS" onExport={handleExport} requiresDateRange={false} />
       </div>
 
       <ReportFilters

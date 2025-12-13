@@ -144,6 +144,26 @@ export const apiPost = async <T>(endpoint: string, data?: any): Promise<T> => {
 };
 
 /**
+ * Realiza una petición PUT a la API
+ * @param endpoint Endpoint de la API (sin la URL base)
+ * @param data Datos a enviar en el cuerpo de la petición
+ * @returns Promise con la respuesta
+ */
+export const apiPut = async <T>(endpoint: string, data: any): Promise<T> => {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+
+  return response.json();
+};
+
+/**
  * Realiza una petición PATCH a la API
  * @param endpoint Endpoint de la API (sin la URL base)
  * @param data Datos a enviar en el cuerpo de la petición

@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePermissions } from '@/lib/hooks/usePermissions';
 import PageHeader from '@/components/layout/PageHeader';
+import { ExportButton } from '@/components/ui/export-button';
 import {
   Select,
   SelectContent,
@@ -157,6 +158,44 @@ export default function PurchaseOrdersPage() {
     );
   };
 
+  const handleExport = async (format: 'pdf' | 'excel', startDate?: string, endDate?: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        toast.error('No estás autenticado');
+        return;
+      }
+
+      const params = new URLSearchParams({ format });
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/purchase-orders/export?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!response.ok) throw new Error('Error al exportar');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ordenes-compra-${Date.now()}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(`Archivo ${format.toUpperCase()} descargado exitosamente`);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error al exportar datos');
+    }
+  };
+
   return (
     <ProtectedPage screenCode="PURCHASE_ORDERS" requiredPermission="VIEW">
       <div className="container mx-auto py-8">
@@ -165,6 +204,7 @@ export default function PurchaseOrdersPage() {
           description="Gestiona las órdenes de compra a proveedores"
           icon="file-text"
         >
+          <ExportButton screenCode="PURCHASE_ORDERS" onExport={handleExport} />
           {canCreate && (
             <Link href="/purchase-orders/create">
               <Button className="bg-primary hover:bg-primary-600">

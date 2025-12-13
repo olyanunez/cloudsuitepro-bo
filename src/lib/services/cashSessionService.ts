@@ -1,5 +1,19 @@
 import { apiGet, apiPost } from './apiService';
 
+export interface CashSessionExpense {
+  id: number;
+  amount: string;
+  category: {
+    id: number;
+    code: string;
+    name: string;
+    color?: string;
+  };
+  description: string;
+  receiptNumber?: string;
+  createdAt: string;
+}
+
 export interface CashSession {
   id: number;
   sessionNumber: string;
@@ -17,6 +31,7 @@ export interface CashSession {
   totalCard: string | null;
   totalTransfer: string | null;
   totalOther: string | null;
+  totalExpenses: string | null;
   openedAt: string;
   closedAt: string | null;
   status: 'OPEN' | 'CLOSED';
@@ -38,9 +53,25 @@ export interface CashSession {
     code: string;
   };
   invoices?: any[];
+  denominations?: CashDenomination[];
+  expenses?: CashSessionExpense[];
   _count?: {
     invoices: number;
   };
+}
+
+export interface CashDenomination {
+  id: number;
+  type: 'BILL' | 'COIN';
+  denomination: string;
+  quantity: number;
+  subtotal: string;
+}
+
+export interface CashDenominationDto {
+  type: 'BILL' | 'COIN';
+  denomination: number;
+  quantity: number;
 }
 
 export interface OpenCashSessionDto {
@@ -51,9 +82,20 @@ export interface OpenCashSessionDto {
 }
 
 export interface CloseCashSessionDto {
-  closingAmount: number;
-  closingVouchers?: number;
+  denominations: CashDenominationDto[];
+  closingVouchers: number;
   closingNotes?: string;
+}
+
+export interface CashierSummary {
+  status: 'OK' | 'SHORTAGE';
+  message: string;
+  cashShortage: number | null;
+  voucherShortage: number | null;
+}
+
+export interface CloseSessionResponse extends CashSession {
+  cashierSummary: CashierSummary;
 }
 
 export class CashSessionService {
@@ -70,8 +112,8 @@ export class CashSessionService {
   static async closeSession(
     sessionId: number,
     data: CloseCashSessionDto,
-  ): Promise<CashSession> {
-    return apiPost<CashSession>(`/cash-sessions/${sessionId}/close`, data);
+  ): Promise<CloseSessionResponse> {
+    return apiPost<CloseSessionResponse>(`/cash-sessions/${sessionId}/close`, data);
   }
 
   /**

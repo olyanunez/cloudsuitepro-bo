@@ -20,8 +20,8 @@ export function LandingNavbar() {
           <div className="flex items-center">
             <Link href="/welcome" className="flex items-center space-x-2">
               <Image
-                src="/xotica_logo.png"
-                alt="Xotica Business"
+                src="/cloudsuitepro_logo.png"
+                alt="CloudSuite Pro"
                 width={360}
                 height={100}
                 priority
@@ -34,51 +34,46 @@ export function LandingNavbar() {
           <div className="hidden lg:flex items-center space-x-1">
             <Link
               href="/welcome"
-              className={`px-4 py-2 font-medium transition-colors ${
-                isActive('/welcome')
-                  ? 'text-yellow-600 border-b-2 border-yellow-600'
-                  : 'text-gray-700 hover:text-yellow-600'
-              }`}
+              className={`px-4 py-2 font-medium transition-colors ${isActive('/welcome')
+                ? 'text-yellow-600 border-b-2 border-yellow-600'
+                : 'text-gray-700 hover:text-yellow-600'
+                }`}
             >
               Inicio
             </Link>
             <Link
               href="/como-funciona"
-              className={`px-4 py-2 font-medium transition-colors ${
-                isActive('/como-funciona')
-                  ? 'text-yellow-600 border-b-2 border-yellow-600'
-                  : 'text-gray-700 hover:text-yellow-600'
-              }`}
+              className={`px-4 py-2 font-medium transition-colors ${isActive('/como-funciona')
+                ? 'text-yellow-600 border-b-2 border-yellow-600'
+                : 'text-gray-700 hover:text-yellow-600'
+                }`}
             >
               Cómo Funciona
             </Link>
             <Link
               href="/nosotros"
-              className={`px-4 py-2 font-medium transition-colors ${
-                isActive('/nosotros')
-                  ? 'text-yellow-600 border-b-2 border-yellow-600'
-                  : 'text-gray-700 hover:text-yellow-600'
-              }`}
+              className={`px-4 py-2 font-medium transition-colors ${isActive('/nosotros')
+                ? 'text-yellow-600 border-b-2 border-yellow-600'
+                : 'text-gray-700 hover:text-yellow-600'
+                }`}
             >
               Nosotros
             </Link>
             <Link
               href="/precios"
-              className={`px-4 py-2 font-medium transition-colors ${
-                isActive('/precios')
-                  ? 'text-yellow-600 border-b-2 border-yellow-600'
-                  : 'text-gray-700 hover:text-yellow-600'
-              }`}
+              className={`px-4 py-2 font-medium transition-colors ${isActive('/precios')
+                ? 'text-yellow-600 border-b-2 border-yellow-600'
+                : 'text-gray-700 hover:text-yellow-600'
+                }`}
             >
               Precios
             </Link>
             <Link
               href="/contacto"
-              className={`px-4 py-2 font-medium transition-colors ${
-                isActive('/contacto')
-                  ? 'text-yellow-600 border-b-2 border-yellow-600'
-                  : 'text-gray-700 hover:text-yellow-600'
-              }`}
+              className={`px-4 py-2 font-medium transition-colors ${isActive('/contacto')
+                ? 'text-yellow-600 border-b-2 border-yellow-600'
+                : 'text-gray-700 hover:text-yellow-600'
+                }`}
             >
               Contacto
             </Link>
@@ -91,7 +86,7 @@ export function LandingNavbar() {
                 Iniciar Sesión
               </Button>
             </Link>
-            <Link href="/register">
+            <Link href="/precios">
               <Button
                 style={{
                   backgroundColor: '#eab308',
