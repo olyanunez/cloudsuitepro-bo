@@ -12,7 +12,7 @@ interface FAQItem {
 const faqs: FAQItem[] = [
   {
     question: '¿Necesito instalar algún software?',
-    answer: 'No, Xotica es una plataforma 100% en la nube. Solo necesitas un navegador web y conexión a internet para acceder desde cualquier dispositivo.',
+    answer: 'No, CloudSuite Pro es una plataforma 100% en la nube. Solo necesitas un navegador web y conexión a internet para acceder desde cualquier dispositivo.',
   },
   {
     question: '¿Cuánto tiempo toma implementar el sistema?',
@@ -20,7 +20,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: '¿Puedo gestionar múltiples sucursales?',
-    answer: 'Sí, Xotica te permite gestionar múltiples sucursales y almacenes desde una sola cuenta. Puedes ver reportes consolidados o individuales por ubicación.',
+    answer: 'Sí, CloudSuite Pro te permite gestionar múltiples sucursales y almacenes desde una sola cuenta. Puedes ver reportes consolidados o individuales por ubicación.',
   },
   {
     question: '¿Los datos de mi empresa están seguros?',
@@ -40,7 +40,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: '¿Funciona offline?',
-    answer: 'Actualmente Xotica requiere conexión a internet. Estamos trabajando en una versión offline para el sistema POS que estará disponible próximamente.',
+    answer: 'Actualmente CloudSuite Pro requiere conexión a internet. Estamos trabajando en una versión offline para el sistema POS que estará disponible próximamente.',
   },
   {
     question: '¿Puedo personalizar facturas y reportes?',
@@ -73,7 +73,7 @@ export function FAQSection() {
             Preguntas Frecuentes
           </h2>
           <p className="text-xl text-gray-600">
-            Encuentra respuestas a las preguntas más comunes sobre Xotica
+            Encuentra respuestas a las preguntas más comunes sobre CloudSuite Pro
           </p>
         </div>
 
@@ -89,15 +89,13 @@ export function FAQSection() {
                   {faq.question}
                 </span>
                 <ChevronDown
-                  className={`h-5 w-5 text-yellow-500 flex-shrink-0 transition-transform duration-200 ${
-                    openIndex === index ? 'transform rotate-180' : ''
-                  }`}
+                  className={`h-5 w-5 text-yellow-500 flex-shrink-0 transition-transform duration-200 ${openIndex === index ? 'transform rotate-180' : ''
+                    }`}
                 />
               </button>
               <div
-                className={`overflow-hidden transition-all duration-200 ${
-                  openIndex === index ? 'max-h-96' : 'max-h-0'
-                }`}
+                className={`overflow-hidden transition-all duration-200 ${openIndex === index ? 'max-h-96' : 'max-h-0'
+                  }`}
               >
                 <div className="px-6 pb-5 text-gray-600 leading-relaxed">
                   {faq.answer}

@@ -30,7 +30,7 @@ export default function Welcome() {
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
               Gestiona tu negocio con{' '}
-              <span className="text-yellow-500">Xotica</span>
+              <span className="text-yellow-500">CloudSuite Pro</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
               La plataforma todo-en-uno para gestionar inventario, ventas, facturación y reportes.
@@ -164,7 +164,7 @@ export default function Welcome() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                ¿Por qué elegir Xotica?
+                ¿Por qué elegir CloudSuite Pro?
               </h2>
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
@@ -210,7 +210,7 @@ export default function Welcome() {
                 <Zap className="h-16 w-16 mx-auto mb-6" />
                 <h3 className="text-3xl font-bold mb-4">Comienza hoy</h3>
                 <p className="text-xl mb-8">
-                  Únete a cientos de negocios que ya están creciendo con Xotica
+                  Únete a cientos de negocios que ya están creciendo con CloudSuite Pro
                 </p>
                 <div className="grid grid-cols-3 gap-6 mb-8">
                   <div>
@@ -253,7 +253,7 @@ export default function Welcome() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Descubre Más Sobre Xotica
+              Descubre Más Sobre CloudSuite Pro
             </h2>
             <p className="text-xl text-gray-600">
               Explora todas las funcionalidades y beneficios de nuestra plataforma
@@ -268,7 +268,7 @@ export default function Welcome() {
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Cómo Funciona</h3>
                   <p className="text-gray-600 text-sm">
-                    Descubre lo fácil que es implementar Xotica en tu negocio
+                    Descubre lo fácil que es implementar CloudSuite Pro en tu negocio
                   </p>
                 </div>
               </Card>

@@ -56,8 +56,8 @@ export default function ForgotPasswordPage() {
                 <div className="text-center">
                     <div className="flex justify-center">
                         <Image
-                            src="/xotica_logo.png"
-                            alt="Xotica Business"
+                            src="/cloudsuitepro_logo.png"
+                            alt="CloudSuite Pro"
                             width={200}
                             height={60}
                             priority

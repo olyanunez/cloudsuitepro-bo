@@ -137,10 +137,10 @@ $29
 
 ## 🔗 Archivos Modificados
 
-1. `/Users/olivernunez/SynologyDrive/Oliver/xotica-bo/src/lib/types/subscription.ts`
+1. `/Users/olivernunez/SynologyDrive/Oliver/cloudsuitepro-bo/src/lib/types/subscription.ts`
    - Agregados 8 nuevos campos opcionales al interface Plan
 
-2. `/Users/olivernunez/SynologyDrive/Oliver/xotica-bo/src/components/landing/PricingSection.tsx`
+2. `/Users/olivernunez/SynologyDrive/Oliver/cloudsuitepro-bo/src/components/landing/PricingSection.tsx`
    - Actualizado método `getFeaturesList()` para incluir nuevos campos
    - Actualizada tarjeta de plan para mostrar descripción y cargo de instalación
 

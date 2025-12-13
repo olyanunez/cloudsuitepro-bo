@@ -10,7 +10,7 @@ export function AboutSection() {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Sobre Xotica
+            Sobre CloudSuite Pro
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Somos una empresa dedicada a transformar la manera en que los negocios gestionan
@@ -55,7 +55,7 @@ export function AboutSection() {
               </h3>
               <div className="space-y-4 text-gray-700 leading-relaxed">
                 <p>
-                  Xotica nació en 2020 con una visión clara: simplificar la gestión empresarial
+                  CloudSuite Pro nació en 2020 con una visión clara: simplificar la gestión empresarial
                   para negocios de todos los tamaños. Fundada por un equipo de emprendedores y
                   desarrolladores apasionados por la tecnología y los negocios, nuestra plataforma
                   fue diseñada desde cero pensando en las necesidades reales de los empresarios.
@@ -66,7 +66,7 @@ export function AboutSection() {
                   incluye punto de venta, facturación electrónica, reportes avanzados y mucho más.
                 </p>
                 <p>
-                  Hoy, más de 500 empresas confían en Xotica para gestionar sus operaciones
+                  Hoy, más de 500 empresas confían en CloudSuite Pro para gestionar sus operaciones
                   diarias, procesando miles de transacciones y ayudando a nuestros clientes a
                   tomar decisiones más inteligentes basadas en datos reales.
                 </p>

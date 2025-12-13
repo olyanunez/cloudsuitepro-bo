@@ -14,8 +14,8 @@ export function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <Image
-                src="/xotica_short_logo.png"
-                alt="Xotica"
+                src="/cloudsuitepro_short_logo.png"
+                alt="CloudSuite Pro"
                 width={60}
                 height={60}
                 className="h-15 w-15"
@@ -143,8 +143,8 @@ export function Footer() {
               <li className="flex items-start space-x-3 text-sm">
                 <Mail className="h-5 w-5 text-yellow-400 flex-shrink-0" />
                 <div className="text-gray-400">
-                  <p>contacto@xotica.com</p>
-                  <p>soporte@xotica.com</p>
+                  <p>contacto@cloudsuitepro.online</p>
+                  <p>soporte@cloudsuitepro.online</p>
                 </div>
               </li>
               <li className="flex items-start space-x-3 text-sm">
@@ -170,7 +170,7 @@ export function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             {/* Copyright */}
             <p className="text-gray-400 text-sm">
-              &copy; {new Date().getFullYear()} Xotica. Todos los derechos reservados.
+              &copy; {new Date().getFullYear()} CloudSuite Pro. Todos los derechos reservados.
             </p>
 
             {/* Legal Links */}

@@ -1039,7 +1039,7 @@ export default function PosPage() {
           <div class="invoice-container">
             <!-- Header con información de la empresa -->
             <div class="company-header">
-              <h1>${tenantInfo?.name || 'Xotica'}</h1>
+              <h1>${tenantInfo?.name || 'CloudSuite Pro'}</h1>
               ${tenantInfo?.address ? `<p class="company-info">${tenantInfo.address}</p>` : ''}
               ${tenantInfo?.phone ? `<p class="company-info">Tel: ${tenantInfo.phone}</p>` : ''}
               ${tenantInfo?.email ? `<p class="company-info">Email: ${tenantInfo.email}</p>` : ''}

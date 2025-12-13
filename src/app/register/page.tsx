@@ -446,8 +446,8 @@ function RegisterContent() {
           {/* Logo */}
           <div className="mb-2 flex justify-center">
             <Image
-              src="/xotica_logo.png"
-              alt="Xotica Business"
+              src="/cloudsuitepro_logo.png"
+              alt="CloudSuite Pro"
               width={800}
               height={240}
               priority

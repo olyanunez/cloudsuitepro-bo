@@ -206,7 +206,7 @@ function SidebarSubmenuItem({
         className={`flex items-center justify-center p-2 rounded-lg transition-colors w-full relative ${isActive
           ? "bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-100"
           : "bg-transparent text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-        }`}
+          }`}
       >
         <Icon name={item.icon} className="h-5 w-5" />
         {/* Flecha indicadora */}
@@ -247,11 +247,10 @@ function SidebarSubmenuItem({
                 key={subItem.href}
                 href={subItem.href}
                 onClick={() => setIsHovered(false)}
-                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm ${
-                  pathname === subItem.href || pathname.startsWith(subItem.href + '/')
-                    ? "bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-100 font-medium"
-                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-                }`}
+                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm ${pathname === subItem.href || pathname.startsWith(subItem.href + '/')
+                  ? "bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-100 font-medium"
+                  : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                  }`}
               >
                 <Icon name={subItem.icon} className="h-4 w-4" />
                 <span>{subItem.name}</span>
@@ -398,14 +397,14 @@ export default function Navbar() {
             </SheetTrigger>
             <Link href="/dashboard" className="flex items-center space-x-2">
               <Image
-                src="/xotica_short_logo.png"
-                alt="Xotica"
+                src="/cloudsuitepro_short_logo.png"
+                alt="CloudSuite Pro"
                 width={32}
                 height={32}
                 priority
                 className="h-12 w-12"
               />
-              <span className="font-bold text-xl text-primary-600 dark:text-primary-400 hidden sm:inline">Xotica</span>
+              <span className="font-bold text-xl text-primary-600 dark:text-primary-400 hidden sm:inline">CloudSuite Pro</span>
             </Link>
           </div>
 
@@ -629,8 +628,8 @@ export default function Navbar() {
           {/* Logo en el sidebar */}
           <div className="flex items-center justify-center  border-b border-gray-200 dark:border-gray-800">
             <Image
-              src="/xotica_logo.png"
-              alt="Xotica Business"
+              src="/cloudsuitepro_logo.png"
+              alt="CloudSuite Pro"
               width={140}
               height={40}
               priority
