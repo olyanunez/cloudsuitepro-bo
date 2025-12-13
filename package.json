@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack -p 3004",
     "build": "next build",
-    "start": "next start -p 3004",
+    "start": "next start -p 3004 -H 0.0.0.0",
     "lint": "next lint",
     "test": "jest --watchAll=false",
     "test:watch": "jest --watch",
