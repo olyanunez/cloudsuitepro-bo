@@ -88,7 +88,7 @@ function ResetPasswordForm() {
                 <div className="text-center">
                     <div className="flex justify-center">
                         <Image
-                            src="/cloudsuitepro_logo.png"
+                            src="/branding/transparente/cloudsuitepro_logo1.png"
                             alt="CloudSuite Pro"
                             width={200}
                             height={60}

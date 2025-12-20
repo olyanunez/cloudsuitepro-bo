@@ -14,11 +14,11 @@ export function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <Image
-                src="/cloudsuitepro_short_logo.png"
+                src="/branding/transparente/cloudsuitepro_logo3.png"
                 alt="CloudSuite Pro"
                 width={60}
                 height={60}
-                className="h-15 w-15"
+                className="h-10 w-auto"
               />
             </div>
             <p className="text-gray-400 text-sm mb-4">
