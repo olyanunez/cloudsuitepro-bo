@@ -397,12 +397,12 @@ export default function Navbar() {
             </SheetTrigger>
             <Link href="/dashboard" className="flex items-center space-x-2">
               <Image
-                src="/cloudsuitepro_short_logo.png"
+                src="/branding/transparente/icon/cloudsuitepro_short_logo1.png"
                 alt="CloudSuite Pro"
                 width={32}
                 height={32}
                 priority
-                className="h-12 w-12"
+                className="h-5 w-auto"
               />
               <span className="font-bold text-xl text-primary-600 dark:text-primary-400 hidden sm:inline">CloudSuite Pro</span>
             </Link>
@@ -626,14 +626,14 @@ export default function Navbar() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-[240px] sm:w-[300px] flex flex-col rounded-r-[30px]">
           {/* Logo en el sidebar */}
-          <div className="flex items-center justify-center  border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-center dark:border-gray-800">
             <Image
-              src="/branding/transparente/cloudsuitepro_logo1.png"
+              src="/branding/transparente/cloudsuitepro_logo5.png"
               alt="CloudSuite Pro"
               width={140}
               height={40}
               priority
-              className="h-20 w-auto"
+              className="h-16 w-auto"
             />
           </div>
           <nav className="flex flex-col gap-4 mt-4 overflow-y-auto flex-1 pr-2">
