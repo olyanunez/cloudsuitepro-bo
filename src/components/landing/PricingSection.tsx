@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Check, Star, Loader2 } from 'lucide-react';
 import { SubscriptionService } from '@/lib/services/subscriptionService';
 import { Plan, BillingCycle } from '@/lib/types/subscription';
+import Image from 'next/image';
 
 export function PricingSection() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -140,6 +141,16 @@ export function PricingSection() {
     return (
       <section id="precios" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
+          <div className="mb-8 flex justify-center">
+            <Image
+              src="/branding/transparente/icon/cloudsuitepro_short_logo1.png"
+              alt="CloudSuite Pro"
+              width={800}
+              height={240}
+              priority
+              className="h-30 w-auto"
+            />
+          </div>
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Planes y Precios
@@ -158,6 +169,16 @@ export function PricingSection() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
+          <div className="mb-4 flex justify-center">
+            <Image
+              src="/branding/transparente/icon/cloudsuitepro_short_logo1.png"
+              alt="CloudSuite Pro"
+              width={800}
+              height={240}
+              priority
+              className="h-20 w-auto"
+            />
+          </div>
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
             Planes y Precios
           </h2>
@@ -238,9 +259,21 @@ export function PricingSection() {
                 )}
 
                 <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    {plan.name}
-                  </h3>
+                  <div className="flex items-center gap-4">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                      {plan.name}
+                    </h3>
+                    <div className="flex justify-center">
+                      <Image
+                        src="/branding/transparente/icon/cloudsuitepro_short_logo3.png"
+                        alt="CloudSuite Pro"
+                        width={800}
+                        height={240}
+                        priority
+                        className="h-5 w-auto"
+                      />
+                    </div>
+                  </div>
                   {plan.description && (
                     <p className="text-sm text-gray-600 mb-4">
                       {plan.description}

@@ -20,12 +20,12 @@ export function LandingNavbar() {
           <div className="flex items-center">
             <Link href="/welcome" className="flex items-center space-x-2">
               <Image
-                src="/cloudsuitepro_logo.png"
+                src="/branding/transparente/icon/cloudsuitepro_short_logo1.png"
                 alt="CloudSuite Pro"
                 width={360}
                 height={100}
                 priority
-                className="h-20 w-auto"
+                className="h-10 w-auto"
               />
             </Link>
           </div>

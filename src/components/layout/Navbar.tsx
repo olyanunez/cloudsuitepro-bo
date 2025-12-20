@@ -628,7 +628,7 @@ export default function Navbar() {
           {/* Logo en el sidebar */}
           <div className="flex items-center justify-center  border-b border-gray-200 dark:border-gray-800">
             <Image
-              src="/cloudsuitepro_logo.png"
+              src="/branding/transparente/cloudsuitepro_logo1.png"
               alt="CloudSuite Pro"
               width={140}
               height={40}

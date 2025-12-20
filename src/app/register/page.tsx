@@ -444,14 +444,14 @@ function RegisterContent() {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900  justify-center">
         <div className="max-w-xl text-white">
           {/* Logo */}
-          <div className="mb-2 flex justify-center">
+          <div className="mb-4 mt-4 flex justify-center">
             <Image
-              src="/cloudsuitepro_logo.png"
+              src="/branding/transparente/cloudsuitepro_logo1.png"
               alt="CloudSuite Pro"
               width={800}
               height={240}
               priority
-              className="h-56 w-auto"
+              className="h-50 w-auto"
             />
           </div>
 
