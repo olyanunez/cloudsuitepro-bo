@@ -28,6 +28,16 @@ export default function Welcome() {
       <section id="inicio" className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-yellow-50 to-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
+            <div className="mb-8 flex justify-center">
+              <Image
+                src="/branding/transparente/cloudsuitepro_logo2.png"
+                alt="CloudSuite Pro"
+                width={800}
+                height={240}
+                priority
+                className="h-40 w-auto"
+              />
+            </div>
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
               Gestiona tu negocio con{' '}
               <span className="text-yellow-500">CloudSuite Pro</span>
@@ -65,7 +75,7 @@ export default function Welcome() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">

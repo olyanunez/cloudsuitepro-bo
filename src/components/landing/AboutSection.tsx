@@ -2,6 +2,7 @@
 
 import { Card } from '@/components/ui/card';
 import { Target, Eye, Heart, Award, Users, Globe } from 'lucide-react';
+import Image from 'next/image';
 
 export function AboutSection() {
   return (
@@ -9,6 +10,16 @@ export function AboutSection() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
+          <div className="mb-8 flex justify-center">
+            <Image
+              src="/branding/transparente/icon/cloudsuitepro_short_logo1.png"
+              alt="CloudSuite Pro"
+              width={800}
+              height={240}
+              priority
+              className="h-30 w-auto"
+            />
+          </div>
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
             Sobre CloudSuite Pro
           </h2>

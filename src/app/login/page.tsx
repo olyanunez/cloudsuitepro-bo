@@ -188,14 +188,14 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-amber-50 to-amber-100 dark:from-gray-900 dark:to-gray-800 px-4">
       <div className="w-full max-w-md space-y-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
         <div className="text-center">
-          <div className="flex justify-center">
+          <div className="flex justify-center mb-4">
             <Image
-              src="/cloudsuitepro_logo.png"
+              src="/branding/transparente/icon/cloudsuitepro_short_logo1.png"
               alt="CloudSuite Pro"
               width={200}
               height={60}
               priority
-              className="h-30 w-auto"
+              className="h-10 w-auto"
             />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Iniciar Sesión</h1>
