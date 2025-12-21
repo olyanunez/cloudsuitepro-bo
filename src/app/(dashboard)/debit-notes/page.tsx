@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -20,16 +21,14 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { ExportButton } from '@/components/ui/export-button';
 import { toast } from 'sonner';
 import { CreateDebitNoteDialog } from '@/components/debit-notes/CreateDebitNoteDialog';
-import { DebitNoteDetailDialog } from '@/components/debit-notes/DebitNoteDetailDialog';
 
 export default function DebitNotesPage() {
+    const router = useRouter();
     const [debitNotes, setDebitNotes] = useState<DebitNote[]>([]);
     const [stats, setStats] = useState<DebitNoteStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
-    const [selectedDebitNote, setSelectedDebitNote] = useState<DebitNote | null>(null);
     const [showCreateDialog, setShowCreateDialog] = useState(false);
-    const [showDetailDialog, setShowDetailDialog] = useState(false);
 
     // Filtros
     const [search, setSearch] = useState('');
@@ -152,15 +151,8 @@ export default function DebitNotesPage() {
         }
     };
 
-    const handleViewDetail = async (debitNote: DebitNote) => {
-        try {
-            const fullDebitNote = await debitNoteService.getById(debitNote.id);
-            setSelectedDebitNote(fullDebitNote);
-            setShowDetailDialog(true);
-        } catch (error) {
-            console.error('Error loading debit note detail:', error);
-            toast.error('Error al cargar el detalle');
-        }
+    const handleViewDetail = (debitNote: DebitNote) => {
+        router.push(`/debit-notes/${debitNote.id}`);
     };
 
     const handleDebitNoteCreated = () => {
@@ -168,13 +160,6 @@ export default function DebitNotesPage() {
         loadDebitNotes();
         loadStats();
         toast.success('Nota de débito creada exitosamente');
-    };
-
-    const handleDebitNoteCancelled = () => {
-        setShowDetailDialog(false);
-        loadDebitNotes();
-        loadStats();
-        toast.success('Nota de débito cancelada');
     };
 
     return (
@@ -421,15 +406,6 @@ export default function DebitNotesPage() {
                 onOpenChange={setShowCreateDialog}
                 onSuccess={handleDebitNoteCreated}
             />
-
-            {selectedDebitNote && (
-                <DebitNoteDetailDialog
-                    open={showDetailDialog}
-                    onOpenChange={setShowDetailDialog}
-                    debitNote={selectedDebitNote}
-                    onCancelled={handleDebitNoteCancelled}
-                />
-            )}
         </div>
     );
 }

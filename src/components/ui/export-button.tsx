@@ -22,7 +22,7 @@ import { Download, FileSpreadsheet, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePermissions } from '@/lib/hooks/usePermissions';
 
-export type ExportFormat = 'pdf' | 'excel';
+export type ExportFormat = 'pdf' | 'excel' | 'csv';
 
 interface ExportButtonProps {
     /**
@@ -156,6 +156,12 @@ export function ExportButton({
                         <DropdownMenuItem onClick={() => handleFormatSelect('excel')}>
                             <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
                             Exportar a Excel
+                        </DropdownMenuItem>
+                    )}
+                    {availableFormats.includes('csv') && (
+                        <DropdownMenuItem onClick={() => handleFormatSelect('csv')}>
+                            <FileSpreadsheet className="h-4 w-4 mr-2 text-blue-600" />
+                            Exportar a CSV
                         </DropdownMenuItem>
                     )}
                     {availableFormats.includes('pdf') && (
