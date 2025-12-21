@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { apiGet } from '@/lib/services/apiService';
 import {
   ArrowLeft,
@@ -22,6 +23,7 @@ import {
   User,
   CreditCard,
   StickyNote,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,6 +39,9 @@ interface Supplier {
   id: number;
   code: string;
   name: string;
+  supplierType?: 'FORMAL' | 'INFORMAL';
+  isInformal?: boolean;
+  informalReason?: string;
   taxId?: string;
   email?: string;
   phone?: string;
@@ -135,85 +140,131 @@ export default function SupplierDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Info */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">
+            <h2 className="text-xl font-semibold mb-6">
               Información General
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-start space-x-3">
-                <Building2 className="h-5 w-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-600">Nombre / Razón Social</p>
-                  <p className="font-medium">{supplier.name}</p>
-                </div>
-              </div>
 
-              <div className="flex items-start space-x-3">
-                <Hash className="h-5 w-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-600">Código</p>
-                  <p className="font-medium">{supplier.code}</p>
+            {/* Sección: Identificación */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                Identificación
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-start space-x-3">
+                  <Building2 className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600">Nombre / Razón Social</p>
+                    <p className="font-medium">{supplier.name}</p>
+                  </div>
                 </div>
-              </div>
 
-              {supplier.taxId && (
                 <div className="flex items-start space-x-3">
                   <FileText className="h-5 w-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-600">RNC</p>
-                    <p className="font-medium">{supplier.taxId}</p>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 mb-1">Tipo de Proveedor</p>
+                    {supplier.supplierType === 'INFORMAL' || supplier.isInformal ? (
+                      <Badge variant="destructive" className="bg-yellow-500 hover:bg-yellow-600">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Proveedor Informal (B11)
+                      </Badge>
+                    ) : (
+                      <Badge variant="destructive" className="bg-yellow-500 hover:bg-yellow-600">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Proveedor Formal
+                      </Badge>
+                    )}
                   </div>
                 </div>
-              )}
 
-              {supplier.email && (
                 <div className="flex items-start space-x-3">
-                  <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-600">Email</p>
-                    <p className="font-medium">{supplier.email}</p>
+                  <Hash className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600">Código</p>
+                    <p className="font-medium">{supplier.code}</p>
                   </div>
                 </div>
-              )}
 
-              {supplier.phone && (
-                <div className="flex items-start space-x-3">
-                  <Phone className="h-5 w-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-600">Teléfono</p>
-                    <p className="font-medium">{supplier.phone}</p>
+                {supplier.taxId && (
+                  <div className="flex items-start space-x-3">
+                    <CreditCard className="h-5 w-5 text-gray-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">RNC</p>
+                      <p className="font-medium">{supplier.taxId}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {supplier.address && (
-                <div className="flex items-start space-x-3 md:col-span-2">
-                  <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-600">Dirección</p>
-                    <p className="font-medium">{supplier.address}</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-start space-x-3">
-                {supplier.isActive ? (
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-red-500 mt-0.5" />
                 )}
-                <div>
-                  <p className="text-sm text-gray-600">Estado</p>
-                  <p className="font-medium">
-                    {supplier.isActive ? 'Activo' : 'Inactivo'}
-                  </p>
-                </div>
               </div>
+            </div>
 
-              <div className="flex items-start space-x-3">
-                <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-sm text-gray-600">Proveedor Desde</p>
-                  <p className="font-medium">{formatDate(supplier.createdAt)}</p>
+            {/* Sección: Contacto */}
+            <div className="mb-6 pt-6 border-t">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                Información de Contacto
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {supplier.email && (
+                  <div className="flex items-start space-x-3">
+                    <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Email</p>
+                      <p className="font-medium break-all">{supplier.email}</p>
+                    </div>
+                  </div>
+                )}
+
+                {supplier.phone && (
+                  <div className="flex items-start space-x-3">
+                    <Phone className="h-5 w-5 text-gray-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Teléfono</p>
+                      <p className="font-medium">{supplier.phone}</p>
+                    </div>
+                  </div>
+                )}
+
+                {supplier.address && (
+                  <div className="flex items-start space-x-3 md:col-span-2">
+                    <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Dirección</p>
+                      <p className="font-medium">{supplier.address}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Sección: Estado */}
+            <div className="pt-6 border-t">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                Estado
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-start space-x-3">
+                  {supplier.isActive ? (
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600">Estado Actual</p>
+                    <div className="mt-1">
+                      <Badge
+                        variant={supplier.isActive ? 'default' : 'destructive'}
+                        className={supplier.isActive ? 'bg-green-500' : ''}
+                      >
+                        {supplier.isActive ? 'Activo' : 'Inactivo'}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-3">
+                  <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600">Proveedor Desde</p>
+                    <p className="font-medium">{formatDate(supplier.createdAt)}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -255,6 +306,29 @@ export default function SupplierDetailPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            </Card>
+          )}
+
+          {/* Informal Supplier Info */}
+          {(supplier.supplierType === 'INFORMAL' || supplier.isInformal) && supplier.informalReason && (
+            <Card className="p-6 border-yellow-200 bg-yellow-50">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold mb-2 text-yellow-800">
+                    Proveedor Informal
+                  </h2>
+                  <p className="text-sm text-yellow-700 mb-2">
+                    Este proveedor genera automáticamente NCF tipo B11 (Comprobante para Regímenes Especiales) al recibir mercancía.
+                  </p>
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-yellow-800 mb-1">Motivo:</p>
+                    <p className="text-sm text-yellow-700 whitespace-pre-wrap">
+                      {supplier.informalReason}
+                    </p>
+                  </div>
+                </div>
               </div>
             </Card>
           )}

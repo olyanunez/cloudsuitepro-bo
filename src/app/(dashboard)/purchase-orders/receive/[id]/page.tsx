@@ -146,7 +146,15 @@ export default function ReceivePurchaseOrderPage() {
 
     try {
       setReceiving(true);
-      await PurchaseOrderService.receivePurchaseOrder(id, receiveData);
+      const result = await PurchaseOrderService.receivePurchaseOrder(id, receiveData);
+
+      // Verificar si hay advertencia de NCF B11
+      if ((result as any)?._ncfWarning) {
+        toast.warning((result as any)._ncfWarning, {
+          duration: 8000,
+        });
+      }
+
       toast.success('Orden de compra recibida exitosamente');
       router.push(`/purchase-orders/${id}`);
     } catch (error: any) {
@@ -175,215 +183,214 @@ export default function ReceivePurchaseOrderPage() {
     <ProtectedPage screenCode="PURCHASE_ORDERS" requiredPermission="UPDATE">
       <div className="container mx-auto py-8">
         <div className="mb-6 flex items-center">
-        <Link href={`/purchase-orders/${id}`}>
-          <Button variant="outline" size="sm" className="mr-4">
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
-            Volver
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold">Recibir Orden de Compra</h1>
-          <p className="text-sm text-muted-foreground">
-            {purchaseOrder.orderNumber} - {purchaseOrder.supplier?.name}
-          </p>
+          <Link href={`/purchase-orders/${id}`}>
+            <Button variant="outline" size="sm" className="mr-4">
+              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+              Volver
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold">Recibir Orden de Compra</h1>
+            <p className="text-sm text-muted-foreground">
+              {purchaseOrder.orderNumber} - {purchaseOrder.supplier?.name}
+            </p>
+          </div>
         </div>
-      </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Productos para Recibir */}
-          <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">Productos a Recibir</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Productos para Recibir */}
+            <div className="lg:col-span-2">
+              <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
+                <h2 className="text-xl font-semibold mb-4">Productos a Recibir</h2>
 
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
-                        Producto
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
-                        Ordenado
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
-                        Recibido
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
-                        Pendiente
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
-                        Recibir Ahora
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
-                        Lote
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
-                        Vencimiento
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                    {receivedItems.map((receivedItem, index) => {
-                      const orderItem = getOrderItem(receivedItem.purchaseOrderItemId);
-                      if (!orderItem) return null;
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
+                          Producto
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
+                          Ordenado
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
+                          Recibido
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
+                          Pendiente
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
+                          Recibir Ahora
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
+                          Lote
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
+                          Vencimiento
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                      {receivedItems.map((receivedItem, index) => {
+                        const orderItem = getOrderItem(receivedItem.purchaseOrderItemId);
+                        if (!orderItem) return null;
 
-                      const pendingQty = orderItem.quantity - orderItem.receivedQty;
+                        const pendingQty = orderItem.quantity - orderItem.receivedQty;
 
-                      return (
-                        <tr key={index}>
-                          <td className="px-4 py-2">
-                            <div>
-                              <div className="font-medium">{orderItem.variant.product.name}</div>
-                              {orderItem.variant.name && (
-                                <div className="text-sm text-muted-foreground">{orderItem.variant.name}</div>
-                              )}
-                              <div className="text-xs text-muted-foreground">
-                                SKU: {orderItem.variant.sku}
+                        return (
+                          <tr key={index}>
+                            <td className="px-4 py-2">
+                              <div>
+                                <div className="font-medium">{orderItem.variant.product.name}</div>
+                                {orderItem.variant.name && (
+                                  <div className="text-sm text-muted-foreground">{orderItem.variant.name}</div>
+                                )}
+                                <div className="text-xs text-muted-foreground">
+                                  SKU: {orderItem.variant.sku}
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            <span className="font-medium">{orderItem.quantity}</span>
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            <span className="text-green-600 dark:text-green-400">
-                              {orderItem.receivedQty}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            <span className="text-orange-600 dark:text-orange-400 font-medium">
-                              {pendingQty}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2">
-                            <Input
-                              type="number"
-                              min="0"
-                              max={pendingQty}
-                              value={receivedItem.receivedQuantity}
-                              onChange={(e) =>
-                                handleItemChange(index, 'receivedQuantity', Number(e.target.value))
-                              }
-                              className={`w-24 ${
-                                errors[`item_${index}_receivedQuantity`] ? 'border-red-500' : ''
-                              }`}
-                            />
-                            {errors[`item_${index}_receivedQuantity`] && (
-                              <p className="mt-1 text-xs text-red-500">
-                                {errors[`item_${index}_receivedQuantity`]}
-                              </p>
-                            )}
-                          </td>
-                          <td className="px-4 py-2">
-                            <Input
-                              type="text"
-                              placeholder="Opcional"
-                              value={receivedItem.batchNumber}
-                              onChange={(e) =>
-                                handleItemChange(index, 'batchNumber', e.target.value)
-                              }
-                              className="w-32"
-                              disabled={receivedItem.receivedQuantity === 0}
-                            />
-                          </td>
-                          <td className="px-4 py-2">
-                            <Input
-                              type="date"
-                              value={receivedItem.expirationDate}
-                              onChange={(e) =>
-                                handleItemChange(index, 'expirationDate', e.target.value)
-                              }
-                              className="w-40"
-                              disabled={receivedItem.receivedQuantity === 0}
-                            />
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                            </td>
+                            <td className="px-4 py-2 text-center">
+                              <span className="font-medium">{orderItem.quantity}</span>
+                            </td>
+                            <td className="px-4 py-2 text-center">
+                              <span className="text-green-600 dark:text-green-400">
+                                {orderItem.receivedQty}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2 text-center">
+                              <span className="text-orange-600 dark:text-orange-400 font-medium">
+                                {pendingQty}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2">
+                              <Input
+                                type="number"
+                                min="0"
+                                max={pendingQty}
+                                value={receivedItem.receivedQuantity}
+                                onChange={(e) =>
+                                  handleItemChange(index, 'receivedQuantity', Number(e.target.value))
+                                }
+                                className={`w-24 ${errors[`item_${index}_receivedQuantity`] ? 'border-red-500' : ''
+                                  }`}
+                              />
+                              {errors[`item_${index}_receivedQuantity`] && (
+                                <p className="mt-1 text-xs text-red-500">
+                                  {errors[`item_${index}_receivedQuantity`]}
+                                </p>
+                              )}
+                            </td>
+                            <td className="px-4 py-2">
+                              <Input
+                                type="text"
+                                placeholder="Opcional"
+                                value={receivedItem.batchNumber}
+                                onChange={(e) =>
+                                  handleItemChange(index, 'batchNumber', e.target.value)
+                                }
+                                className="w-32"
+                                disabled={receivedItem.receivedQuantity === 0}
+                              />
+                            </td>
+                            <td className="px-4 py-2">
+                              <Input
+                                type="date"
+                                value={receivedItem.expirationDate}
+                                onChange={(e) =>
+                                  handleItemChange(index, 'expirationDate', e.target.value)
+                                }
+                                className="w-40"
+                                disabled={receivedItem.receivedQuantity === 0}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Información de Recepción */}
-          <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 sticky top-8">
-              <h2 className="text-xl font-semibold mb-4">Información de Recepción</h2>
+            {/* Información de Recepción */}
+            <div className="lg:col-span-1">
+              <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 sticky top-8">
+                <h2 className="text-xl font-semibold mb-4">Información de Recepción</h2>
 
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="receivedDate" className="block text-sm font-medium mb-1">
-                    Fecha de Recepción
-                  </label>
-                  <Input
-                    type="date"
-                    id="receivedDate"
-                    name="receivedDate"
-                    value={formData.receivedDate}
-                    onChange={handleInputChange}
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="receivedDate" className="block text-sm font-medium mb-1">
+                      Fecha de Recepción
+                    </label>
+                    <Input
+                      type="date"
+                      id="receivedDate"
+                      name="receivedDate"
+                      value={formData.receivedDate}
+                      onChange={handleInputChange}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="notes" className="block text-sm font-medium mb-1">
+                      Notas de Recepción
+                    </label>
+                    <textarea
+                      id="notes"
+                      name="notes"
+                      value={formData.notes}
+                      onChange={handleInputChange}
+                      rows={4}
+                      className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                      placeholder="Notas sobre la recepción..."
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                  <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                    Información Importante
+                  </h3>
+                  <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                    <li>• Puede recibir parcialmente los productos</li>
+                    <li>• El número de lote es opcional</li>
+                    <li>• La fecha de vencimiento es opcional</li>
+                    <li>• Se creará un movimiento de inventario automáticamente</li>
+                  </ul>
+                </div>
+
+                <div className="mt-6 space-y-2">
+                  <Button
+                    type="submit"
+                    disabled={receiving}
                     className="w-full"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="notes" className="block text-sm font-medium mb-1">
-                    Notas de Recepción
-                  </label>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleInputChange}
-                    rows={4}
-                    className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-                    placeholder="Notas sobre la recepción..."
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-                <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
-                  Información Importante
-                </h3>
-                <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
-                  <li>• Puede recibir parcialmente los productos</li>
-                  <li>• El número de lote es opcional</li>
-                  <li>• La fecha de vencimiento es opcional</li>
-                  <li>• Se creará un movimiento de inventario automáticamente</li>
-                </ul>
-              </div>
-
-              <div className="mt-6 space-y-2">
-                <Button
-                  type="submit"
-                  disabled={receiving}
-                  className="w-full"
-                  style={{ backgroundColor: '#16a34a', color: 'white' }}
-                >
-                  {receiving ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-transparent mr-2"></div>
-                      Procesando...
-                    </>
-                  ) : (
-                    <>
-                      <PackageIcon className="mr-2 h-4 w-4" />
-                      Confirmar Recepción
-                    </>
-                  )}
-                </Button>
-                <Link href={`/purchase-orders/${id}`} className="block">
-                  <Button type="button" variant="outline" className="w-full">
-                    Cancelar
+                    style={{ backgroundColor: '#16a34a', color: 'white' }}
+                  >
+                    {receiving ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-transparent mr-2"></div>
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        <PackageIcon className="mr-2 h-4 w-4" />
+                        Confirmar Recepción
+                      </>
+                    )}
                   </Button>
-                </Link>
+                  <Link href={`/purchase-orders/${id}`} className="block">
+                    <Button type="button" variant="outline" className="w-full">
+                      Cancelar
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </form>
+        </form>
       </div>
     </ProtectedPage>
   );
