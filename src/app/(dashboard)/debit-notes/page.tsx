@@ -99,7 +99,7 @@ export default function DebitNotesPage() {
     const getStatusBadge = (status: string) => {
         if (status === 'COMPLETED') {
             return (
-                <Badge variant="default" className="bg-green-600">
+                <Badge variant="default" className="bg-green-600 hover:bg-green-700">
                     <CheckCircle className="mr-1 h-3 w-3" />
                     Completada
                 </Badge>
@@ -334,7 +334,6 @@ export default function DebitNotesPage() {
                                     <TableHead>Factura Original</TableHead>
                                     <TableHead>Cliente</TableHead>
                                     <TableHead>Tipo</TableHead>
-                                    <TableHead>Estado</TableHead>
                                     <TableHead>Total</TableHead>
                                     <TableHead>Fecha</TableHead>
                                     <TableHead>Acciones</TableHead>
@@ -376,7 +375,6 @@ export default function DebitNotesPage() {
                                             )}
                                         </TableCell>
                                         <TableCell>{getFiscalTypeBadge(dn.fiscalType)}</TableCell>
-                                        <TableCell>{getStatusBadge(dn.status)}</TableCell>
                                         <TableCell className="font-medium">
                                             {formatCurrency(dn.total)}
                                         </TableCell>
