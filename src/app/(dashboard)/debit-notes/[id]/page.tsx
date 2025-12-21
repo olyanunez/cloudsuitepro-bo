@@ -104,6 +104,7 @@ export default function DebitNoteDetailPage() {
                         <Button
                             variant="destructive"
                             onClick={() => setShowCancelDialog(true)}
+                            className="!bg-red-600 hover:!bg-red-700 !text-white border-red-600"
                         >
                             <XCircle className="mr-2 h-4 w-4" />
                             Cancelar Nota
@@ -150,9 +151,9 @@ export default function DebitNoteDetailPage() {
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">Estado:</span>
                             {debitNote.status === 'COMPLETED' ? (
-                                <Badge className="bg-green-600">Completada</Badge>
+                                <Badge variant="default">Completada</Badge>
                             ) : (
-                                <Badge variant="destructive">Cancelada</Badge>
+                                <Badge variant="secondary">Cancelada</Badge>
                             )}
                         </div>
                     </CardContent>
@@ -180,8 +181,14 @@ export default function DebitNoteDetailPage() {
                                     <span>{formatCurrency(debitNote.originalInvoice.total)}</span>
                                 </div>
                                 <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Nuevo Cargo:</span>
+                                    <span className="text-red-600 font-medium">+{formatCurrency(debitNote.total)}</span>
+                                </div>
+                                <div className="flex justify-between border-t pt-2">
                                     <span className="text-muted-foreground">Nuevo Saldo:</span>
-                                    <span className="font-semibold">{formatCurrency(debitNote.originalInvoice.balanceDue)}</span>
+                                    <span className="font-semibold text-lg">
+                                        {formatCurrency(Number(debitNote.originalInvoice.total) + Number(debitNote.total))}
+                                    </span>
                                 </div>
                             </>
                         )}
