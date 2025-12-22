@@ -49,6 +49,7 @@ export interface PurchaseOrder {
     name: string;
     email?: string;
     phone?: string;
+    supplierType?: 'FORMAL' | 'INFORMAL';
   };
   warehouseId: number;
   warehouse?: {
@@ -67,6 +68,8 @@ export interface PurchaseOrder {
   paymentTerms?: string;
   sentAt?: Date;
   sentBy?: number;
+  supplierNcf?: string;
+  supplierNcfType?: string;
   items?: PurchaseOrderItem[];
   _count?: {
     items: number;
@@ -123,4 +126,6 @@ export interface ReceivePurchaseOrderInput {
   items: ReceivePurchaseOrderItem[];
   receivedDate?: string;
   notes?: string;
+  supplierNcf?: string;
+  supplierNcfType?: string;
 }

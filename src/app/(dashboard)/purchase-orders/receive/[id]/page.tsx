@@ -27,6 +27,8 @@ export default function ReceivePurchaseOrderPage() {
   const [formData, setFormData] = useState({
     receivedDate: new Date().toISOString().split('T')[0],
     notes: '',
+    supplierNcf: '',
+    supplierNcfType: 'B01',
   });
 
   const [receivedItems, setReceivedItems] = useState<ReceivePurchaseOrderItem[]>([]);
@@ -58,6 +60,15 @@ export default function ReceivePurchaseOrderPage() {
             }))
           );
         }
+
+        // Inicializar NCF del proveedor si ya existe
+        if (orderData.supplierNcf) {
+          setFormData(prev => ({
+            ...prev,
+            supplierNcf: orderData.supplierNcf || '',
+            supplierNcfType: orderData.supplierNcfType || 'B01',
+          }));
+        }
       } catch (error: any) {
         console.error('Error loading data:', error);
         toast.error('Error al cargar la orden de compra');
@@ -72,7 +83,7 @@ export default function ReceivePurchaseOrderPage() {
     }
   }, [id, router]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
@@ -109,6 +120,14 @@ export default function ReceivePurchaseOrderPage() {
       toast.error('Debe recibir al menos un producto');
     }
 
+    // Validar NCF del proveedor si es formal
+    if (purchaseOrder?.supplier?.supplierType === 'FORMAL') {
+      if (!formData.supplierNcf || formData.supplierNcf.trim() === '') {
+        newErrors.supplierNcf = 'El NCF del proveedor es requerido';
+        toast.error('Debe ingresar el NCF del proveedor formal');
+      }
+    }
+
     // Validar cada item que tiene cantidad recibida
     receivedItems.forEach((receivedItem, index) => {
       if (receivedItem.receivedQuantity > 0) {
@@ -142,6 +161,8 @@ export default function ReceivePurchaseOrderPage() {
       items: itemsToReceive,
       receivedDate: formData.receivedDate || undefined,
       notes: formData.notes || undefined,
+      supplierNcf: formData.supplierNcf || undefined,
+      supplierNcfType: formData.supplierNcfType || undefined,
     };
 
     try {
@@ -334,6 +355,51 @@ export default function ReceivePurchaseOrderPage() {
                     />
                   </div>
 
+                  {/* NCF del Proveedor (solo para proveedores formales) */}
+                  {purchaseOrder.supplier?.supplierType === 'FORMAL' && (
+                    <>
+                      <div>
+                        <label htmlFor="supplierNcfType" className="block text-sm font-medium mb-1">
+                          Tipo de NCF *
+                        </label>
+                        <select
+                          id="supplierNcfType"
+                          name="supplierNcfType"
+                          value={formData.supplierNcfType}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                        >
+                          <option value="B01">B01 - Crédito Fiscal</option>
+                          <option value="B02">B02 - Consumidor Final</option>
+                          <option value="B14">B14 - Regímenes Especiales</option>
+                          <option value="B15">B15 - Gubernamental</option>
+                          <option value="B16">B16 - Exportaciones</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label htmlFor="supplierNcf" className="block text-sm font-medium mb-1">
+                          NCF del Proveedor *
+                        </label>
+                        <Input
+                          type="text"
+                          id="supplierNcf"
+                          name="supplierNcf"
+                          value={formData.supplierNcf}
+                          onChange={handleInputChange}
+                          placeholder="Ej: B0100000001"
+                          className={`w-full ${errors.supplierNcf ? 'border-red-500' : ''}`}
+                        />
+                        {errors.supplierNcf && (
+                          <p className="mt-1 text-xs text-red-500">{errors.supplierNcf}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          NCF de la factura del proveedor
+                        </p>
+                      </div>
+                    </>
+                  )}
+
                   <div>
                     <label htmlFor="notes" className="block text-sm font-medium mb-1">
                       Notas de Recepción
@@ -358,6 +424,12 @@ export default function ReceivePurchaseOrderPage() {
                     <li>• Puede recibir parcialmente los productos</li>
                     <li>• El número de lote es opcional</li>
                     <li>• La fecha de vencimiento es opcional</li>
+                    {purchaseOrder.supplier?.supplierType === 'FORMAL' && (
+                      <li>• El NCF del proveedor es requerido para reportes DGII</li>
+                    )}
+                    {purchaseOrder.supplier?.supplierType === 'INFORMAL' && (
+                      <li>• Se generará un NCF B11 automáticamente</li>
+                    )}
                     <li>• Se creará un movimiento de inventario automáticamente</li>
                   </ul>
                 </div>

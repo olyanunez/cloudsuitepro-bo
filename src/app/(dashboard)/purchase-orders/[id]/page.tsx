@@ -283,6 +283,16 @@ export default function PurchaseOrderDetailPage() {
                     </p>
                   </div>
                 )}
+                {purchaseOrder.supplierNcf && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-muted-foreground">
+                      NCF del Proveedor {purchaseOrder.supplierNcfType ? `(${purchaseOrder.supplierNcfType})` : ''}
+                    </p>
+                    <p className="font-bold text-lg text-green-600 dark:text-green-400">
+                      {purchaseOrder.supplierNcf}
+                    </p>
+                  </div>
+                )}
               </div>
               {purchaseOrder.notes && (
                 <div className="mt-4">
@@ -462,6 +472,18 @@ export default function PurchaseOrderDetailPage() {
               </div>
             </div>
           )}
+
+          {/* NCF del Proveedor Formal en Header */}
+          {purchaseOrder.supplierNcf && (
+            <div className="col-span-2 mt-4 text-center">
+              <div className="inline-block bg-green-100 border-2 border-green-600 rounded-lg px-6 py-3">
+                <p className="text-xs text-green-700 font-semibold uppercase mb-1">
+                  NCF del Proveedor {purchaseOrder.supplierNcfType ? `(${purchaseOrder.supplierNcfType})` : ''}
+                </p>
+                <p className="text-2xl font-bold text-green-900">{purchaseOrder.supplierNcf}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Información del Proveedor y Almacén */}
@@ -494,6 +516,15 @@ export default function PurchaseOrderDetailPage() {
                   <p className="text-xs text-blue-700 font-semibold">NCF B11:</p>
                   <p className="font-bold text-blue-900 text-lg">{(purchaseOrder as any).ncfB11}</p>
                   <p className="text-xs text-blue-600 mt-1">Proveedor Informal</p>
+                </div>
+              )}
+              {purchaseOrder.supplierNcf && (
+                <div className="mt-4 bg-green-50 border border-green-300 rounded p-2">
+                  <p className="text-xs text-green-700 font-semibold">
+                    NCF del Proveedor {purchaseOrder.supplierNcfType ? `(${purchaseOrder.supplierNcfType})` : ''}:
+                  </p>
+                  <p className="font-bold text-green-900 text-lg">{purchaseOrder.supplierNcf}</p>
+                  <p className="text-xs text-green-600 mt-1">Proveedor Formal</p>
                 </div>
               )}
             </div>
