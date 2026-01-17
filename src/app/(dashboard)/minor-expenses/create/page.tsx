@@ -249,6 +249,7 @@ export default function CreateMinorExpensePage() {
                                         name="taxableAmount"
                                         type="number"
                                         step="0.01"
+                                        min="0"
                                         value={formData.taxableAmount}
                                         onChange={(e) => handleNumberChange('taxableAmount', e.target.value)}
                                         required
@@ -263,6 +264,7 @@ export default function CreateMinorExpensePage() {
                                         name="tax"
                                         type="number"
                                         step="0.01"
+                                        min="0"
                                         value={formData.tax}
                                         onChange={(e) => handleNumberChange('tax', e.target.value)}
                                         required
@@ -277,6 +279,7 @@ export default function CreateMinorExpensePage() {
                                         name="amount"
                                         type="number"
                                         step="0.01"
+                                        min="0"
                                         value={formData.amount}
                                         readOnly
                                         className="bg-gray-50 font-bold"

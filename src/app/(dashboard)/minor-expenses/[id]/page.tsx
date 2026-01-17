@@ -10,6 +10,7 @@ import {
     paymentMethodLabels,
 } from '@/lib/types/minor-expense';
 import { MinorExpenseService } from '@/lib/services/minorExpenseService';
+import { usePermissions } from '@/lib/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +36,7 @@ export default function MinorExpenseDetailPage() {
     const router = useRouter();
     const params = useParams();
     const id = parseInt(params.id as string);
+    const { hasPermission } = usePermissions('MINOR_EXPENSES');
 
     const [expense, setExpense] = useState<MinorExpense | null>(null);
     const [loading, setLoading] = useState(true);
@@ -84,7 +86,11 @@ export default function MinorExpenseDetailPage() {
             router.push('/minor-expenses');
         } catch (error: any) {
             console.error('Error approving expense:', error);
-            toast.error(error.response?.data?.message || 'Error al procesar aprobación');
+            const errorMessage =
+                error?.response?.data?.message ||
+                error?.message ||
+                'Error al procesar aprobación';
+            toast.error(errorMessage);
         } finally {
             setApproving(false);
         }
@@ -142,7 +148,7 @@ export default function MinorExpenseDetailPage() {
                     </div>
                     <div className="flex gap-2">
                         {getStatusBadge(expense.status)}
-                        {expense.status === 'PENDING' && (
+                        {expense.status === 'PENDING' && hasPermission('APPROVE') && (
                             <Button
                                 variant="success"
                                 onClick={() => setShowApproval(!showApproval)}

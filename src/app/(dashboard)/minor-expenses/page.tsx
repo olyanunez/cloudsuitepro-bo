@@ -32,6 +32,15 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
     Plus,
     Search,
     Eye,
@@ -42,12 +51,22 @@ import {
     DollarSign,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { toast } from 'sonner';
+import { usePermissions } from '@/lib/hooks/usePermissions';
 
 export default function MinorExpensesPage() {
     const router = useRouter();
+    const { hasPermission } = usePermissions('MINOR_EXPENSES');
     const [expenses, setExpenses] = useState<MinorExpense[]>([]);
     const [loading, setLoading] = useState(true);
     const [statistics, setStatistics] = useState<any>(null);
+    const [showApprovalModal, setShowApprovalModal] = useState(false);
+    const [selectedExpense, setSelectedExpense] = useState<MinorExpense | null>(null);
+    const [approving, setApproving] = useState(false);
+    const [approvalData, setApprovalData] = useState({
+        approved: true,
+        rejectionReason: '',
+    });
     const [pagination, setPagination] = useState({
         page: 1,
         limit: 10,
@@ -137,8 +156,44 @@ export default function MinorExpensesPage() {
         setPagination((prev) => ({ ...prev, page: 1 }));
     };
 
-    const handleApprove = async (id: number) => {
-        router.push(`/minor-expenses/${id}/approve`);
+    const handleApprove = async (expense: MinorExpense) => {
+        setSelectedExpense(expense);
+        setApprovalData({ approved: true, rejectionReason: '' });
+        setShowApprovalModal(true);
+    };
+
+    const processApproval = async () => {
+        if (!selectedExpense) return;
+
+        if (!approvalData.approved && !approvalData.rejectionReason.trim()) {
+            toast.error('Debe proporcionar una razón para el rechazo');
+            return;
+        }
+
+        try {
+            setApproving(true);
+            await MinorExpenseService.approveMinorExpense(selectedExpense.id, approvalData);
+
+            toast.success(
+                approvalData.approved
+                    ? 'Gasto aprobado exitosamente'
+                    : 'Gasto rechazado exitosamente'
+            );
+
+            setShowApprovalModal(false);
+            setSelectedExpense(null);
+            loadExpenses();
+            loadStatistics();
+        } catch (error: any) {
+            console.error('Error approving expense:', error);
+            const errorMessage =
+                error?.response?.data?.message ||
+                error?.message ||
+                'Error al procesar aprobación';
+            toast.error(errorMessage);
+        } finally {
+            setApproving(false);
+        }
     };
 
     const filteredExpenses = expenses.filter((expense) => {
@@ -371,11 +426,11 @@ export default function MinorExpensesPage() {
                                                                 <Eye className="h-4 w-4" />
                                                             </Button>
                                                         </Link>
-                                                        {expense.status === 'PENDING' && (
+                                                        {expense.status === 'PENDING' && hasPermission('APPROVE') && (
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                onClick={() => handleApprove(expense.id)}
+                                                                onClick={() => handleApprove(expense)}
                                                                 className="text-green-600 hover:text-green-700"
                                                             >
                                                                 <CheckCircle className="h-4 w-4" />
@@ -426,6 +481,122 @@ export default function MinorExpensesPage() {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Approval Modal */}
+            <Dialog open={showApprovalModal} onOpenChange={setShowApprovalModal}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Aprobar/Rechazar Gasto Menor</DialogTitle>
+                    </DialogHeader>
+
+                    {selectedExpense && (
+                        <div className="space-y-4">
+                            {/* Expense Details */}
+                            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                                <div>
+                                    <p className="text-sm text-gray-600">Número</p>
+                                    <p className="font-semibold">{selectedExpense.expenseNumber}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-600">Fecha</p>
+                                    <p className="font-semibold">
+                                        {new Date(selectedExpense.date).toLocaleDateString('es-DO')}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-600">Categoría</p>
+                                    <p className="font-semibold">
+                                        {expenseCategoryLabels[selectedExpense.category]}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-600">Monto</p>
+                                    <p className="font-semibold text-lg text-blue-600">
+                                        {formatCurrency(selectedExpense.amount)}
+                                    </p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-sm text-gray-600">Descripción</p>
+                                    <p className="font-semibold">{selectedExpense.description}</p>
+                                </div>
+                                {selectedExpense.beneficiary && (
+                                    <div className="col-span-2">
+                                        <p className="text-sm text-gray-600">Beneficiario</p>
+                                        <p className="font-semibold">{selectedExpense.beneficiary}</p>
+                                    </div>
+                                )}
+                                <div>
+                                    <p className="text-sm text-gray-600">Método de Pago</p>
+                                    <p className="font-semibold">
+                                        {paymentMethodLabels[selectedExpense.paymentMethod]}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Approval Actions */}
+                            <div className="space-y-4">
+                                <div className="flex gap-4">
+                                    <Button
+                                        variant={approvalData.approved ? 'success' : 'outline'}
+                                        onClick={() => setApprovalData({ ...approvalData, approved: true })}
+                                        className="flex-1"
+                                    >
+                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                        Aprobar
+                                    </Button>
+                                    <Button
+                                        variant={!approvalData.approved ? 'success' : 'outline'}
+                                        onClick={() => setApprovalData({ ...approvalData, approved: false })}
+                                        className="flex-1"
+                                    >
+                                        <XCircle className="h-4 w-4 mr-2" />
+                                        Rechazar
+                                    </Button>
+                                </div>
+
+                                {!approvalData.approved && (
+                                    <div>
+                                        <Label htmlFor="rejectionReason">Razón del rechazo *</Label>
+                                        <Textarea
+                                            id="rejectionReason"
+                                            value={approvalData.rejectionReason}
+                                            onChange={(e) =>
+                                                setApprovalData({ ...approvalData, rejectionReason: e.target.value })
+                                            }
+                                            placeholder="Explique por qué se rechaza este gasto..."
+                                            rows={3}
+                                            className="mt-1"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowApprovalModal(false)}
+                            disabled={approving}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={processApproval}
+                            disabled={approving}
+                        >
+                            {approving ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                    Procesando...
+                                </>
+                            ) : (
+                                'Confirmar'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
