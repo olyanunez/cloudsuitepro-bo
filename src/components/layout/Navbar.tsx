@@ -40,10 +40,11 @@ const menuItems = [
   { name: 'Usuarios', href: '/users', icon: 'user-cog', screenCode: 'USERS' },
   { name: 'Roles', href: '/roles', icon: 'shield', screenCode: 'ROLES' },
   { name: 'Punto de Venta', href: '/pos', icon: 'shopping-cart', screenCode: 'POS' },
+  { name: 'Sesiones de Caja', href: '/cash-sessions', icon: 'hand-coins', screenCode: 'CASH_SESSIONS' },
   { name: 'Facturas', href: '/invoices', icon: 'file-text', screenCode: 'INVOICE' },
   { name: 'Notas de Crédito', href: '/credit-notes', icon: 'undo-2', screenCode: 'CREDIT_NOTE' },
   { name: 'Notas de Débito', href: '/debit-notes', icon: 'trending-up', screenCode: 'DEBIT_NOTE' },
-  { name: 'Sesiones de Caja', href: '/cash-sessions', icon: 'hand-coins', screenCode: 'CASH_SESSIONS' },
+  { name: 'Gastos Menores', href: '/minor-expenses', icon: 'wallet', screenCode: 'MINOR_EXPENSES' },
   {
     name: 'Contabilidad',
     href: '/accounting',
