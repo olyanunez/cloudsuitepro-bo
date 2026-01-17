@@ -21,6 +21,7 @@ interface Customer {
   phone?: string;
   address?: string;
   taxId?: string;
+  isRuiContributor?: boolean;
   isActive: boolean;
 }
 
@@ -39,6 +40,7 @@ export default function EditCustomerPage() {
     phone: '',
     address: '',
     taxId: '',
+    isRuiContributor: false,
     isActive: true,
   });
 
@@ -55,6 +57,7 @@ export default function EditCustomerPage() {
           phone: customer.phone || '',
           address: customer.address || '',
           taxId: customer.taxId || '',
+          isRuiContributor: customer.isRuiContributor || false,
           isActive: customer.isActive,
         });
       } catch (error: any) {
@@ -232,8 +235,20 @@ export default function EditCustomerPage() {
               </p>
             </div>
 
-            {/* Empty space for alignment */}
-            <div></div>
+            {/* Régimen Simplificado (RUI) */}
+            <div className="flex items-center space-x-2 mt-8">
+              <input
+                type="checkbox"
+                id="isRuiContributor"
+                name="isRuiContributor"
+                checked={formData.isRuiContributor}
+                onChange={handleChange}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <Label htmlFor="isRuiContributor" className="cursor-pointer">
+                Régimen Simplificado (RUI)
+              </Label>
+            </div>
 
             {/* Dirección */}
             <div className="md:col-span-2">

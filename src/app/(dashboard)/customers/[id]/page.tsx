@@ -39,6 +39,7 @@ interface Customer {
   phone?: string;
   address?: string;
   taxId?: string;
+  isRuiContributor?: boolean;
   isActive: boolean;
   createdAt: string;
   invoices: Invoice[];
@@ -189,6 +190,20 @@ export default function CustomerDetailPage() {
                 </div>
               )}
 
+              <div className="flex items-start space-x-3">
+                {customer.isRuiContributor ? (
+                  <CheckCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-gray-400 mt-0.5" />
+                )}
+                <div>
+                  <p className="text-sm text-gray-600">Régimen Simplificado (RUI)</p>
+                  <p className="font-medium">
+                    {customer.isRuiContributor ? 'Sí - Requiere NCF B12' : 'No'}
+                  </p>
+                </div>
+              </div>
+
               {customer.address && (
                 <div className="flex items-start space-x-3 md:col-span-2">
                   <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
@@ -263,19 +278,18 @@ export default function CustomerDetailPage() {
                         </td>
                         <td className="py-3 px-4 text-center">
                           <span
-                            className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                              invoice.status === 'PAID'
+                            className={`px-2 py-1 text-xs font-semibold rounded-full ${invoice.status === 'PAID'
                                 ? 'bg-green-100 text-green-800'
                                 : invoice.status === 'PENDING'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
                           >
                             {invoice.status === 'PAID'
                               ? 'Pagada'
                               : invoice.status === 'PENDING'
-                              ? 'Pendiente'
-                              : 'Cancelada'}
+                                ? 'Pendiente'
+                                : 'Cancelada'}
                           </span>
                         </td>
                       </tr>

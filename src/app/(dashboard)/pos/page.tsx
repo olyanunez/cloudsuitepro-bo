@@ -587,7 +587,8 @@ export default function PosPage() {
       }));
 
       const invoice = await PosService.createInvoice({
-        customerId: selectedCustomer?.id,
+        // Si está marcado como consumidor final, NO enviar el customerId para evitar conflictos con clientes RUI
+        customerId: sellAsFinalConsumer ? undefined : selectedCustomer?.id,
         branchId: activeBranchId,
         warehouseId: activeWarehouseId,
         subtotal,
