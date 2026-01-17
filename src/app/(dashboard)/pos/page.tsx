@@ -1973,8 +1973,16 @@ export default function PosPage() {
                       <CreditCard className="h-4 w-4 mr-1" />
                       Tarjeta
                     </>
+                  ) : paymentMethod === 'TRANSFER' ? (
+                    <>
+                      <DollarSign className="h-4 w-4 mr-1" />
+                      Transferencia
+                    </>
                   ) : (
-                    'Transferencia'
+                    <>
+                      <UserIcon className="h-4 w-4 mr-1" />
+                      Crédito
+                    </>
                   )}
                 </Badge>
               </div>
@@ -2140,8 +2148,16 @@ export default function PosPage() {
                           <CreditCard className="h-3 w-3 mr-1" />
                           Tarjeta
                         </>
+                      ) : completedInvoice.paymentMethod === 'TRANSFER' ? (
+                        <>
+                          <DollarSign className="h-3 w-3 mr-1" />
+                          Transferencia
+                        </>
                       ) : (
-                        'Transferencia'
+                        <>
+                          <UserIcon className="h-3 w-3 mr-1" />
+                          Crédito
+                        </>
                       )}
                     </Badge>
                   </div>
