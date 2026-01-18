@@ -1528,29 +1528,44 @@ export default function PosPage() {
                     <div className="space-y-2">
                       <Label>Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}</Label>
                       {selectedCustomer ? (
-                        <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
-                          <div className="flex items-center gap-2">
-                            <UserIcon className="h-4 w-4 text-muted-foreground" />
-                            <div>
-                              <p className="font-medium text-sm">
-                                {selectedCustomer.name}{selectedCustomer.lastName ? ` ${selectedCustomer.lastName}` : ''}
-                              </p>
-                              <p className="text-xs text-muted-foreground">{selectedCustomer.code}</p>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
+                            <div className="flex items-center gap-2">
+                              <UserIcon className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium text-sm">
+                                  {selectedCustomer.name}{selectedCustomer.lastName ? ` ${selectedCustomer.lastName}` : ''}
+                                </p>
+                                <p className="text-xs text-muted-foreground">{selectedCustomer.code}</p>
+                              </div>
                             </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedCustomer(null);
+                                setCustomerSearch('');
+                                setCustomerSearchResults([]);
+                                setSellAsFinalConsumer(false);
+                              }}
+                              className="h-7 w-7 p-0"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCustomer(null);
-                              setCustomerSearch('');
-                              setCustomerSearchResults([]);
-                              setSellAsFinalConsumer(false);
-                            }}
-                            className="h-7 w-7 p-0"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                          {selectedCustomer.isRuiContributor && (
+                            <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+                              <CheckCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                              <div className="flex-1">
+                                <p className="text-xs font-medium text-blue-900 dark:text-blue-100">
+                                  Contribuyente RUI
+                                </p>
+                                <p className="text-xs text-blue-700 dark:text-blue-300">
+                                  Requiere NCF B12
+                                </p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="relative">
@@ -1603,7 +1618,7 @@ export default function PosPage() {
                           className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                         />
                         <Label htmlFor="sellAsFinalConsumer" className="cursor-pointer text-sm font-medium">
-                          Vender como consumidor final (sin NCF B01)
+                          Vender como consumidor final (sin NCF {selectedCustomer?.isRuiContributor ? 'B12' : 'B01'})
                         </Label>
                       </div>
                     )}
