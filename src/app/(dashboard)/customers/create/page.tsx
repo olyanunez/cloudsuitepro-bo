@@ -23,7 +23,7 @@ export default function CreateCustomerPage() {
     phone: '',
     address: '',
     taxId: '',
-    isRuiContributor: false,
+    taxRegime: 'NORMAL' as 'NORMAL' | 'RUI' | 'SPECIAL_REGIME',
     isActive: true,
   });
 
@@ -188,19 +188,56 @@ export default function CreateCustomerPage() {
               </p>
             </div>
 
-            {/* Régimen Simplificado (RUI) */}
-            <div className="flex items-center space-x-2 mt-8">
-              <input
-                type="checkbox"
-                id="isRuiContributor"
-                name="isRuiContributor"
-                checked={formData.isRuiContributor}
-                onChange={handleChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <Label htmlFor="isRuiContributor" className="cursor-pointer">
-                Régimen Simplificado (RUI)
-              </Label>
+            {/* Régimen Fiscal */}
+            <div className="md:col-span-2 space-y-3">
+              <Label>Régimen Fiscal</Label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="taxRegime-normal"
+                    name="taxRegime"
+                    value="NORMAL"
+                    checked={formData.taxRegime === 'NORMAL'}
+                    onChange={(e) => setFormData({ ...formData, taxRegime: 'NORMAL' })}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <Label htmlFor="taxRegime-normal" className="cursor-pointer font-normal">
+                    Normal (NCF B01) - Contribuyente regular con RNC
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="taxRegime-rui"
+                    name="taxRegime"
+                    value="RUI"
+                    checked={formData.taxRegime === 'RUI'}
+                    onChange={(e) => setFormData({ ...formData, taxRegime: 'RUI' })}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <Label htmlFor="taxRegime-rui" className="cursor-pointer font-normal">
+                    Régimen Simplificado - RUI (NCF B12)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="taxRegime-special"
+                    name="taxRegime"
+                    value="SPECIAL_REGIME"
+                    checked={formData.taxRegime === 'SPECIAL_REGIME'}
+                    onChange={(e) => setFormData({ ...formData, taxRegime: 'SPECIAL_REGIME' })}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <Label htmlFor="taxRegime-special" className="cursor-pointer font-normal">
+                    Regímenes Especiales (NCF B14) - Zonas francas, turismo, etc.
+                  </Label>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                Selecciona el tipo de régimen fiscal del cliente para la asignación automática de NCF
+              </p>
             </div>
 
             {/* Dirección */}

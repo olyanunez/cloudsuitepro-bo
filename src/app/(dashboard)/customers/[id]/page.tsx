@@ -39,7 +39,7 @@ interface Customer {
   phone?: string;
   address?: string;
   taxId?: string;
-  isRuiContributor?: boolean;
+  taxRegime?: 'NORMAL' | 'RUI' | 'SPECIAL_REGIME';
   isActive: boolean;
   createdAt: string;
   invoices: Invoice[];
@@ -191,15 +191,19 @@ export default function CustomerDetailPage() {
               )}
 
               <div className="flex items-start space-x-3">
-                {customer.isRuiContributor ? (
+                {customer.taxRegime === 'RUI' ? (
                   <CheckCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+                ) : customer.taxRegime === 'SPECIAL_REGIME' ? (
+                  <CheckCircle className="h-5 w-5 text-purple-500 mt-0.5" />
                 ) : (
-                  <XCircle className="h-5 w-5 text-gray-400 mt-0.5" />
+                  <FileText className="h-5 w-5 text-gray-400 mt-0.5" />
                 )}
                 <div>
-                  <p className="text-sm text-gray-600">Régimen Simplificado (RUI)</p>
+                  <p className="text-sm text-gray-600">Régimen Fiscal</p>
                   <p className="font-medium">
-                    {customer.isRuiContributor ? 'Sí - Requiere NCF B12' : 'No'}
+                    {customer.taxRegime === 'RUI' && 'Régimen Simplificado (RUI) - Requiere NCF B12'}
+                    {customer.taxRegime === 'SPECIAL_REGIME' && 'Regímenes Especiales - Requiere NCF B14'}
+                    {(!customer.taxRegime || customer.taxRegime === 'NORMAL') && 'Normal - NCF B01'}
                   </p>
                 </div>
               </div>
@@ -279,10 +283,10 @@ export default function CustomerDetailPage() {
                         <td className="py-3 px-4 text-center">
                           <span
                             className={`px-2 py-1 text-xs font-semibold rounded-full ${invoice.status === 'PAID'
-                                ? 'bg-green-100 text-green-800'
-                                : invoice.status === 'PENDING'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-red-100 text-red-800'
+                              ? 'bg-green-100 text-green-800'
+                              : invoice.status === 'PENDING'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
                               }`}
                           >
                             {invoice.status === 'PAID'

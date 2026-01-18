@@ -1553,15 +1553,27 @@ export default function PosPage() {
                               <X className="h-4 w-4" />
                             </Button>
                           </div>
-                          {selectedCustomer.isRuiContributor && (
-                            <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
-                              <CheckCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          {(selectedCustomer.taxRegime === 'RUI' || selectedCustomer.taxRegime === 'SPECIAL_REGIME') && (
+                            <div className={`flex items-center gap-2 p-2 rounded-md border ${selectedCustomer.taxRegime === 'RUI'
+                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                                : 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
+                              }`}>
+                              <CheckCircle className={`h-4 w-4 ${selectedCustomer.taxRegime === 'RUI'
+                                  ? 'text-blue-600 dark:text-blue-400'
+                                  : 'text-purple-600 dark:text-purple-400'
+                                }`} />
                               <div className="flex-1">
-                                <p className="text-xs font-medium text-blue-900 dark:text-blue-100">
-                                  Contribuyente RUI
+                                <p className={`text-xs font-medium ${selectedCustomer.taxRegime === 'RUI'
+                                    ? 'text-blue-900 dark:text-blue-100'
+                                    : 'text-purple-900 dark:text-purple-100'
+                                  }`}>
+                                  {selectedCustomer.taxRegime === 'RUI' ? 'Contribuyente RUI' : 'Régimen Especial'}
                                 </p>
-                                <p className="text-xs text-blue-700 dark:text-blue-300">
-                                  Requiere NCF B12
+                                <p className={`text-xs ${selectedCustomer.taxRegime === 'RUI'
+                                    ? 'text-blue-700 dark:text-blue-300'
+                                    : 'text-purple-700 dark:text-purple-300'
+                                  }`}>
+                                  {selectedCustomer.taxRegime === 'RUI' ? 'Requiere NCF B12' : 'Requiere NCF B14'}
                                 </p>
                               </div>
                             </div>
@@ -1618,7 +1630,7 @@ export default function PosPage() {
                           className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                         />
                         <Label htmlFor="sellAsFinalConsumer" className="cursor-pointer text-sm font-medium">
-                          Vender como consumidor final (sin NCF {selectedCustomer?.isRuiContributor ? 'B12' : 'B01'})
+                          Vender como consumidor final (sin NCF {selectedCustomer?.taxRegime === 'RUI' ? 'B12' : selectedCustomer?.taxRegime === 'SPECIAL_REGIME' ? 'B14' : 'B01'})
                         </Label>
                       </div>
                     )}
