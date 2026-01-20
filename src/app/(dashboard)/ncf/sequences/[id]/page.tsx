@@ -94,9 +94,13 @@ export default function EditNcfSequencePage() {
       router.push('/ncf/sequences');
     } catch (error: any) {
       console.error('Error actualizando secuencia:', error);
-      toast.error(
-        error.response?.data?.message || 'Error al actualizar la secuencia'
-      );
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo actualizar la secuencia';
+      toast.error('Error al actualizar la secuencia', {
+        description: errorMessage,
+      });
     } finally {
       setSaving(false);
     }

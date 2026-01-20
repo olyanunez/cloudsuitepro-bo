@@ -21,7 +21,7 @@ interface Customer {
   phone?: string;
   address?: string;
   taxId?: string;
-  taxRegime?: 'NORMAL' | 'RUI' | 'SPECIAL_REGIME';
+  taxRegime?: 'NORMAL' | 'RUI' | 'SPECIAL_REGIME' | 'GOVERNMENT';
   isActive: boolean;
 }
 
@@ -40,7 +40,7 @@ export default function EditCustomerPage() {
     phone: '',
     address: '',
     taxId: '',
-    taxRegime: 'NORMAL' as 'NORMAL' | 'RUI' | 'SPECIAL_REGIME',
+    taxRegime: 'NORMAL' as 'NORMAL' | 'RUI' | 'SPECIAL_REGIME' | 'GOVERNMENT',
     isActive: true,
   });
 
@@ -279,6 +279,20 @@ export default function EditCustomerPage() {
                   />
                   <Label htmlFor="taxRegime-special" className="cursor-pointer font-normal">
                     Regímenes Especiales (NCF B14) - Zonas francas, turismo, etc.
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="taxRegime-government"
+                    name="taxRegime"
+                    value="GOVERNMENT"
+                    checked={formData.taxRegime === 'GOVERNMENT'}
+                    onChange={(e) => setFormData({ ...formData, taxRegime: 'GOVERNMENT' })}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <Label htmlFor="taxRegime-government" className="cursor-pointer font-normal">
+                    Entidad Gubernamental (NCF B15) - Instituciones del Estado
                   </Label>
                 </div>
               </div>

@@ -37,7 +37,19 @@ export default function RootLayout({
             <BranchProvider>
               {children}
               <Toaster />
-              <SonnerToaster position="top-right" richColors />
+              <SonnerToaster
+                position="top-right"
+                richColors
+                toastOptions={{
+                  style: {
+                    fontFamily: 'var(--font-geist-sans)',
+                  },
+                  classNames: {
+                    title: 'font-semibold',
+                    description: 'text-sm opacity-90',
+                  },
+                }}
+              />
             </BranchProvider>
           </TenantProvider>
         </ReduxProvider>

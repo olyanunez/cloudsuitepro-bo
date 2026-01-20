@@ -234,6 +234,20 @@ export default function CreateCustomerPage() {
                     Regímenes Especiales (NCF B14) - Zonas francas, turismo, etc.
                   </Label>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="taxRegime-government"
+                    name="taxRegime"
+                    value="GOVERNMENT"
+                    checked={formData.taxRegime === 'GOVERNMENT'}
+                    onChange={(e) => setFormData({ ...formData, taxRegime: 'GOVERNMENT' })}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <Label htmlFor="taxRegime-government" className="cursor-pointer font-normal">
+                    Entidad Gubernamental (NCF B15) - Instituciones del Estado
+                  </Label>
+                </div>
               </div>
               <p className="text-sm text-gray-500 mt-2">
                 Selecciona el tipo de régimen fiscal del cliente para la asignación automática de NCF

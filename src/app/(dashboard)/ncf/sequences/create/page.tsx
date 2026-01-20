@@ -108,9 +108,13 @@ export default function CreateNcfSequencePage() {
       router.push('/ncf/sequences');
     } catch (error: any) {
       console.error('Error creando secuencia:', error);
-      toast.error(
-        error.response?.data?.message || 'Error al crear la secuencia NCF'
-      );
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo crear la secuencia NCF';
+      toast.error('Error al crear la secuencia NCF', {
+        description: errorMessage,
+      });
     } finally {
       setLoading(false);
     }
