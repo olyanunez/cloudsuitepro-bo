@@ -21,7 +21,7 @@ interface Customer {
   phone?: string;
   address?: string;
   taxId?: string;
-  taxRegime?: 'NORMAL' | 'RUI' | 'SPECIAL_REGIME' | 'GOVERNMENT';
+  taxRegime?: 'NORMAL' | 'RUI' | 'SPECIAL_REGIME' | 'GOVERNMENT' | 'EXPORT';
   isActive: boolean;
 }
 
@@ -40,7 +40,7 @@ export default function EditCustomerPage() {
     phone: '',
     address: '',
     taxId: '',
-    taxRegime: 'NORMAL' as 'NORMAL' | 'RUI' | 'SPECIAL_REGIME' | 'GOVERNMENT',
+    taxRegime: 'NORMAL' as 'NORMAL' | 'RUI' | 'SPECIAL_REGIME' | 'GOVERNMENT' | 'EXPORT',
     isActive: true,
   });
 
@@ -293,6 +293,20 @@ export default function EditCustomerPage() {
                   />
                   <Label htmlFor="taxRegime-government" className="cursor-pointer font-normal">
                     Entidad Gubernamental (NCF B15) - Instituciones del Estado
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="taxRegime-export"
+                    name="taxRegime"
+                    value="EXPORT"
+                    checked={formData.taxRegime === 'EXPORT'}
+                    onChange={(e) => setFormData({ ...formData, taxRegime: 'EXPORT' })}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <Label htmlFor="taxRegime-export" className="cursor-pointer font-normal">
+                    Exportaciones (NCF B16) - Ventas al exterior (exento ITBIS)
                   </Label>
                 </div>
               </div>

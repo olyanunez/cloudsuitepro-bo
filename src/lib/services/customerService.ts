@@ -9,7 +9,7 @@ export interface Customer {
   phone?: string;
   address?: string;
   taxId?: string;
-  taxRegime?: 'NORMAL' | 'RUI' | 'SPECIAL_REGIME' | 'GOVERNMENT';
+  taxRegime?: 'NORMAL' | 'RUI' | 'SPECIAL_REGIME' | 'GOVERNMENT' | 'EXPORT';
   isActive: boolean;
   tenantId: number;
   // Campos de crédito
