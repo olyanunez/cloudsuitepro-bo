@@ -84,7 +84,13 @@ export default function SubscriptionPage() {
       await loadSubscriptionData();
     } catch (error: any) {
       console.error('Error changing plan:', error);
-      toast.error(error.message || 'Error al cambiar el plan');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo cambiar el plan';
+      toast.error('Error al cambiar plan', {
+        description: errorMessage,
+      });
     } finally {
       setLoadingAction(false);
     }

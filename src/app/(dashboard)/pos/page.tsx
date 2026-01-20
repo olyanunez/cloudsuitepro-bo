@@ -652,7 +652,13 @@ export default function PosPage() {
       }
     } catch (error: any) {
       console.error('Error processing payment:', error);
-      toast.error(error?.message || 'Error al procesar el pago');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo procesar el pago';
+      toast.error('Error al procesar el pago', {
+        description: errorMessage,
+      });
     } finally {
       setProcessingPayment(false);
     }
@@ -687,7 +693,13 @@ export default function PosPage() {
       setShowCancelConfirmation(true);
     } catch (error: any) {
       console.error('Error searching invoice:', error);
-      toast.error(error?.message || 'Factura no encontrada');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo encontrar la factura';
+      toast.error('Error al buscar factura', {
+        description: errorMessage,
+      });
       setInvoiceToCancel(null);
     } finally {
       setSearchingInvoice(false);
@@ -1555,31 +1567,31 @@ export default function PosPage() {
                           </div>
                           {(selectedCustomer.taxRegime === 'RUI' || selectedCustomer.taxRegime === 'SPECIAL_REGIME' || selectedCustomer.taxRegime === 'GOVERNMENT') && (
                             <div className={`flex items-center gap-2 p-2 rounded-md border ${selectedCustomer.taxRegime === 'RUI'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                                : selectedCustomer.taxRegime === 'GOVERNMENT'
-                                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                                  : 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
+                              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                              : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                : 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
                               }`}>
                               <CheckCircle className={`h-4 w-4 ${selectedCustomer.taxRegime === 'RUI'
-                                  ? 'text-blue-600 dark:text-blue-400'
-                                  : selectedCustomer.taxRegime === 'GOVERNMENT'
-                                    ? 'text-green-600 dark:text-green-400'
-                                    : 'text-purple-600 dark:text-purple-400'
+                                ? 'text-blue-600 dark:text-blue-400'
+                                : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                  ? 'text-green-600 dark:text-green-400'
+                                  : 'text-purple-600 dark:text-purple-400'
                                 }`} />
                               <div className="flex-1">
                                 <p className={`text-xs font-medium ${selectedCustomer.taxRegime === 'RUI'
-                                    ? 'text-blue-900 dark:text-blue-100'
-                                    : selectedCustomer.taxRegime === 'GOVERNMENT'
-                                      ? 'text-green-900 dark:text-green-100'
-                                      : 'text-purple-900 dark:text-purple-100'
+                                  ? 'text-blue-900 dark:text-blue-100'
+                                  : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                    ? 'text-green-900 dark:text-green-100'
+                                    : 'text-purple-900 dark:text-purple-100'
                                   }`}>
                                   {selectedCustomer.taxRegime === 'RUI' ? 'Contribuyente RUI' : selectedCustomer.taxRegime === 'GOVERNMENT' ? 'Entidad Gubernamental' : 'Régimen Especial'}
                                 </p>
                                 <p className={`text-xs ${selectedCustomer.taxRegime === 'RUI'
-                                    ? 'text-blue-700 dark:text-blue-300'
-                                    : selectedCustomer.taxRegime === 'GOVERNMENT'
-                                      ? 'text-green-700 dark:text-green-300'
-                                      : 'text-purple-700 dark:text-purple-300'
+                                  ? 'text-blue-700 dark:text-blue-300'
+                                  : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                    ? 'text-green-700 dark:text-green-300'
+                                    : 'text-purple-700 dark:text-purple-300'
                                   }`}>
                                   {selectedCustomer.taxRegime === 'RUI' ? 'Requiere NCF B12' : selectedCustomer.taxRegime === 'GOVERNMENT' ? 'Requiere NCF B15' : 'Requiere NCF B14'}
                                 </p>

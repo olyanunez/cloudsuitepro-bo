@@ -325,8 +325,12 @@ export default function CreditPage() {
         toast.success(result.message);
         fetchAllCustomers();
       } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          'No se pudo deshabilitar el crédito';
         toast.error('Error al deshabilitar crédito', {
-          description: error.message,
+          description: errorMessage,
         });
       }
     } else {

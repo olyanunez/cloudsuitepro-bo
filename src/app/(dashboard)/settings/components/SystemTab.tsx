@@ -85,7 +85,13 @@ export default function SystemTab() {
       toast.success('Preferencias guardadas correctamente');
     } catch (error: any) {
       console.error('Error saving preferences:', error);
-      toast.error(error.message || 'Error al guardar preferencias');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudieron guardar las preferencias';
+      toast.error('Error al guardar preferencias', {
+        description: errorMessage,
+      });
     } finally {
       setSaving(false);
     }

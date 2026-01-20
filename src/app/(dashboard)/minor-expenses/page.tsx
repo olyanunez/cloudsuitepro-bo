@@ -189,8 +189,10 @@ export default function MinorExpensesPage() {
             const errorMessage =
                 error?.response?.data?.message ||
                 error?.message ||
-                'Error al procesar aprobación';
-            toast.error(errorMessage);
+                'No se pudo procesar la aprobación';
+            toast.error('Error al procesar aprobación', {
+                description: errorMessage,
+            });
         } finally {
             setApproving(false);
         }

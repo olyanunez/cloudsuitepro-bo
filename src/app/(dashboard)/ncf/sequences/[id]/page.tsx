@@ -70,9 +70,15 @@ export default function EditNcfSequencePage() {
         isActive: data.isActive,
         description: data.description || '',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error cargando secuencia:', error);
-      toast.error('Error al cargar la secuencia');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo cargar la secuencia';
+      toast.error('Error al cargar la secuencia', {
+        description: errorMessage,
+      });
       router.push('/ncf/sequences');
     } finally {
       setLoading(false);

@@ -58,9 +58,15 @@ export default function MinorExpenseDetailPage() {
             setLoading(true);
             const data = await MinorExpenseService.getMinorExpenseById(id);
             setExpense(data);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error loading expense:', error);
-            toast.error('Error al cargar el gasto');
+            const errorMessage =
+                error.response?.data?.message ||
+                error.message ||
+                'No se pudo cargar el gasto';
+            toast.error('Error al cargar el gasto', {
+                description: errorMessage,
+            });
             router.push('/minor-expenses');
         } finally {
             setLoading(false);
@@ -89,8 +95,10 @@ export default function MinorExpenseDetailPage() {
             const errorMessage =
                 error?.response?.data?.message ||
                 error?.message ||
-                'Error al procesar aprobación';
-            toast.error(errorMessage);
+                'No se pudo procesar la aprobación';
+            toast.error('Error al procesar aprobación', {
+                description: errorMessage,
+            });
         } finally {
             setApproving(false);
         }

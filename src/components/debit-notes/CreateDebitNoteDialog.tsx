@@ -91,9 +91,15 @@ export function CreateDebitNoteDialog({
 
             setSelectedInvoice(invoice);
             toast.success('Factura encontrada');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error searching invoice:', error);
-            toast.error('Error al buscar la factura');
+            const errorMessage =
+                error.response?.data?.message ||
+                error.message ||
+                'No se pudo buscar la factura';
+            toast.error('Error al buscar la factura', {
+                description: errorMessage,
+            });
         } finally {
             setSearchingInvoice(false);
         }
@@ -140,7 +146,13 @@ export function CreateDebitNoteDialog({
             onOpenChange(false);
         } catch (error: any) {
             console.error('Error creating debit note:', error);
-            toast.error(error?.message || 'Error al crear la nota de débito');
+            const errorMessage =
+                error.response?.data?.message ||
+                error.message ||
+                'No se pudo crear la nota de débito';
+            toast.error('Error al crear la nota de débito', {
+                description: errorMessage,
+            });
         } finally {
             setLoading(false);
         }
