@@ -62,6 +62,16 @@ const formSchema = z.object({
     message: 'El rango final debe ser mayor al rango inicial',
     path: ['rangeEnd'],
   }
+).refine(
+  (data) => {
+    const validFrom = new Date(data.validFrom);
+    const validUntil = new Date(data.validUntil);
+    return validUntil > validFrom;
+  },
+  {
+    message: 'La fecha de vencimiento debe ser posterior a la fecha de inicio',
+    path: ['validUntil'],
+  }
 );
 
 type FormValues = z.infer<typeof formSchema>;

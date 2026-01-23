@@ -34,7 +34,17 @@ const formSchema = z.object({
   validUntil: z.string().min(1, 'La fecha de fin es requerida'),
   isActive: z.boolean(),
   description: z.string().optional(),
-});
+}).refine(
+  (data) => {
+    const validFrom = new Date(data.validFrom);
+    const validUntil = new Date(data.validUntil);
+    return validUntil > validFrom;
+  },
+  {
+    message: 'La fecha de vencimiento debe ser posterior a la fecha de inicio',
+    path: ['validUntil'],
+  }
+);
 
 type FormValues = z.infer<typeof formSchema>;
 
