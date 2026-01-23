@@ -201,6 +201,13 @@ const ncfService = {
     return apiGet<NcfSequence[]>('/ncf/sequences/expiring/check');
   },
 
+  /**
+   * Obtener secuencias activas por tipo de NCF
+   */
+  getActiveSequencesByType: async (ncfType: NcfType): Promise<NcfSequence[]> => {
+    return apiGet<NcfSequence[]>(`/ncf/sequences/active/${ncfType}`);
+  },
+
   // ===== CONFIGURACIÓN NCF =====
 
   /**

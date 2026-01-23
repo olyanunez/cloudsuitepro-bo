@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import PageHeader from '@/components/layout/PageHeader';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePermissions } from '@/lib/hooks/usePermissions';
@@ -77,6 +78,7 @@ import {
   Volume2,
   VolumeX,
   Receipt,
+  AlertTriangle,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -145,6 +147,8 @@ export default function PosPage() {
   const [manualCustomerRnc, setManualCustomerRnc] = useState('');
   const [manualCustomerName, setManualCustomerName] = useState('');
   const [sellAsFinalConsumer, setSellAsFinalConsumer] = useState(false);
+  const [missingNcfSequence, setMissingNcfSequence] = useState(false);
+  const [requiredNcfType, setRequiredNcfType] = useState<NcfType | null>(null);
 
   // Estados para envío de email
   const [sendEmail, setSendEmail] = useState(false);
@@ -406,6 +410,70 @@ export default function PosPage() {
     } else {
       setCustomerEmail('');
     }
+  }, [selectedCustomer]);
+
+  // Verificar disponibilidad de secuencias NCF para el régimen del cliente
+  useEffect(() => {
+    const checkNcfAvailability = async () => {
+      if (!selectedCustomer) {
+        setMissingNcfSequence(false);
+        setRequiredNcfType(null);
+        return;
+      }
+
+      // Mapear régimen del cliente a tipo de NCF requerido
+      let requiredType: NcfType | null = null;
+
+      switch (selectedCustomer.taxRegime) {
+        case 'RUI':
+          requiredType = NcfType.B12;
+          break;
+        case 'SPECIAL_REGIME':
+          requiredType = NcfType.B14;
+          break;
+        case 'GOVERNMENT':
+          requiredType = NcfType.B15;
+          break;
+        case 'EXPORT':
+          requiredType = NcfType.B16;
+          break;
+        case 'NORMAL':
+          // Para clientes normales, se puede usar B01 o B02
+          // Verificaremos B01 (Crédito Fiscal) ya que es el más común para facturas con RNC
+          requiredType = NcfType.B01;
+          break;
+        default:
+          // Si no tiene régimen especial, no validamos
+          setMissingNcfSequence(false);
+          setRequiredNcfType(null);
+          return;
+      }
+
+      setRequiredNcfType(requiredType);
+
+      try {
+        const sequences = await ncfService.getActiveSequencesByType(requiredType);
+
+        console.log(`[POS] Validando NCF para cliente ${selectedCustomer.name} (${selectedCustomer.taxRegime})`);
+        console.log(`[POS] Tipo NCF requerido: ${requiredType}`);
+        console.log(`[POS] Secuencias activas encontradas:`, sequences.length);
+
+        // Si no hay secuencias activas, mostrar alerta
+        if (sequences.length === 0) {
+          setMissingNcfSequence(true);
+          console.log(`[POS] ⚠️ ALERTA: No hay secuencias ${requiredType} activas`);
+        } else {
+          setMissingNcfSequence(false);
+          console.log(`[POS] ✅ Secuencias ${requiredType} disponibles`);
+        }
+      } catch (error) {
+        console.error('Error checking NCF availability:', error);
+        // En caso de error, asumimos que no hay secuencias para ser cautelosos
+        setMissingNcfSequence(true);
+      }
+    };
+
+    checkNcfAvailability();
   }, [selectedCustomer]);
 
   // Agregar producto al carrito
@@ -1246,6 +1314,25 @@ export default function PosPage() {
                               </div>
                             </div>
                           )}
+                          {/* Alerta cuando no hay secuencias NCF disponibles */}
+                          {missingNcfSequence && requiredNcfType && (
+                            <Alert variant="destructive" className="mt-2">
+                              <AlertTriangle className="h-4 w-4" />
+                              <AlertTitle>Sin secuencias NCF disponibles</AlertTitle>
+                              <AlertDescription className="text-xs">
+                                No hay secuencias activas de tipo <strong>{ncfTypeLabels[requiredNcfType]}</strong> para este cliente.
+                                {' '}
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  className="h-auto p-0 text-xs underline"
+                                  onClick={() => router.push('/ncf/sequences/create')}
+                                >
+                                  Crear secuencia
+                                </Button>
+                              </AlertDescription>
+                            </Alert>
+                          )}
                         </div>
                       ) : (
                         <div className="relative">
@@ -1506,12 +1593,31 @@ export default function PosPage() {
                       </div>
                     )}
 
+                    {/* Mensaje cuando el botón está deshabilitado por falta de NCF */}
+                    {missingNcfSequence && !sellAsFinalConsumer && (
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Pago bloqueado</AlertTitle>
+                        <AlertDescription className="text-xs">
+                          Para procesar el pago, debe marcar &quot;Vender como consumidor final&quot; o{' '}
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-xs underline"
+                            onClick={() => router.push('/ncf/sequences/create')}
+                          >
+                            crear una secuencia NCF {requiredNcfType}
+                          </Button>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     {/* Botón de pagar */}
                     <Button
                       className="w-full"
                       size="lg"
                       onClick={handlePaymentClick}
-                      disabled={processingPayment}
+                      disabled={processingPayment || (missingNcfSequence && !sellAsFinalConsumer)}
                     >
                       {processingPayment ? (
                         <>
@@ -1807,6 +1913,24 @@ export default function PosPage() {
               <DialogDescription>
                 Factura generada correctamente. Puede imprimirla o cerrar esta ventana.
               </DialogDescription>
+
+              {/* Botones debajo del subtítulo */}
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowInvoiceModal(false)}
+                  className="flex-1"
+                >
+                  Cerrar
+                </Button>
+                <Button
+                  onClick={handlePrintInvoice}
+                  className="gap-2 flex-1"
+                >
+                  <Printer className="h-4 w-4" />
+                  Imprimir Factura
+                </Button>
+              </div>
             </DialogHeader>
 
             {completedInvoice && (
@@ -1959,22 +2083,6 @@ export default function PosPage() {
                 </div>
               </div>
             )}
-
-            <DialogFooter className="gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowInvoiceModal(false)}
-              >
-                Cerrar
-              </Button>
-              <Button
-                onClick={handlePrintInvoice}
-                className="gap-2"
-              >
-                <Printer className="h-4 w-4" />
-                Imprimir Factura
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
