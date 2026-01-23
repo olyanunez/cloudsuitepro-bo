@@ -133,6 +133,20 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
     if (!invoice) return;
 
     try {
+      // Determinar si el cliente está exento de impuestos basado en el tipo de NCF
+      const isExempt = invoice.ncfType === 'B14' ||
+        invoice.ncfType === 'B15' ||
+        invoice.ncfType === 'B16';
+
+      // Determinar razón de exención basada en el tipo de NCF
+      const exemptionReason = isExempt
+        ? invoice.ncfType === 'B16'
+          ? 'Cliente exportador - NCF tipo B16 (Art. 343 Código Tributario)'
+          : invoice.ncfType === 'B15'
+            ? 'Entidad gubernamental - NCF tipo B15 (Art. 343 Código Tributario)'
+            : 'Régimen especial - NCF tipo B14 (Art. 343 Código Tributario)'
+        : undefined;
+
       printInvoice({
         invoice,
         tenantInfo,
@@ -140,6 +154,8 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
         includeLogo: tenantSettings?.includeLogo ?? true,
         invoiceFooter: tenantSettings?.invoiceFooter || undefined,
         termsAndConditions: tenantSettings?.termsAndConditions || undefined,
+        isExemptFromTax: isExempt,
+        taxExemptionReason: exemptionReason,
       });
     } catch (error: any) {
       toast.error(error.message || 'Error al imprimir la factura');

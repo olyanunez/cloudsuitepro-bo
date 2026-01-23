@@ -27,6 +27,7 @@ import ncfService, {
   ncfTypeLabels,
   UpdateNcfSequenceDto,
 } from '@/lib/services/ncfService';
+import { toDateInputValue } from '@/lib/utils/dateUtils';
 
 const formSchema = z.object({
   validFrom: z.string().min(1, 'La fecha de inicio es requerida'),
@@ -60,9 +61,9 @@ export default function EditNcfSequencePage() {
       const data = await ncfService.getSequenceById(sequenceId);
       setSequence(data);
 
-      // Formatear fechas para el input date
-      const validFrom = new Date(data.validFrom).toISOString().split('T')[0];
-      const validUntil = new Date(data.validUntil).toISOString().split('T')[0];
+      // Usar utilidad para formatear fechas sin conversión de timezone
+      const validFrom = toDateInputValue(data.validFrom);
+      const validUntil = toDateInputValue(data.validUntil);
 
       form.reset({
         validFrom,
