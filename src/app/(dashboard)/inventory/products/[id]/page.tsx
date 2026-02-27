@@ -16,11 +16,33 @@ export default function ProductDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const productId = parseInt(params.id as string, 10);
 
+  // Función para obtener todas las imágenes (del producto o de todas las variantes)
+  const getAllImages = () => {
+    if (!product) return [];
+
+    if (product.hasVariants) {
+      // Si tiene variantes, recopilar todas las imágenes de todas las variantes
+      const allVariantImages: any[] = [];
+      product.variants?.forEach(variant => {
+        if (variant.images && variant.images.length > 0) {
+          variant.images.forEach(image => {
+            // Evitar duplicados por URL
+            if (!allVariantImages.some(img => img.url === image.url)) {
+              allVariantImages.push(image);
+            }
+          });
+        }
+      });
+      return allVariantImages;
+    } else {
+      // Si no tiene variantes, usar las imágenes de la variante por defecto
+      const defaultVariant = product.variants?.[0];
+      return defaultVariant?.images || [];
+    }
+  };
+
   const nextImage = () => {
-    const defaultVariant = product?.variants?.[0];
-    const displayImages = product?.hasVariants
-      ? product.images
-      : (defaultVariant?.images || []);
+    const displayImages = getAllImages();
 
     if (displayImages && displayImages.length > 0) {
       setCurrentImageIndex((prev) => (prev + 1) % displayImages.length);
@@ -28,10 +50,7 @@ export default function ProductDetailPage() {
   };
 
   const prevImage = () => {
-    const defaultVariant = product?.variants?.[0];
-    const displayImages = product?.hasVariants
-      ? product.images
-      : (defaultVariant?.images || []);
+    const displayImages = getAllImages();
 
     if (displayImages && displayImages.length > 0) {
       setCurrentImageIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
@@ -83,25 +102,23 @@ export default function ProductDetailPage() {
 
   const defaultVariant = product.variants?.[0];
 
-  // Para productos simples (sin variantes), usar las imágenes de la variante
-  const displayImages = product.hasVariants
-    ? product.images
-    : (defaultVariant?.images || []);
+  // Obtener todas las imágenes para mostrar en el carrusel
+  const displayImages = getAllImages();
 
   // Formatear el precio en moneda local (DOP)
   const formattedPrice = defaultVariant?.price
     ? new Intl.NumberFormat('es-DO', {
-        style: 'currency',
-        currency: 'DOP'
-      }).format(defaultVariant.price)
+      style: 'currency',
+      currency: 'DOP'
+    }).format(defaultVariant.price)
     : 'N/A';
 
   // Formatear el costo en moneda local (DOP)
   const formattedCost = defaultVariant?.cost
     ? new Intl.NumberFormat('es-DO', {
-        style: 'currency',
-        currency: 'DOP'
-      }).format(defaultVariant.cost)
+      style: 'currency',
+      currency: 'DOP'
+    }).format(defaultVariant.cost)
     : 'N/A';
 
   return (
@@ -164,8 +181,8 @@ export default function ProductDetailPage() {
                     <div
                       key={image.id}
                       className={`relative w-20 h-20 flex-shrink-0 cursor-pointer rounded-md overflow-hidden border-2 transition-colors ${index === currentImageIndex
-                          ? 'border-primary'
-                          : 'border-gray-200 dark:border-gray-600 hover:border-primary/50'
+                        ? 'border-primary'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-primary/50'
                         }`}
                       onClick={() => setCurrentImageIndex(index)}
                     >
@@ -341,25 +358,24 @@ export default function ProductDetailPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {variant.price
                         ? new Intl.NumberFormat('es-DO', {
-                            style: 'currency',
-                            currency: 'DOP'
-                          }).format(variant.price)
+                          style: 'currency',
+                          currency: 'DOP'
+                        }).format(variant.price)
                         : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {variant.cost
                         ? new Intl.NumberFormat('es-DO', {
-                            style: 'currency',
-                            currency: 'DOP'
-                          }).format(variant.cost)
+                          style: 'currency',
+                          currency: 'DOP'
+                        }).format(variant.cost)
                         : 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        variant.isActive
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${variant.isActive
                           ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
                           : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-                      }`}>
+                        }`}>
                         {variant.isActive ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
