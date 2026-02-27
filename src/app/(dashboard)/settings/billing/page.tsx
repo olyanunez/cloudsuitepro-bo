@@ -22,6 +22,7 @@ import { SubscriptionService } from '@/lib/services/subscriptionService';
 import { Subscription } from '@/lib/types/subscription';
 import { toast } from 'react-hot-toast';
 import { getTenantId } from '@/lib/services/apiService';
+import { PayPalSubscriptionButton } from '@/components/subscription/PayPalSubscriptionButton';
 
 export default function BillingPage() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function BillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function BillingPage() {
     }
   };
 
-  const handlePaymentCallback = () => {
+  const handlePaymentCallback = async () => {
     const payment = searchParams.get('payment');
 
     if (payment === 'success') {
@@ -65,6 +67,23 @@ export default function BillingPage() {
     } else if (payment === 'cancelled') {
       toast.error('Configuración de pago cancelada');
       router.replace('/settings/billing');
+      // Limpiar suscripción pendiente
+      await cleanupPendingSubscription();
+      loadSubscriptionData();
+    }
+  };
+
+  const cleanupPendingSubscription = async () => {
+    if (!subscription) return;
+
+    try {
+      // Solo limpiar si está en estado APPROVAL_PENDING
+      if (subscription.status === 'APPROVAL_PENDING' && subscription.paypalSubscriptionId) {
+        await SubscriptionService.cancelPayPalSubscription(subscription.id);
+      }
+    } catch (error) {
+      console.error('Error limpiando suscripción pendiente:', error);
+      // No mostrar error al usuario, es una limpieza silenciosa
     }
   };
 
@@ -98,16 +117,13 @@ export default function BillingPage() {
   const handleCancelPayPalSubscription = async () => {
     if (!subscription || !subscription.paypalSubscriptionId) return;
 
-    if (!confirm('¿Estás seguro de que deseas cancelar tu método de pago? Tu suscripción se cancelará.')) {
-      return;
-    }
-
     try {
       setProcessingPayment(true);
       await SubscriptionService.cancelPayPalSubscription(subscription.id);
       toast.success('Método de pago cancelado');
       await loadSubscriptionData();
       setShowPaymentModal(false);
+      setShowCancelConfirmDialog(false);
     } catch (error: any) {
       console.error('Error cancelling payment:', error);
       toast.error(error.message || 'Error al cancelar método de pago');
@@ -143,7 +159,7 @@ export default function BillingPage() {
     );
   }
 
-  const hasPaymentMethod = !!subscription.paypalSubscriptionId;
+  const hasPaymentMethod = !!subscription.paypalSubscriptionId && subscription.status === 'ACTIVE';
   const isInTrial = SubscriptionService.isInTrial(subscription);
   const trialDaysRemaining = SubscriptionService.getTrialDaysRemaining(subscription);
   const needsPaymentSetup = isInTrial && !hasPaymentMethod && (trialDaysRemaining || 0) <= 7;
@@ -239,53 +255,37 @@ export default function BillingPage() {
                   <Button
                     variant="outline"
                     className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={handleCancelPayPalSubscription}
+                    onClick={() => setShowCancelConfirmDialog(true)}
                     disabled={processingPayment}
                   >
-                    {processingPayment && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Cancelar
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-8">
+              <div className="text-center py-6">
                 <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <AlertCircle className="h-8 w-8 text-gray-400" />
                 </div>
                 <h3 className="font-semibold mb-2">No hay método de pago configurado</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Configura PayPal para continuar después del período de prueba
+                <p className="text-sm text-muted-foreground mb-6">
+                  Configura tu método de pago para continuar después del período de prueba
                 </p>
-                <div className="w-16 flex items-center justify-center mx-auto">
-                  <Button
-                    onClick={handleSetupPayment}
-                    disabled={processingPayment}
-                    className="hover:bg-[#F7B600] text-black font-semibold flex items-center gap-4 py-10 justify-center"
-                  >
-                    {processingPayment ? (
-                      <>
-                        <div className="ml-15">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        </div>
-                        <div className="mr-15">
-                          <span>Procesando...</span>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="relative w-[130px] h-50 rounded px-1">
-                          <Image
-                            src="/paypal_logo2.png"
-                            alt="PayPal"
-                            fill
-                            className="object-contain"
-                          />
-                        </div>
-                        <span className='text-[20px]'>Configurar</span>
-                      </>
-                    )}
-                  </Button>
-                </div>
+
+                {/* Componente de PayPal con opción de tarjeta */}
+                <PayPalSubscriptionButton
+                  subscriptionId={subscription.id}
+                  onSuccess={(paypalSubId) => {
+                    console.log('Suscripción exitosa:', paypalSubId);
+                    loadSubscriptionData();
+                  }}
+                  onError={(error) => {
+                    console.error('Error en suscripción:', error);
+                  }}
+                  onCancel={() => {
+                    loadSubscriptionData();
+                  }}
+                />
               </div>
             )}
           </CardContent>
@@ -403,6 +403,55 @@ export default function BillingPage() {
             >
               {processingPayment && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Continuar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Confirmación de Cancelación */}
+      <Dialog open={showCancelConfirmDialog} onOpenChange={setShowCancelConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Confirmar Cancelación
+            </DialogTitle>
+            <DialogDescription className="pt-4">
+              ¿Estás seguro de que deseas cancelar tu método de pago?
+            </DialogDescription>
+          </DialogHeader>
+
+          <Alert className="border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              <p className="font-semibold mb-1">Advertencia:</p>
+              <p className="text-sm">
+                Al cancelar el método de pago, tu suscripción se cancelará y perderás
+                acceso a las funcionalidades premium cuando termine tu período actual.
+              </p>
+            </AlertDescription>
+          </Alert>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelConfirmDialog(false)}
+              disabled={processingPayment}
+              className="w-full sm:w-auto"
+            >
+              No, mantener
+            </Button>
+            <Button
+              onClick={handleCancelPayPalSubscription}
+              disabled={processingPayment}
+              style={{
+                backgroundColor: '#dc2626',
+                color: 'white',
+              }}
+              className="w-full sm:w-auto hover:opacity-90"
+            >
+              {processingPayment && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Sí, cancelar método de pago
             </Button>
           </DialogFooter>
         </DialogContent>

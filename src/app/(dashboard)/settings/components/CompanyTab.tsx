@@ -95,7 +95,13 @@ export default function CompanyTab() {
           toast.success('Logo subido correctamente');
         } catch (uploadError: any) {
           console.error('Error uploading logo:', uploadError);
-          toast.error(uploadError.message || 'Error al subir el logo');
+          const errorMessage =
+            uploadError.response?.data?.message ||
+            uploadError.message ||
+            'No se pudo subir el logo';
+          toast.error('Error al subir el logo', {
+            description: errorMessage,
+          });
           return;
         } finally {
           setUploading(false);
@@ -123,7 +129,13 @@ export default function CompanyTab() {
       await loadCompanyData();
     } catch (error: any) {
       console.error('Error updating company:', error);
-      toast.error(error.message || 'Error al actualizar la información de la empresa');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo actualizar la información de la empresa';
+      toast.error('Error al actualizar información', {
+        description: errorMessage,
+      });
     } finally {
       setSaving(false);
     }

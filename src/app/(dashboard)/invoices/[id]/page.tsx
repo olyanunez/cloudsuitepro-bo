@@ -66,9 +66,15 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
       const data = await InvoiceService.getInvoice(invoiceId);
       console.log('Factura cargada:', data);
       setInvoice(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading invoice:', error);
-      toast.error('Error al cargar la factura');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo cargar la factura';
+      toast.error('Error al cargar la factura', {
+        description: errorMessage,
+      });
       router.push('/invoices');
     } finally {
       setLoading(false);
@@ -113,8 +119,12 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
       loadInvoice(); // Reload to show updated status
     } catch (error: any) {
       console.error('Error voiding invoice:', error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo anular la factura';
       toast.error('Error al anular la factura', {
-        description: error.message || 'Ocurrió un error inesperado',
+        description: errorMessage,
       });
     }
   };
@@ -123,6 +133,20 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
     if (!invoice) return;
 
     try {
+      // Determinar si el cliente está exento de impuestos basado en el tipo de NCF
+      const isExempt = invoice.ncfType === 'B14' ||
+        invoice.ncfType === 'B15' ||
+        invoice.ncfType === 'B16';
+
+      // Determinar razón de exención basada en el tipo de NCF
+      const exemptionReason = isExempt
+        ? invoice.ncfType === 'B16'
+          ? 'Cliente exportador - NCF tipo B16 (Art. 343 Código Tributario)'
+          : invoice.ncfType === 'B15'
+            ? 'Entidad gubernamental - NCF tipo B15 (Art. 343 Código Tributario)'
+            : 'Régimen especial - NCF tipo B14 (Art. 343 Código Tributario)'
+        : undefined;
+
       printInvoice({
         invoice,
         tenantInfo,
@@ -130,6 +154,8 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
         includeLogo: tenantSettings?.includeLogo ?? true,
         invoiceFooter: tenantSettings?.invoiceFooter || undefined,
         termsAndConditions: tenantSettings?.termsAndConditions || undefined,
+        isExemptFromTax: isExempt,
+        taxExemptionReason: exemptionReason,
       });
     } catch (error: any) {
       toast.error(error.message || 'Error al imprimir la factura');

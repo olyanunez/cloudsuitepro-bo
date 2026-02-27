@@ -149,9 +149,13 @@ export default function CashExpenseModal({
       onExpenseCreated?.();
     } catch (error: any) {
       console.error('Error creating expense:', error);
-      toast.error(
-        error.message || 'Error al registrar el gasto'
-      );
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo registrar el gasto';
+      toast.error('Error al registrar el gasto', {
+        description: errorMessage,
+      });
     } finally {
       setLoading(false);
     }
@@ -164,9 +168,13 @@ export default function CashExpenseModal({
       await loadExpenses();
       onExpenseCreated?.();
     } catch (error: any) {
-      toast.error(
-        error.message || 'Error al eliminar el gasto'
-      );
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo eliminar el gasto';
+      toast.error('Error al eliminar el gasto', {
+        description: errorMessage,
+      });
     }
   };
 

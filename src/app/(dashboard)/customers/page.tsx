@@ -126,9 +126,15 @@ export default function CustomersPage() {
       document.body.removeChild(a);
 
       toast.success(`Archivo ${format.toUpperCase()} descargado exitosamente`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error);
-      toast.error('Error al exportar datos');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudieron exportar los datos';
+      toast.error('Error al exportar datos', {
+        description: errorMessage,
+      });
     }
   };
 
@@ -145,8 +151,12 @@ export default function CustomersPage() {
       toast.success('Cliente eliminado exitosamente');
       fetchCustomers();
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo eliminar el cliente';
       toast.error('Error al eliminar cliente', {
-        description: error.message || 'No se pudo eliminar el cliente',
+        description: errorMessage,
       });
     } finally {
       setCustomerToDelete(null);
@@ -162,8 +172,12 @@ export default function CustomersPage() {
       );
       fetchCustomers();
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo cambiar el estado del cliente';
       toast.error('Error al cambiar estado del cliente', {
-        description: error.message,
+        description: errorMessage,
       });
     }
   };
@@ -355,8 +369,8 @@ export default function CustomersPage() {
                             handleToggleActive(customer.id, customer.isActive)
                           }
                           className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${customer.isActive
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                             }`}
                         >
                           {customer.isActive ? 'Activo' : 'Inactivo'}

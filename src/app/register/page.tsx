@@ -180,11 +180,16 @@ function RegisterContent() {
 
       // Redirigir al login después del registro
       router.push('/login');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error en registro:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al registrar. Por favor intente nuevamente.';
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Error al registrar. Por favor intente nuevamente.';
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error('Error en el registro', {
+        description: errorMessage,
+      });
     } finally {
       setIsSubmitting(false);
     }

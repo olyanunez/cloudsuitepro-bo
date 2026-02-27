@@ -126,7 +126,13 @@ export default function SuppliersPage() {
 
       toast.success(`Proveedores exportados a ${format.toUpperCase()} exitosamente`);
     } catch (error: any) {
-      toast.error('Error al exportar', { description: error.message });
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudieron exportar los proveedores';
+      toast.error('Error al exportar', {
+        description: errorMessage,
+      });
     }
   };
 
@@ -143,8 +149,12 @@ export default function SuppliersPage() {
       toast.success('Proveedor eliminado exitosamente');
       fetchSuppliers();
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo eliminar el proveedor';
       toast.error('Error al eliminar proveedor', {
-        description: error.message || 'No se pudo eliminar el proveedor',
+        description: errorMessage,
       });
     } finally {
       setSupplierToDelete(null);
@@ -160,8 +170,12 @@ export default function SuppliersPage() {
       );
       fetchSuppliers();
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo cambiar el estado del proveedor';
       toast.error('Error al cambiar estado del proveedor', {
-        description: error.message,
+        description: errorMessage,
       });
     }
   };
@@ -346,8 +360,8 @@ export default function SuppliersPage() {
                             handleToggleActive(supplier.id, supplier.isActive)
                           }
                           className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${supplier.isActive
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                             }`}
                         >
                           {supplier.isActive ? 'Activo' : 'Inactivo'}

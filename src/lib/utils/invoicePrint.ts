@@ -10,6 +10,8 @@ interface PrintInvoiceOptions {
   includeLogo?: boolean;
   invoiceFooter?: string;
   termsAndConditions?: string;
+  isExemptFromTax?: boolean;
+  taxExemptionReason?: string;
 }
 
 export function printInvoice({
@@ -18,7 +20,9 @@ export function printInvoice({
   itbisRate,
   includeLogo = true,
   invoiceFooter,
-  termsAndConditions
+  termsAndConditions,
+  isExemptFromTax = false,
+  taxExemptionReason
 }: PrintInvoiceOptions) {
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
@@ -263,12 +267,14 @@ export function printInvoice({
           </div>
 
           <!-- Sección de información fiscal (NCF) -->
-          ${invoice.ncf ? `
+          ${invoice.ncf || invoice.ncfType ? `
           <div class="fiscal-section">
+            ${invoice.ncf ? `
             <div class="ncf-row">
               <span class="ncf-label">Comprobante Fiscal (NCF):</span>
               <span class="ncf-value">${invoice.ncf}</span>
             </div>
+            ` : ''}
             ${ncfTypeLabel ? `
             <div class="ncf-row">
               <span class="ncf-label">Tipo:</span>
@@ -356,19 +362,33 @@ export function printInvoice({
             </thead>
             <tbody>
               ${invoice.items.map(item => {
-    // Calcular ITBIS por item (precio incluye ITBIS)
-    const totalWithItbis = parseFloat(item.total.toString());
-    const itbisAmount = totalWithItbis * (itbisRate / (1 + itbisRate));
+    // Calcular valores correctamente según tipo de factura
+    const unitPriceValue = parseFloat(item.unitPrice.toString());
+    const quantity = item.quantity;
+
+    let itemPrice, itemTax, itemTotal;
+
+    if (isExemptFromTax && taxExemptionReason) {
+      // Facturas B14, B15, B16 - Exentas
+      itemPrice = unitPriceValue * quantity;
+      itemTax = 0;
+      itemTotal = itemPrice;
+    } else {
+      // Facturas B01, B02 - Calcular ITBIS sobre el precio
+      itemPrice = unitPriceValue * quantity;
+      itemTax = itemPrice * itbisRate;
+      itemTotal = itemPrice + itemTax;
+    }
 
     return `
                 <tr>
                   <td>
                     <div class="product-name">${item.variant.product.name}${item.variant.name ? ` - ${item.variant.name}` : ''}</div>
                   </td>
-                  <td class="text-center">${item.quantity}</td>
-                  <td class="text-right">${formatCurrency(item.unitPrice)}</td>
-                  <td class="text-right">${formatCurrency(itbisAmount)}</td>
-                  <td class="text-right">${formatCurrency(item.total)}</td>
+                  <td class="text-center">${quantity}</td>
+                  <td class="text-right">${formatCurrency(itemPrice)}</td>
+                  <td class="text-right">${formatCurrency(itemTax)}</td>
+                  <td class="text-right">${formatCurrency(itemTotal)}</td>
                 </tr>
                 `;
   }).join('')}
@@ -378,29 +398,46 @@ export function printInvoice({
           <!-- Totales con desglose de ITBIS -->
           <div class="totals">
             ${(() => {
-      // Calcular totales con ITBIS
-      const totalWithItbis = parseFloat(invoice.total.toString());
-      const totalItbis = totalWithItbis * (itbisRate / (1 + itbisRate));
-      const subtotalWithoutItbis = totalWithItbis - totalItbis;
+      // Usar directamente los valores que vienen del backend
+      // El backend ya calculó correctamente si hay ITBIS o no según el tipo de cliente
+      const invoiceSubtotal = parseFloat(invoice.subtotal.toString());
+      const invoiceTax = parseFloat(invoice.tax.toString());
+      const invoiceDiscount = parseFloat(invoice.discount.toString());
+      const invoiceTotal = parseFloat(invoice.total.toString());
 
       return `
                 <div class="row">
-                  <span class="label">Subtotal (sin ITBIS):</span>
-                  <span class="value">${formatCurrency(subtotalWithoutItbis)}</span>
+                  <span class="label">Subtotal${invoiceTax > 0 ? ' (sin ITBIS)' : ''}:</span>
+                  <span class="value">${formatCurrency(invoiceSubtotal)}</span>
                 </div>
+                ${invoiceTax > 0 ? `
                 <div class="row itbis-row">
                   <span class="label">ITBIS (${(itbisRate * 100).toFixed(0)}%):</span>
-                  <span class="value">${formatCurrency(totalItbis)}</span>
+                  <span class="value">${formatCurrency(invoiceTax)}</span>
                 </div>
-                ${parseFloat(invoice.discount) > 0 ? `
+                ` : invoiceTax === 0 && isExemptFromTax && taxExemptionReason ? `
+                <div class="row" style="background-color: #d4edda; border: 1px solid #28a745; padding: 8px; margin: 5px 0; border-radius: 4px;">
+                  <span class="label" style="color: #155724; font-weight: bold;">ITBIS - EXENTO:</span>
+                  <span class="value" style="color: #155724; font-weight: bold;">${formatCurrency(0)}</span>
+                </div>
+                <div style="font-size: 9pt; color: #155724; margin: 5px 0; padding: 5px 8px; background-color: #d4edda; border-radius: 4px;">
+                  <em>${taxExemptionReason}</em>
+                </div>
+                ` : `
+                <div class="row">
+                  <span class="label">ITBIS:</span>
+                  <span class="value">${formatCurrency(0)}</span>
+                </div>
+                `}
+                ${invoiceDiscount > 0 ? `
                 <div class="row">
                   <span class="label">Descuento:</span>
-                  <span class="value">-${formatCurrency(invoice.discount).replace('RD$', 'RD$ ')}</span>
+                  <span class="value">-${formatCurrency(invoiceDiscount).replace('RD$', 'RD$ ')}</span>
                 </div>
                 ` : ''}
                 <div class="row total-row">
                   <span class="label">TOTAL A PAGAR:</span>
-                  <span class="value">${formatCurrency(invoice.total)}</span>
+                  <span class="value">${formatCurrency(invoiceTotal)}</span>
                 </div>
               `;
     })()}

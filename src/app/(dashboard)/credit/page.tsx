@@ -218,6 +218,14 @@ export default function CreditPage() {
       return;
     }
 
+    // Validar referencia para tarjeta y transferencia
+    if ((paymentMethod === CreditPaymentMethod.CARD || paymentMethod === CreditPaymentMethod.TRANSFER) && !paymentReference.trim()) {
+      toast.error('La referencia es obligatoria', {
+        description: `Debe ingresar una referencia para pagos con ${paymentMethod === CreditPaymentMethod.CARD ? 'tarjeta' : 'transferencia'}`,
+      });
+      return;
+    }
+
     if (amount > Number(selectedCustomer.currentBalance)) {
       toast.error('El monto excede el saldo pendiente del cliente');
       return;
@@ -317,8 +325,12 @@ export default function CreditPage() {
         toast.success(result.message);
         fetchAllCustomers();
       } catch (error: any) {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          'No se pudo deshabilitar el crédito';
         toast.error('Error al deshabilitar crédito', {
-          description: error.message,
+          description: errorMessage,
         });
       }
     } else {
@@ -578,9 +590,8 @@ export default function CreditPage() {
                           </td>
                           <td className="px-6 py-4 text-right">
                             <span
-                              className={`font-medium ${
-                                customer.availableCredit > 0 ? 'text-green-600' : 'text-red-600'
-                              }`}
+                              className={`font-medium ${customer.availableCredit > 0 ? 'text-green-600' : 'text-red-600'
+                                }`}
                             >
                               {formatCurrency(customer.availableCredit)}
                             </span>
@@ -831,22 +842,20 @@ export default function CreditPage() {
                             </td>
                             <td className="px-6 py-4 text-right">
                               <span
-                                className={`font-medium ${
-                                  customer.currentBalance > 0 ? 'text-red-600' : ''
-                                }`}
+                                className={`font-medium ${customer.currentBalance > 0 ? 'text-red-600' : ''
+                                  }`}
                               >
                                 {formatCurrency(customer.currentBalance)}
                               </span>
                             </td>
                             <td className="px-6 py-4 text-right">
                               <span
-                                className={`font-medium ${
-                                  customer.availableCredit > 0
-                                    ? 'text-green-600'
-                                    : customer.availableCredit < 0
-                                      ? 'text-red-600'
-                                      : ''
-                                }`}
+                                className={`font-medium ${customer.availableCredit > 0
+                                  ? 'text-green-600'
+                                  : customer.availableCredit < 0
+                                    ? 'text-red-600'
+                                    : ''
+                                  }`}
                               >
                                 {customer.allowCredit
                                   ? formatCurrency(customer.availableCredit)
@@ -971,9 +980,8 @@ export default function CreditPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">Crédito Disponible</p>
                       <p
-                        className={`text-lg font-semibold ${
-                          customerSummary.availableCredit > 0 ? 'text-green-600' : 'text-red-600'
-                        }`}
+                        className={`text-lg font-semibold ${customerSummary.availableCredit > 0 ? 'text-green-600' : 'text-red-600'
+                          }`}
                       >
                         {formatCurrency(customerSummary.availableCredit)}
                       </p>
@@ -1009,11 +1017,10 @@ export default function CreditPage() {
                           {pendingInvoices.map((invoice) => (
                             <tr
                               key={invoice.id}
-                              className={`${
-                                selectedInvoiceId === invoice.id
-                                  ? 'bg-primary/10'
-                                  : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                              }`}
+                              className={`${selectedInvoiceId === invoice.id
+                                ? 'bg-primary/10'
+                                : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                                }`}
                             >
                               <td className="px-3 py-2 text-sm">
                                 <div>{invoice.invoiceNumber}</div>
@@ -1114,7 +1121,9 @@ export default function CreditPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="reference">Referencia (opcional)</Label>
+                    <Label htmlFor="reference">
+                      Referencia {(paymentMethod === CreditPaymentMethod.CARD || paymentMethod === CreditPaymentMethod.TRANSFER) ? '*' : '(opcional)'}
+                    </Label>
                     <Input
                       id="reference"
                       placeholder="No. voucher, transferencia, etc."
@@ -1143,7 +1152,13 @@ export default function CreditPage() {
               </Button>
               <Button
                 onClick={handleSubmitPayment}
-                disabled={submittingPayment || !paymentAmount || !activeBranchId || !selectedInvoiceId}
+                disabled={
+                  submittingPayment ||
+                  !paymentAmount ||
+                  !activeBranchId ||
+                  !selectedInvoiceId ||
+                  ((paymentMethod === CreditPaymentMethod.CARD || paymentMethod === CreditPaymentMethod.TRANSFER) && !paymentReference.trim())
+                }
                 className="!bg-green-600 hover:!bg-green-700 !text-white"
               >
                 {submittingPayment ? 'Procesando...' : 'Registrar Pago'}

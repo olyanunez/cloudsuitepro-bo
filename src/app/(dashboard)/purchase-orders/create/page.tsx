@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeftIcon, SaveIcon, PlusIcon, TrashIcon, ImageIcon } from 'lucide-react';
+import { ArrowLeftIcon, SaveIcon, PlusIcon, TrashIcon, ImageIcon, Check, ChevronsUpDown, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiGet } from '@/lib/services/apiService';
 import { PurchaseOrderService } from '@/lib/services/purchaseOrderService';
@@ -18,6 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 interface Supplier {
   id: number;
@@ -105,6 +111,12 @@ export default function CreatePurchaseOrderPage() {
 
   // Track selected variant IDs for display purposes
   const [selectedVariants, setSelectedVariants] = useState<Map<number, string>>(new Map());
+
+  // Track open state for each combobox
+  const [openComboboxes, setOpenComboboxes] = useState<Map<number, boolean>>(new Map());
+
+  // Track search value for each combobox
+  const [searchValues, setSearchValues] = useState<Map<number, string>>(new Map());
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -510,150 +522,268 @@ export default function CreatePurchaseOrderPage() {
                       const selectedKey = selectedVariants.get(index) || (item.variantId > 0 ? `variant-${item.variantId}` : undefined);
 
                       return (
-                      <tr key={index}>
-                        <td className="px-4 py-2">
-                          <Select
-                            value={selectedKey}
-                            onValueChange={(value) => handleItemChange(index, 'variantId', value)}
-                          >
-                            <SelectTrigger className="w-full min-w-[280px]">
-                              {displayInfo ? (
-                                <div className="flex items-center gap-2 w-full">
-                                  {displayInfo.image ? (
-                                    <div className="relative w-8 h-8 rounded overflow-hidden flex-shrink-0">
-                                      <Image
-                                        src={displayInfo.image}
-                                        alt={displayInfo.name}
-                                        fill
-                                        className="object-cover"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
-                                      <ImageIcon className="h-4 w-4 text-gray-400" />
-                                    </div>
-                                  )}
-                                  <div className="flex-1 min-w-0 text-left">
-                                    <div className="font-medium truncate">{displayInfo.name}</div>
-                                    {displayInfo.variantName && (
-                                      <div className="text-xs text-muted-foreground truncate">
-                                        {displayInfo.variantName} • {displayInfo.sku}
-                                      </div>
-                                    )}
-                                    {!displayInfo.variantName && (
-                                      <div className="text-xs text-muted-foreground truncate">
-                                        {displayInfo.sku}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              ) : (
-                                <SelectValue placeholder="Seleccionar producto" />
-                              )}
-                            </SelectTrigger>
-                            <SelectContent className="max-h-[400px]">
-                              {products.map((product) => {
-                                const productVariants = allVariants.filter(v => v.productId === product.id);
-
-                                // Solo mostrar variantes (no productos sin variantes)
-                                return productVariants.map((variant) => {
-                                  const variantImages = variant.images || [];
-                                  const variantPrimaryImage = variantImages.find(img => img.isPrimary) || variantImages[0];
-
-                                  return (
-                                    <SelectItem
-                                      key={`variant-${variant.id}`}
-                                      value={`variant-${variant.id}`}
-                                      textValue={`${product.name} ${variant.name || ''} ${variant.sku}`}
-                                    >
-                                      <div className="flex items-center gap-3 py-1">
-                                        {variantPrimaryImage ? (
-                                          <img
-                                            src={variantPrimaryImage.url}
-                                            alt={variant.name || product.name}
-                                            className="w-10 h-10 rounded object-cover flex-shrink-0"
+                        <tr key={index}>
+                          <td className="px-4 py-2">
+                            <Popover
+                              open={openComboboxes.get(index) || false}
+                              onOpenChange={(open) => {
+                                const newOpenStates = new Map(openComboboxes);
+                                newOpenStates.set(index, open);
+                                setOpenComboboxes(newOpenStates);
+                              }}
+                            >
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={openComboboxes.get(index) || false}
+                                  className="w-full min-w-[280px] justify-between"
+                                >
+                                  {displayInfo ? (
+                                    <div className="flex items-center gap-2 w-full">
+                                      {displayInfo.image ? (
+                                        <div className="relative w-8 h-8 rounded overflow-hidden flex-shrink-0">
+                                          <Image
+                                            src={displayInfo.image}
+                                            alt={displayInfo.name}
+                                            fill
+                                            className="object-cover"
                                           />
-                                        ) : (
-                                          <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
-                                            <ImageIcon className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                      ) : (
+                                        <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
+                                          <ImageIcon className="h-4 w-4 text-gray-400" />
+                                        </div>
+                                      )}
+                                      <div className="flex-1 min-w-0 text-left">
+                                        <div className="font-medium truncate">{displayInfo.name}</div>
+                                        {displayInfo.variantName && (
+                                          <div className="text-xs text-muted-foreground truncate">
+                                            {displayInfo.variantName} • {displayInfo.sku}
                                           </div>
                                         )}
-                                        <div className="flex-1 min-w-0">
-                                          <div className="font-medium truncate">{product.name}</div>
-                                          <div className="text-xs text-muted-foreground">
-                                            {variant.name && <span>{variant.name} • </span>}
-                                            {variant.sku} • ${Number(variant.cost || product.cost).toFixed(2)}
+                                        {!displayInfo.variantName && (
+                                          <div className="text-xs text-muted-foreground truncate">
+                                            {displayInfo.sku}
                                           </div>
-                                          {variant.attributeValues && variant.attributeValues.length > 0 && (
-                                            <div className="flex flex-wrap gap-1 mt-1">
-                                              {variant.attributeValues.map((av) => (
-                                                <span
-                                                  key={av.id}
-                                                  className="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs"
-                                                >
-                                                  {av.attributeValue?.displayName || av.attributeValue?.value}
-                                                </span>
-                                              ))}
-                                            </div>
-                                          )}
-                                        </div>
+                                        )}
                                       </div>
-                                    </SelectItem>
-                                  );
-                                });
-                              })}
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="px-4 py-2">
-                          <Input
-                            type="number"
-                            min="1"
-                            value={item.quantity}
-                            onChange={(e) => handleItemChange(index, 'quantity', Number(e.target.value))}
-                            className="w-24"
-                          />
-                        </td>
-                        <td className="px-4 py-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={item.unitCost}
-                            onChange={(e) => handleItemChange(index, 'unitCost', Number(e.target.value))}
-                            className="w-28"
-                          />
-                        </td>
-                        <td className="px-4 py-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={item.discount}
-                            onChange={(e) => handleItemChange(index, 'discount', Number(e.target.value))}
-                            className="w-24"
-                          />
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="font-medium">
-                            ${calculateItemTotal(item).toFixed(2)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2">
-                          {items.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeItem(index)}
-                              className="text-red-500 hover:bg-red-50"
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    )})}
+                                    </div>
+                                  ) : (
+                                    <span className="text-muted-foreground">Seleccionar producto</span>
+                                  )}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[450px] p-0 bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700" align="start">
+                                <div className="flex flex-col bg-white dark:bg-gray-800 rounded-md overflow-hidden">
+                                  {/* Search Bar */}
+                                  <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-800/50">
+                                    <Search className="mr-2 h-4 w-4 shrink-0 text-gray-400" />
+                                    <input
+                                      type="text"
+                                      placeholder="Buscar por nombre, SKU o código..."
+                                      className="flex h-8 w-full bg-transparent text-sm outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                      value={searchValues.get(index) || ''}
+                                      onChange={(e) => {
+                                        const newSearchValues = new Map(searchValues);
+                                        newSearchValues.set(index, e.target.value);
+                                        setSearchValues(newSearchValues);
+                                      }}
+                                    />
+                                  </div>
+
+                                  {/* Products List */}
+                                  <div className="max-h-[350px] overflow-y-auto bg-white dark:bg-gray-800">
+                                    <div className="p-2 space-y-1">
+                                      {products
+                                        .flatMap((product) => {
+                                          const productVariants = allVariants.filter(v => v.productId === product.id);
+                                          return productVariants.map((variant) => ({
+                                            product,
+                                            variant
+                                          }));
+                                        })
+                                        .filter(({ product, variant }) => {
+                                          const searchTerm = (searchValues.get(index) || '').toLowerCase();
+                                          if (!searchTerm) return true;
+
+                                          const productName = product.name.toLowerCase();
+                                          const variantName = (variant.name || '').toLowerCase();
+                                          const sku = variant.sku.toLowerCase();
+
+                                          return productName.includes(searchTerm) ||
+                                            variantName.includes(searchTerm) ||
+                                            sku.includes(searchTerm);
+                                        })
+                                        .map(({ product, variant }) => {
+                                          const variantImages = variant.images || [];
+                                          const variantPrimaryImage = variantImages.find(img => img.isPrimary) || variantImages[0];
+                                          const variantValue = `variant-${variant.id}`;
+                                          const isSelected = selectedKey === variantValue;
+
+                                          return (
+                                            <div
+                                              key={variantValue}
+                                              onClick={() => {
+                                                console.log('Selected:', variantValue);
+                                                handleItemChange(index, 'variantId', variantValue);
+                                                const newOpenStates = new Map(openComboboxes);
+                                                newOpenStates.set(index, false);
+                                                setOpenComboboxes(newOpenStates);
+                                              }}
+                                              className={cn(
+                                                "group relative flex cursor-pointer select-none items-center rounded-md px-3 py-3 text-sm transition-colors",
+                                                "hover:bg-blue-50 dark:hover:bg-blue-900/20",
+                                                isSelected
+                                                  ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
+                                                  : "border border-transparent hover:border-blue-100 dark:hover:border-blue-900/50"
+                                              )}
+                                            >
+                                              {/* Check Icon */}
+                                              <div className="mr-3 flex-shrink-0">
+                                                <Check
+                                                  className={cn(
+                                                    "h-4 w-4 transition-all",
+                                                    isSelected
+                                                      ? "opacity-100 text-blue-600 dark:text-blue-400"
+                                                      : "opacity-0 group-hover:opacity-30"
+                                                  )}
+                                                />
+                                              </div>
+
+                                              {/* Product Image */}
+                                              {variantPrimaryImage ? (
+                                                <img
+                                                  src={variantPrimaryImage.url}
+                                                  alt={variant.name || product.name}
+                                                  className="w-12 h-12 rounded-md object-cover flex-shrink-0 border border-gray-200 dark:border-gray-700"
+                                                />
+                                              ) : (
+                                                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-600">
+                                                  <ImageIcon className="h-6 w-6 text-gray-400" />
+                                                </div>
+                                              )}
+
+                                              {/* Product Info */}
+                                              <div className="flex-1 min-w-0 ml-3">
+                                                <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                                  {product.name}
+                                                </div>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                  {variant.name && <span className="font-medium">{variant.name} • </span>}
+                                                  <span className="text-gray-600 dark:text-gray-400">SKU: {variant.sku}</span>
+                                                </div>
+                                                <div className="text-xs font-semibold text-green-600 dark:text-green-400 mt-1">
+                                                  ${Number(variant.cost || product.cost).toFixed(2)}
+                                                </div>
+
+                                                {/* Attributes */}
+                                                {variant.attributeValues && variant.attributeValues.length > 0 && (
+                                                  <div className="flex flex-wrap gap-1 mt-2">
+                                                    {variant.attributeValues.map((av) => (
+                                                      <span
+                                                        key={av.id}
+                                                        className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium"
+                                                      >
+                                                        {av.attributeValue?.displayName || av.attributeValue?.value}
+                                                      </span>
+                                                    ))}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
+                                      {products
+                                        .flatMap((product) => {
+                                          const productVariants = allVariants.filter(v => v.productId === product.id);
+                                          return productVariants.map((variant) => ({
+                                            product,
+                                            variant
+                                          }));
+                                        })
+                                        .filter(({ product, variant }) => {
+                                          const searchTerm = (searchValues.get(index) || '').toLowerCase();
+                                          if (!searchTerm) return false;
+
+                                          const productName = product.name.toLowerCase();
+                                          const variantName = (variant.name || '').toLowerCase();
+                                          const sku = variant.sku.toLowerCase();
+
+                                          return !(productName.includes(searchTerm) ||
+                                            variantName.includes(searchTerm) ||
+                                            sku.includes(searchTerm));
+                                        }).length === products.flatMap(p => allVariants.filter(v => v.productId === p.id)).length &&
+                                        (searchValues.get(index) || '').length > 0 && (
+                                          <div className="py-8 text-center">
+                                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 mb-3">
+                                              <Search className="h-5 w-5 text-gray-400" />
+                                            </div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                              No se encontraron productos
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                              Intenta con otro término de búsqueda
+                                            </p>
+                                          </div>
+                                        )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </td>
+                          <td className="px-4 py-2">
+                            <Input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleItemChange(index, 'quantity', Number(e.target.value))}
+                              className="w-24"
+                            />
+                          </td>
+                          <td className="px-4 py-2">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={item.unitCost}
+                              onChange={(e) => handleItemChange(index, 'unitCost', Number(e.target.value))}
+                              className="w-28"
+                            />
+                          </td>
+                          <td className="px-4 py-2">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={item.discount}
+                              onChange={(e) => handleItemChange(index, 'discount', Number(e.target.value))}
+                              className="w-24"
+                            />
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="font-medium">
+                              ${calculateItemTotal(item).toFixed(2)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            {items.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeItem(index)}
+                                className="text-red-500 hover:bg-red-50"
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>

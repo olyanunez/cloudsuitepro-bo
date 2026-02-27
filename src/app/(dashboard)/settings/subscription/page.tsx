@@ -11,6 +11,7 @@ import { SubscriptionService } from '@/lib/services/subscriptionService';
 import { Subscription, Plan, UsageStats } from '@/lib/types/subscription';
 import { toast } from 'react-hot-toast';
 import { getTenantId } from '@/lib/services/apiService';
+import Image from 'next/image';
 
 export default function SubscriptionPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -83,7 +84,13 @@ export default function SubscriptionPage() {
       await loadSubscriptionData();
     } catch (error: any) {
       console.error('Error changing plan:', error);
-      toast.error(error.message || 'Error al cambiar el plan');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo cambiar el plan';
+      toast.error('Error al cambiar plan', {
+        description: errorMessage,
+      });
     } finally {
       setLoadingAction(false);
     }
@@ -184,6 +191,16 @@ export default function SubscriptionPage() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 Plan {subscription.plan.name}
+                <div className="flex justify-center">
+                  <Image
+                    src="/branding/transparente/icon/cloudsuitepro_short_logo3.png"
+                    alt="CloudSuite Pro"
+                    width={800}
+                    height={240}
+                    priority
+                    className="h-5 w-auto"
+                  />
+                </div>
                 {getStatusBadge(subscription.status)}
               </CardTitle>
               <CardDescription className="mt-2">

@@ -39,6 +39,7 @@ interface Customer {
   phone?: string;
   address?: string;
   taxId?: string;
+  taxRegime?: 'NORMAL' | 'RUI' | 'SPECIAL_REGIME';
   isActive: boolean;
   createdAt: string;
   invoices: Invoice[];
@@ -189,6 +190,24 @@ export default function CustomerDetailPage() {
                 </div>
               )}
 
+              <div className="flex items-start space-x-3">
+                {customer.taxRegime === 'RUI' ? (
+                  <CheckCircle className="h-5 w-5 text-blue-500 mt-0.5" />
+                ) : customer.taxRegime === 'SPECIAL_REGIME' ? (
+                  <CheckCircle className="h-5 w-5 text-purple-500 mt-0.5" />
+                ) : (
+                  <FileText className="h-5 w-5 text-gray-400 mt-0.5" />
+                )}
+                <div>
+                  <p className="text-sm text-gray-600">Régimen Fiscal</p>
+                  <p className="font-medium">
+                    {customer.taxRegime === 'RUI' && 'Régimen Simplificado (RUI) - Requiere NCF B12'}
+                    {customer.taxRegime === 'SPECIAL_REGIME' && 'Regímenes Especiales - Requiere NCF B14'}
+                    {(!customer.taxRegime || customer.taxRegime === 'NORMAL') && 'Normal - NCF B01'}
+                  </p>
+                </div>
+              </div>
+
               {customer.address && (
                 <div className="flex items-start space-x-3 md:col-span-2">
                   <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
@@ -263,19 +282,18 @@ export default function CustomerDetailPage() {
                         </td>
                         <td className="py-3 px-4 text-center">
                           <span
-                            className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                              invoice.status === 'PAID'
-                                ? 'bg-green-100 text-green-800'
-                                : invoice.status === 'PENDING'
+                            className={`px-2 py-1 text-xs font-semibold rounded-full ${invoice.status === 'PAID'
+                              ? 'bg-green-100 text-green-800'
+                              : invoice.status === 'PENDING'
                                 ? 'bg-yellow-100 text-yellow-800'
                                 : 'bg-red-100 text-red-800'
-                            }`}
+                              }`}
                           >
                             {invoice.status === 'PAID'
                               ? 'Pagada'
                               : invoice.status === 'PENDING'
-                              ? 'Pendiente'
-                              : 'Cancelada'}
+                                ? 'Pendiente'
+                                : 'Cancelada'}
                           </span>
                         </td>
                       </tr>

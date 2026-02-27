@@ -100,7 +100,13 @@ export default function ProfileTab() {
       toast.success('Perfil actualizado correctamente');
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      toast.error(error.message || 'Error al actualizar el perfil');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo actualizar el perfil';
+      toast.error('Error al actualizar perfil', {
+        description: errorMessage,
+      });
     } finally {
       setSaving(false);
     }
@@ -148,7 +154,13 @@ export default function ProfileTab() {
       setShowPasswordSection(false);
     } catch (error: any) {
       console.error('Error changing password:', error);
-      toast.error(error.message || 'Error al cambiar la contraseña');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo cambiar la contraseña';
+      toast.error('Error al cambiar contraseña', {
+        description: errorMessage,
+      });
     } finally {
       setSaving(false);
     }
@@ -266,11 +278,10 @@ export default function ProfileTab() {
               <Label className="text-muted-foreground">Estado</Label>
               <p>
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    profile?.isActive
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${profile?.isActive
                       ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                       : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                  }`}
+                    }`}
                 >
                   {profile?.isActive ? 'Activo' : 'Inactivo'}
                 </span>
@@ -282,10 +293,10 @@ export default function ProfileTab() {
               <p className="font-medium">
                 {profile?.createdAt
                   ? new Date(profile.createdAt).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
                   : 'N/A'}
               </p>
             </div>

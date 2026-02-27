@@ -173,7 +173,13 @@ export default function JournalEntriesPage() {
 
       toast.success(`Asientos exportados a ${format.toUpperCase()} exitosamente`);
     } catch (error: any) {
-      toast.error('Error al exportar', { description: error.message });
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudieron exportar los asientos';
+      toast.error('Error al exportar', {
+        description: errorMessage,
+      });
     }
   };
 
@@ -192,8 +198,12 @@ export default function JournalEntriesPage() {
       setEntryToPost(null);
       fetchEntries();
     } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo contabilizar el asiento';
       toast.error('Error al contabilizar asiento', {
-        description: error.message,
+        description: errorMessage,
       });
     }
   };
