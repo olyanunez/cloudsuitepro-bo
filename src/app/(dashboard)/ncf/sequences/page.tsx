@@ -31,6 +31,7 @@ import ncfService, {
 import { toast } from 'sonner';
 import { PermissionService } from '@/lib/services/permissionService';
 import { ExportButton } from '@/components/ui/export-button';
+import { formatDateWithoutTimezone } from '@/lib/utils/dateUtils';
 
 export default function NcfSequencesPage() {
   const router = useRouter();
@@ -85,14 +86,6 @@ export default function NcfSequencesPage() {
 
   const isExpiringSoon = (sequence: NcfSequence): boolean => {
     return expiringSequences.some((exp) => exp.id === sequence.id);
-  };
-
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('es-DO', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
   };
 
   const handleExport = async (format: 'pdf' | 'excel', startDate?: string, endDate?: string) => {
@@ -302,8 +295,8 @@ export default function NcfSequencesPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm">
-                        {formatDate(sequence.validFrom)} -{' '}
-                        {formatDate(sequence.validUntil)}
+                        {formatDateWithoutTimezone(sequence.validFrom)} -{' '}
+                        {formatDateWithoutTimezone(sequence.validUntil)}
                         {expiring && (
                           <AlertTriangle className="inline-block ml-2 h-4 w-4 text-destructive" />
                         )}

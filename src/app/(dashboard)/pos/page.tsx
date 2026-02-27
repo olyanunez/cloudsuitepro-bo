@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import PageHeader from '@/components/layout/PageHeader';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePermissions } from '@/lib/hooks/usePermissions';
@@ -77,6 +78,7 @@ import {
   Volume2,
   VolumeX,
   Receipt,
+  AlertTriangle,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -145,6 +147,8 @@ export default function PosPage() {
   const [manualCustomerRnc, setManualCustomerRnc] = useState('');
   const [manualCustomerName, setManualCustomerName] = useState('');
   const [sellAsFinalConsumer, setSellAsFinalConsumer] = useState(false);
+  const [missingNcfSequence, setMissingNcfSequence] = useState(false);
+  const [requiredNcfType, setRequiredNcfType] = useState<NcfType | null>(null);
 
   // Estados para envío de email
   const [sendEmail, setSendEmail] = useState(false);
@@ -408,6 +412,70 @@ export default function PosPage() {
     }
   }, [selectedCustomer]);
 
+  // Verificar disponibilidad de secuencias NCF para el régimen del cliente
+  useEffect(() => {
+    const checkNcfAvailability = async () => {
+      if (!selectedCustomer) {
+        setMissingNcfSequence(false);
+        setRequiredNcfType(null);
+        return;
+      }
+
+      // Mapear régimen del cliente a tipo de NCF requerido
+      let requiredType: NcfType | null = null;
+
+      switch (selectedCustomer.taxRegime) {
+        case 'RUI':
+          requiredType = NcfType.B12;
+          break;
+        case 'SPECIAL_REGIME':
+          requiredType = NcfType.B14;
+          break;
+        case 'GOVERNMENT':
+          requiredType = NcfType.B15;
+          break;
+        case 'EXPORT':
+          requiredType = NcfType.B16;
+          break;
+        case 'NORMAL':
+          // Para clientes normales, se puede usar B01 o B02
+          // Verificaremos B01 (Crédito Fiscal) ya que es el más común para facturas con RNC
+          requiredType = NcfType.B01;
+          break;
+        default:
+          // Si no tiene régimen especial, no validamos
+          setMissingNcfSequence(false);
+          setRequiredNcfType(null);
+          return;
+      }
+
+      setRequiredNcfType(requiredType);
+
+      try {
+        const sequences = await ncfService.getActiveSequencesByType(requiredType);
+
+        console.log(`[POS] Validando NCF para cliente ${selectedCustomer.name} (${selectedCustomer.taxRegime})`);
+        console.log(`[POS] Tipo NCF requerido: ${requiredType}`);
+        console.log(`[POS] Secuencias activas encontradas:`, sequences.length);
+
+        // Si no hay secuencias activas, mostrar alerta
+        if (sequences.length === 0) {
+          setMissingNcfSequence(true);
+          console.log(`[POS] ⚠️ ALERTA: No hay secuencias ${requiredType} activas`);
+        } else {
+          setMissingNcfSequence(false);
+          console.log(`[POS] ✅ Secuencias ${requiredType} disponibles`);
+        }
+      } catch (error) {
+        console.error('Error checking NCF availability:', error);
+        // En caso de error, asumimos que no hay secuencias para ser cautelosos
+        setMissingNcfSequence(true);
+      }
+    };
+
+    checkNcfAvailability();
+  }, [selectedCustomer]);
+
   // Agregar producto al carrito
   const addToCart = (product: ProductStock) => {
     setCart((prevCart) => {
@@ -483,7 +551,16 @@ export default function PosPage() {
     (sum, item) => sum + parseFloat(item.price) * item.cartQuantity,
     0
   );
-  const tax = 0; // Puedes agregar lógica de impuestos aquí
+
+  // Determinar si el cliente está exento de ITBIS
+  const isExemptFromTax = selectedCustomer &&
+    !sellAsFinalConsumer &&
+    (selectedCustomer.taxRegime === 'EXPORT' ||
+      selectedCustomer.taxRegime === 'GOVERNMENT' ||
+      selectedCustomer.taxRegime === 'SPECIAL_REGIME');
+
+  const taxRate = 0.18; // 18% ITBIS
+  const tax = isExemptFromTax ? 0 : subtotal * taxRate;
   const discount = 0; // Puedes agregar lógica de descuentos aquí
   const total = subtotal + tax - discount;
 
@@ -587,7 +664,8 @@ export default function PosPage() {
       }));
 
       const invoice = await PosService.createInvoice({
-        customerId: selectedCustomer?.id,
+        // Si está marcado como consumidor final, NO enviar el customerId para evitar conflictos con clientes RUI
+        customerId: sellAsFinalConsumer ? undefined : selectedCustomer?.id,
         branchId: activeBranchId,
         warehouseId: activeWarehouseId,
         subtotal,
@@ -634,6 +712,16 @@ export default function PosPage() {
       if (tenantSettings?.autoPrintReceipts) {
         try {
           console.log('🖨️ Auto-printing receipt (autoPrintReceipts is enabled)');
+
+          // Determinar razón de exención si aplica
+          const exemptionReason = isExemptFromTax && selectedCustomer
+            ? selectedCustomer.taxRegime === 'EXPORT'
+              ? 'Cliente exportador - NCF tipo B16 (Art. 343 Código Tributario)'
+              : selectedCustomer.taxRegime === 'GOVERNMENT'
+                ? 'Entidad gubernamental - NCF tipo B15 (Art. 343 Código Tributario)'
+                : 'Régimen especial - NCF tipo B14 (Art. 343 Código Tributario)'
+            : undefined;
+
           printInvoice({
             invoice,
             tenantInfo,
@@ -641,6 +729,8 @@ export default function PosPage() {
             includeLogo: tenantSettings?.includeLogo ?? true,
             invoiceFooter: tenantSettings?.invoiceFooter || undefined,
             termsAndConditions: tenantSettings?.termsAndConditions || undefined,
+            isExemptFromTax,
+            taxExemptionReason: exemptionReason,
           });
         } catch (error) {
           console.error('Error auto-printing receipt:', error);
@@ -651,7 +741,13 @@ export default function PosPage() {
       }
     } catch (error: any) {
       console.error('Error processing payment:', error);
-      toast.error(error?.message || 'Error al procesar el pago');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo procesar el pago';
+      toast.error('Error al procesar el pago', {
+        description: errorMessage,
+      });
     } finally {
       setProcessingPayment(false);
     }
@@ -686,7 +782,13 @@ export default function PosPage() {
       setShowCancelConfirmation(true);
     } catch (error: any) {
       console.error('Error searching invoice:', error);
-      toast.error(error?.message || 'Factura no encontrada');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo encontrar la factura';
+      toast.error('Error al buscar factura', {
+        description: errorMessage,
+      });
       setInvoiceToCancel(null);
     } finally {
       setSearchingInvoice(false);
@@ -794,6 +896,20 @@ export default function PosPage() {
       // Convertir itbisRate de porcentaje a decimal si es necesario
       const itbisRate = ncfConfig.itbisRate > 1 ? ncfConfig.itbisRate / 100 : ncfConfig.itbisRate;
 
+      // Determinar si el cliente está exento de impuestos basado en la factura completada
+      const isExempt = completedInvoice.ncfType === 'B14' ||
+        completedInvoice.ncfType === 'B15' ||
+        completedInvoice.ncfType === 'B16';
+
+      // Determinar razón de exención basada en el tipo de NCF
+      const exemptionReason = isExempt
+        ? completedInvoice.ncfType === 'B16'
+          ? 'Cliente exportador - NCF tipo B16 (Art. 343 Código Tributario)'
+          : completedInvoice.ncfType === 'B15'
+            ? 'Entidad gubernamental - NCF tipo B15 (Art. 343 Código Tributario)'
+            : 'Régimen especial - NCF tipo B14 (Art. 343 Código Tributario)'
+        : undefined;
+
       printInvoice({
         invoice: completedInvoice,
         tenantInfo,
@@ -801,419 +917,12 @@ export default function PosPage() {
         includeLogo: tenantSettings?.includeLogo ?? true,
         invoiceFooter: tenantSettings?.invoiceFooter || undefined,
         termsAndConditions: tenantSettings?.termsAndConditions || undefined,
+        isExemptFromTax: isExempt,
+        taxExemptionReason: exemptionReason,
       });
     } catch (error: any) {
       toast.error(error.message || 'Error al imprimir la factura');
     }
-  };
-
-  // Función temporal para mantener el código antiguo (borrar después)
-  const handlePrintInvoice_OLD = () => {
-    if (!completedInvoice) return;
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error('No se pudo abrir la ventana de impresión. Por favor, permita las ventanas emergentes.');
-      return;
-    }
-
-    const paymentMethodLabels: Record<string, string> = {
-      CASH: 'Efectivo',
-      CARD: 'Tarjeta',
-      TRANSFER: 'Transferencia',
-      CHECK: 'Cheque',
-      CREDIT: 'Crédito',
-    };
-
-    // Convertir itbisRate de porcentaje a decimal si es necesario
-    const itbisRateRaw = ncfConfig?.itbisRate ?? 18;
-    const itbisRate = itbisRateRaw > 1 ? itbisRateRaw / 100 : itbisRateRaw;
-
-    const printContent_OLD = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Factura ${completedInvoice.invoiceNumber}</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-              font-family: Arial, Helvetica, sans-serif;
-              padding: 20px;
-              font-size: 11pt;
-              line-height: 1.4;
-            }
-            .invoice-container { max-width: 210mm; margin: 0 auto; }
-
-            /* Header - Información de la empresa */
-            .company-header {
-              text-align: center;
-              margin-bottom: 20px;
-              border-bottom: 2px solid #000;
-              padding-bottom: 15px;
-            }
-            .company-header h1 {
-              font-size: 24pt;
-              margin-bottom: 8px;
-              font-weight: bold;
-              text-transform: uppercase;
-            }
-            .company-header .company-info {
-              font-size: 10pt;
-              margin: 3px 0;
-              color: #333;
-            }
-            .company-header .rnc {
-              font-weight: 600;
-              font-size: 11pt;
-              margin-top: 5px;
-            }
-
-            /* Sección de información fiscal (NCF) */
-            .fiscal-section {
-              background-color: #f8f8f8;
-              border: 2px solid #000;
-              padding: 15px;
-              margin-bottom: 20px;
-            }
-            .fiscal-section .ncf-row {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 8px;
-              padding: 5px 0;
-            }
-            .fiscal-section .ncf-row:last-child {
-              margin-bottom: 0;
-            }
-            .fiscal-section .ncf-label {
-              font-weight: 600;
-              font-size: 11pt;
-            }
-            .fiscal-section .ncf-value {
-              font-family: 'Courier New', monospace;
-              font-size: 13pt;
-              font-weight: bold;
-              letter-spacing: 1px;
-            }
-            .fiscal-section .ncf-type {
-              font-size: 10pt;
-              color: #555;
-              font-style: italic;
-            }
-            .fiscal-section .ncf-validity {
-              font-size: 9pt;
-              color: #666;
-            }
-
-            /* Información de la factura */
-            .invoice-info {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 10px;
-              margin-bottom: 20px;
-              font-size: 10pt;
-            }
-            .invoice-info .info-group {
-              padding: 10px;
-              background-color: #fafafa;
-              border-radius: 4px;
-            }
-            .invoice-info .row {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 5px;
-              padding: 2px 0;
-            }
-            .invoice-info .row:last-child {
-              margin-bottom: 0;
-            }
-            .invoice-info .row .label {
-              font-weight: 600;
-              color: #555;
-            }
-            .invoice-info .row .value {
-              font-weight: 500;
-            }
-
-            /* Tabla de productos */
-            .items-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin: 20px 0;
-            }
-            .items-table th {
-              text-align: left;
-              border-bottom: 2px solid #000;
-              padding: 10px 6px;
-              font-size: 10pt;
-              font-weight: bold;
-              background-color: #e8e8e8;
-            }
-            .items-table td {
-              padding: 8px 6px;
-              font-size: 10pt;
-              border-bottom: 1px solid #ddd;
-            }
-            .items-table .product-name {
-              font-weight: 600;
-              margin-bottom: 2px;
-            }
-            .items-table .product-code {
-              font-size: 9pt;
-              color: #666;
-            }
-            .items-table .text-right {
-              text-align: right;
-            }
-            .items-table .text-center {
-              text-align: center;
-            }
-
-            /* Sección de totales */
-            .totals {
-              margin-top: 20px;
-              border-top: 2px solid #000;
-              padding-top: 15px;
-            }
-            .totals .row {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 8px;
-              font-size: 11pt;
-              padding: 3px 0;
-            }
-            .totals .row .label {
-              font-weight: 500;
-            }
-            .totals .row .value {
-              font-weight: 600;
-              min-width: 120px;
-              text-align: right;
-            }
-            .totals .itbis-row {
-              background-color: #f0f0f0;
-              padding: 8px;
-              margin: 5px 0;
-              border-radius: 4px;
-            }
-            .totals .total-row {
-              font-weight: bold;
-              font-size: 16pt;
-              margin-top: 12px;
-              padding-top: 12px;
-              border-top: 2px solid #000;
-              background-color: #f5f5f5;
-              padding: 12px 8px;
-            }
-            .totals .total-row .label {
-              font-size: 14pt;
-            }
-            .totals .total-row .value {
-              font-size: 18pt;
-            }
-
-            /* Footer */
-            .footer {
-              margin-top: 30px;
-              text-align: center;
-              font-size: 10pt;
-              border-top: 1px solid #000;
-              padding-top: 15px;
-            }
-            .footer p {
-              margin: 5px 0;
-            }
-            .footer .legal {
-              font-size: 8pt;
-              color: #666;
-              margin-top: 10px;
-            }
-
-            @media print {
-              body { padding: 10px; }
-              .no-print { display: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="invoice-container">
-            <!-- Header con información de la empresa -->
-            <div class="company-header">
-              <h1>${tenantInfo?.name || 'CloudSuite Pro'}</h1>
-              ${tenantInfo?.address ? `<p class="company-info">${tenantInfo.address}</p>` : ''}
-              ${tenantInfo?.phone ? `<p class="company-info">Tel: ${tenantInfo.phone}</p>` : ''}
-              ${tenantInfo?.email ? `<p class="company-info">Email: ${tenantInfo.email}</p>` : ''}
-              ${tenantInfo?.taxId ? `<p class="rnc">RNC: ${tenantInfo.taxId}</p>` : ''}
-            </div>
-
-            <!-- Sección de información fiscal (NCF) -->
-            ${completedInvoice.ncf ? `
-            <div class="fiscal-section">
-              <div class="ncf-row">
-                <span class="ncf-label">Comprobante Fiscal (NCF):</span>
-                <span class="ncf-value">${completedInvoice.ncf}</span>
-              </div>
-              ${ncfTypeLabel ? `
-              <div class="ncf-row">
-                <span class="ncf-label">Tipo:</span>
-                <span class="ncf-type">${ncfTypeLabel}</span>
-              </div>
-              ` : ''}
-              ${completedInvoice.ncfValidUntil ? `
-              <div class="ncf-row">
-                <span class="ncf-label">NCF Válido hasta:</span>
-                <span class="ncf-validity">${new Date(completedInvoice.ncfValidUntil).toLocaleDateString('es-DO', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })}</span>
-              </div>
-              ` : ''}
-            </div>
-            ` : ''}
-
-            <!-- Información de la factura -->
-            <div class="invoice-info">
-              <div class="info-group">
-                <div class="row">
-                  <span class="label">Factura No:</span>
-                  <span class="value">${completedInvoice.invoiceNumber}</span>
-                </div>
-                <div class="row">
-                  <span class="label">Fecha:</span>
-                  <span class="value">${new Date(completedInvoice.createdAt).toLocaleString('es-DO', {
-      dateStyle: 'short',
-      timeStyle: 'short'
-    })}</span>
-                </div>
-                <div class="row">
-                  <span class="label">Sucursal:</span>
-                  <span class="value">${completedInvoice.branch?.name || 'N/A'}</span>
-                </div>
-                <div class="row">
-                  <span class="label">Cajero:</span>
-                  <span class="value">${completedInvoice.user?.name || 'N/A'}</span>
-                </div>
-              </div>
-
-              <div class="info-group">
-                ${completedInvoice.customerName || completedInvoice.customerRnc ? `
-                <div class="row">
-                  <span class="label">Cliente:</span>
-                  <span class="value">${completedInvoice.customerName || 'N/A'}</span>
-                </div>
-                ${completedInvoice.customerRnc ? `
-                <div class="row">
-                  <span class="label">RNC/Cédula:</span>
-                  <span class="value">${completedInvoice.customerRnc}</span>
-                </div>
-                ` : ''}
-                ` : `
-                <div class="row">
-                  <span class="label">Cliente:</span>
-                  <span class="value">Consumidor Final</span>
-                </div>
-                `}
-                <div class="row">
-                  <span class="label">Pago:</span>
-                  <span class="value">${paymentMethodLabels[completedInvoice.paymentMethod] || completedInvoice.paymentMethod}</span>
-                </div>
-                ${completedInvoice.paymentReference ? `
-                <div class="row">
-                  <span class="label">Ref. Pago:</span>
-                  <span class="value">${completedInvoice.paymentReference}</span>
-                </div>
-                ` : ''}
-              </div>
-            </div>
-
-            <!-- Tabla de productos -->
-            <table class="items-table">
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th class="text-center">Cant.</th>
-                  <th class="text-right">Precio</th>
-                  <th class="text-right">ITBIS</th>
-                  <th class="text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${completedInvoice.items.map(item => {
-      // Calcular ITBIS por item (precio incluye ITBIS)
-      const totalWithItbis = parseFloat(item.total.toString());
-      const itbisAmount = totalWithItbis * (itbisRate / (1 + itbisRate));
-      const subtotalItem = totalWithItbis - itbisAmount;
-
-      return `
-                  <tr>
-                    <td>
-                      <div class="product-name">${item.variant.product.name}${item.variant.name ? ` - ${item.variant.name}` : ''}</div>
-                    </td>
-                    <td class="text-center">${item.quantity}</td>
-                    <td class="text-right">${formatCurrency(item.unitPrice)}</td>
-                    <td class="text-right">${formatCurrency(itbisAmount)}</td>
-                    <td class="text-right">${formatCurrency(item.total)}</td>
-                  </tr>
-                  `;
-    }).join('')}
-              </tbody>
-            </table>
-
-            <!-- Totales con desglose de ITBIS -->
-            <div class="totals">
-              ${(() => {
-        // Calcular totales con ITBIS
-        const totalWithItbis = parseFloat(completedInvoice.total.toString());
-        const totalItbis = totalWithItbis * (itbisRate / (1 + itbisRate));
-        const subtotalWithoutItbis = totalWithItbis - totalItbis;
-
-        return `
-                  <div class="row">
-                    <span class="label">Subtotal (sin ITBIS):</span>
-                    <span class="value">${formatCurrency(subtotalWithoutItbis)}</span>
-                  </div>
-                  <div class="row itbis-row">
-                    <span class="label">ITBIS (${(itbisRate * 100).toFixed(0)}%):</span>
-                    <span class="value">${formatCurrency(totalItbis)}</span>
-                  </div>
-                  ${parseFloat(completedInvoice.discount) > 0 ? `
-                  <div class="row">
-                    <span class="label">Descuento:</span>
-                    <span class="value">-${formatCurrency(completedInvoice.discount).replace('RD$', 'RD$ ')}</span>
-                  </div>
-                  ` : ''}
-                  <div class="row total-row">
-                    <span class="label">TOTAL A PAGAR:</span>
-                    <span class="value">${formatCurrency(completedInvoice.total)}</span>
-                  </div>
-                `;
-      })()}
-            </div>
-
-            <!-- Footer -->
-            <div class="footer">
-              <p><strong>¡Gracias por su preferencia!</strong></p>
-              <p>Conserve este comprobante para fines fiscales</p>
-              ${completedInvoice.ncf ? `
-              <p class="legal">
-                Este documento es válido como comprobante fiscal según la Norma 06-18 de la DGII
-              </p>
-              ` : ''}
-            </div>
-          </div>
-
-          <script>
-            window.onload = function() {
-              window.print();
-            };
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.write(printContent);
-    printWindow.document.close();
   };
 
   if (!activeBranchId) {
@@ -1504,7 +1213,7 @@ export default function PosPage() {
                       </div>
                       {tax > 0 && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Impuesto:</span>
+                          <span className="text-muted-foreground">ITBIS:</span>
                           <span>{formatCurrency(tax)}</span>
                         </div>
                       )}
@@ -1527,29 +1236,103 @@ export default function PosPage() {
                     <div className="space-y-2">
                       <Label>Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}</Label>
                       {selectedCustomer ? (
-                        <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
-                          <div className="flex items-center gap-2">
-                            <UserIcon className="h-4 w-4 text-muted-foreground" />
-                            <div>
-                              <p className="font-medium text-sm">
-                                {selectedCustomer.name}{selectedCustomer.lastName ? ` ${selectedCustomer.lastName}` : ''}
-                              </p>
-                              <p className="text-xs text-muted-foreground">{selectedCustomer.code}</p>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
+                            <div className="flex items-center gap-2">
+                              <UserIcon className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium text-sm">
+                                  {selectedCustomer.name}{selectedCustomer.lastName ? ` ${selectedCustomer.lastName}` : ''}
+                                </p>
+                                <p className="text-xs text-muted-foreground">{selectedCustomer.code}</p>
+                              </div>
                             </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedCustomer(null);
+                                setCustomerSearch('');
+                                setCustomerSearchResults([]);
+                                setSellAsFinalConsumer(false);
+                              }}
+                              className="h-7 w-7 p-0"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCustomer(null);
-                              setCustomerSearch('');
-                              setCustomerSearchResults([]);
-                              setSellAsFinalConsumer(false);
-                            }}
-                            className="h-7 w-7 p-0"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                          {(selectedCustomer.taxRegime === 'RUI' || selectedCustomer.taxRegime === 'SPECIAL_REGIME' || selectedCustomer.taxRegime === 'GOVERNMENT' || selectedCustomer.taxRegime === 'EXPORT') && (
+                            <div className={`flex items-center gap-2 p-2 rounded-md border ${selectedCustomer.taxRegime === 'RUI'
+                              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                              : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                : selectedCustomer.taxRegime === 'EXPORT'
+                                  ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+                                  : 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
+                              }`}>
+                              <CheckCircle className={`h-4 w-4 ${selectedCustomer.taxRegime === 'RUI'
+                                ? 'text-blue-600 dark:text-blue-400'
+                                : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                  ? 'text-green-600 dark:text-green-400'
+                                  : selectedCustomer.taxRegime === 'EXPORT'
+                                    ? 'text-orange-600 dark:text-orange-400'
+                                    : 'text-purple-600 dark:text-purple-400'
+                                }`} />
+                              <div className="flex-1">
+                                <p className={`text-xs font-medium ${selectedCustomer.taxRegime === 'RUI'
+                                  ? 'text-blue-900 dark:text-blue-100'
+                                  : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                    ? 'text-green-900 dark:text-green-100'
+                                    : selectedCustomer.taxRegime === 'EXPORT'
+                                      ? 'text-orange-900 dark:text-orange-100'
+                                      : 'text-purple-900 dark:text-purple-100'
+                                  }`}>
+                                  {selectedCustomer.taxRegime === 'RUI'
+                                    ? 'Contribuyente RUI'
+                                    : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                      ? 'Entidad Gubernamental'
+                                      : selectedCustomer.taxRegime === 'EXPORT'
+                                        ? 'Cliente Exportador'
+                                        : 'Régimen Especial'}
+                                </p>
+                                <p className={`text-xs ${selectedCustomer.taxRegime === 'RUI'
+                                  ? 'text-blue-700 dark:text-blue-300'
+                                  : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                    ? 'text-green-700 dark:text-green-300'
+                                    : selectedCustomer.taxRegime === 'EXPORT'
+                                      ? 'text-orange-700 dark:text-orange-300'
+                                      : 'text-purple-700 dark:text-purple-300'
+                                  }`}>
+                                  {selectedCustomer.taxRegime === 'RUI'
+                                    ? 'Requiere NCF B12'
+                                    : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                      ? 'Requiere NCF B15'
+                                      : selectedCustomer.taxRegime === 'EXPORT'
+                                        ? 'Requiere NCF B16 (Exento ITBIS)'
+                                        : 'Requiere NCF B14'}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          {/* Alerta cuando no hay secuencias NCF disponibles */}
+                          {missingNcfSequence && requiredNcfType && (
+                            <Alert variant="destructive" className="mt-2">
+                              <AlertTriangle className="h-4 w-4" />
+                              <AlertTitle>Sin secuencias NCF disponibles</AlertTitle>
+                              <AlertDescription className="text-xs">
+                                No hay secuencias activas de tipo <strong>{ncfTypeLabels[requiredNcfType]}</strong> para este cliente.
+                                {' '}
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  className="h-auto p-0 text-xs underline"
+                                  onClick={() => router.push('/ncf/sequences/create')}
+                                >
+                                  Crear secuencia
+                                </Button>
+                              </AlertDescription>
+                            </Alert>
+                          )}
                         </div>
                       ) : (
                         <div className="relative">
@@ -1602,7 +1385,12 @@ export default function PosPage() {
                           className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                         />
                         <Label htmlFor="sellAsFinalConsumer" className="cursor-pointer text-sm font-medium">
-                          Vender como consumidor final (sin NCF B01)
+                          Vender como consumidor final (sin NCF {
+                            selectedCustomer?.taxRegime === 'RUI' ? 'B12'
+                              : selectedCustomer?.taxRegime === 'SPECIAL_REGIME' ? 'B14'
+                                : selectedCustomer?.taxRegime === 'GOVERNMENT' ? 'B15'
+                                  : selectedCustomer?.taxRegime === 'EXPORT' ? 'B16'
+                                    : 'B01'})
                         </Label>
                       </div>
                     )}
@@ -1805,12 +1593,31 @@ export default function PosPage() {
                       </div>
                     )}
 
+                    {/* Mensaje cuando el botón está deshabilitado por falta de NCF */}
+                    {missingNcfSequence && !sellAsFinalConsumer && (
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Pago bloqueado</AlertTitle>
+                        <AlertDescription className="text-xs">
+                          Para procesar el pago, debe marcar &quot;Vender como consumidor final&quot; o{' '}
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-xs underline"
+                            onClick={() => router.push('/ncf/sequences/create')}
+                          >
+                            crear una secuencia NCF {requiredNcfType}
+                          </Button>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     {/* Botón de pagar */}
                     <Button
                       className="w-full"
                       size="lg"
                       onClick={handlePaymentClick}
-                      disabled={processingPayment}
+                      disabled={processingPayment || (missingNcfSequence && !sellAsFinalConsumer)}
                     >
                       {processingPayment ? (
                         <>
@@ -1973,8 +1780,16 @@ export default function PosPage() {
                       <CreditCard className="h-4 w-4 mr-1" />
                       Tarjeta
                     </>
+                  ) : paymentMethod === 'TRANSFER' ? (
+                    <>
+                      <DollarSign className="h-4 w-4 mr-1" />
+                      Transferencia
+                    </>
                   ) : (
-                    'Transferencia'
+                    <>
+                      <UserIcon className="h-4 w-4 mr-1" />
+                      Crédito
+                    </>
                   )}
                 </Badge>
               </div>
@@ -1991,6 +1806,42 @@ export default function PosPage() {
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                 <span className="text-sm font-medium text-muted-foreground">Productos:</span>
                 <span className="font-medium">{cart.length} {cart.length === 1 ? 'artículo' : 'artículos'}</span>
+              </div>
+
+              {/* Indicador de exención de ITBIS */}
+              {isExemptFromTax && (
+                <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-green-900 dark:text-green-100">
+                      Exento de ITBIS
+                    </p>
+                    <p className="text-xs text-green-700 dark:text-green-300">
+                      {selectedCustomer?.taxRegime === 'EXPORT'
+                        ? 'Cliente exportador (B16)'
+                        : selectedCustomer?.taxRegime === 'GOVERNMENT'
+                          ? 'Entidad gubernamental (B15)'
+                          : 'Régimen especial (B14)'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Desglose de montos */}
+              <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal:</span>
+                  <span className="font-medium">{formatCurrency(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    ITBIS (18%):
+                    {isExemptFromTax && <span className="ml-1 text-green-600 font-semibold">EXENTO</span>}
+                  </span>
+                  <span className={`font-medium ${isExemptFromTax ? 'text-green-600 line-through' : ''}`}>
+                    {formatCurrency(isExemptFromTax ? 0 : tax)}
+                  </span>
+                </div>
               </div>
 
               {/* Total a cobrar */}
@@ -2062,6 +1913,24 @@ export default function PosPage() {
               <DialogDescription>
                 Factura generada correctamente. Puede imprimirla o cerrar esta ventana.
               </DialogDescription>
+
+              {/* Botones debajo del subtítulo */}
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowInvoiceModal(false)}
+                  className="flex-1"
+                >
+                  Cerrar
+                </Button>
+                <Button
+                  onClick={handlePrintInvoice}
+                  className="gap-2 flex-1"
+                >
+                  <Printer className="h-4 w-4" />
+                  Imprimir Factura
+                </Button>
+              </div>
             </DialogHeader>
 
             {completedInvoice && (
@@ -2140,8 +2009,16 @@ export default function PosPage() {
                           <CreditCard className="h-3 w-3 mr-1" />
                           Tarjeta
                         </>
+                      ) : completedInvoice.paymentMethod === 'TRANSFER' ? (
+                        <>
+                          <DollarSign className="h-3 w-3 mr-1" />
+                          Transferencia
+                        </>
                       ) : (
-                        'Transferencia'
+                        <>
+                          <UserIcon className="h-3 w-3 mr-1" />
+                          Crédito
+                        </>
                       )}
                     </Badge>
                   </div>
@@ -2188,7 +2065,7 @@ export default function PosPage() {
                   </div>
                   {parseFloat(completedInvoice.tax) > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Impuesto:</span>
+                      <span className="text-muted-foreground">ITBIS:</span>
                       <span className="font-medium">{formatCurrency(completedInvoice.tax)}</span>
                     </div>
                   )}
@@ -2206,22 +2083,6 @@ export default function PosPage() {
                 </div>
               </div>
             )}
-
-            <DialogFooter className="gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowInvoiceModal(false)}
-              >
-                Cerrar
-              </Button>
-              <Button
-                onClick={handlePrintInvoice}
-                className="gap-2"
-              >
-                <Printer className="h-4 w-4" />
-                Imprimir Factura
-              </Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

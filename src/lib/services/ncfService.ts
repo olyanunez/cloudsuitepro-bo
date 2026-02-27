@@ -8,12 +8,12 @@ export enum NcfType {
   B02 = 'B02', // Consumo
   B03 = 'B03', // Nota de Débito
   B04 = 'B04', // Nota de Crédito
-  B11 = 'B11', // Régimen Especial
-  B12 = 'B12', // Gubernamental
-  B13 = 'B13', // Exportaciones
-  B14 = 'B14', // Pagos al Exterior
-  B15 = 'B15', // Ventas a Zonas Francas
-  B16 = 'B16', // Remesas
+  B11 = 'B11', // Proveedores Informales
+  B12 = 'B12', // Registro Único de Ingresos
+  B13 = 'B13', // Gastos Menores
+  B14 = 'B14', // Regímenes Especiales
+  B15 = 'B15', // Comprobante Gubernamental
+  B16 = 'B16', // Comprobante para Exportaciones
 }
 
 export enum DgiiReportType {
@@ -201,6 +201,13 @@ const ncfService = {
     return apiGet<NcfSequence[]>('/ncf/sequences/expiring/check');
   },
 
+  /**
+   * Obtener secuencias activas por tipo de NCF
+   */
+  getActiveSequencesByType: async (ncfType: NcfType): Promise<NcfSequence[]> => {
+    return apiGet<NcfSequence[]>(`/ncf/sequences/active/${ncfType}`);
+  },
+
   // ===== CONFIGURACIÓN NCF =====
 
   /**
@@ -293,12 +300,12 @@ export const ncfTypeLabels: Record<NcfType, string> = {
   [NcfType.B02]: 'B02 - Consumo',
   [NcfType.B03]: 'B03 - Nota de Débito',
   [NcfType.B04]: 'B04 - Nota de Crédito',
-  [NcfType.B11]: 'B11 - Régimen Especial',
-  [NcfType.B12]: 'B12 - Gubernamental',
-  [NcfType.B13]: 'B13 - Exportaciones',
-  [NcfType.B14]: 'B14 - Pagos al Exterior',
-  [NcfType.B15]: 'B15 - Ventas a Zonas Francas',
-  [NcfType.B16]: 'B16 - Remesas',
+  [NcfType.B11]: 'B11 - Proveedores Informales',
+  [NcfType.B12]: 'B12 - Registro Único de Ingresos',
+  [NcfType.B13]: 'B13 - Gastos Menores',
+  [NcfType.B14]: 'B14 - Regímenes Especiales',
+  [NcfType.B15]: 'B15 - Comprobante Gubernamental',
+  [NcfType.B16]: 'B16 - Comprobante para Exportaciones',
 };
 
 export const dgiiReportTypeLabels: Record<DgiiReportType, string> = {

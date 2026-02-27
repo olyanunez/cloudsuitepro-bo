@@ -8,8 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { apiPost, apiGet } from '@/lib/services/apiService';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function CreateSupplierPage() {
@@ -18,6 +26,9 @@ export default function CreateSupplierPage() {
   const [formData, setFormData] = useState({
     code: '',
     name: '',
+    supplierType: 'FORMAL' as 'FORMAL' | 'INFORMAL',
+    isInformal: false,
+    informalReason: '',
     taxId: '',
     email: '',
     phone: '',
@@ -131,7 +142,12 @@ export default function CreateSupplierPage() {
 
               {/* RNC */}
               <div>
-                <Label htmlFor="taxId">RNC</Label>
+                <Label htmlFor="taxId">
+                  RNC{' '}
+                  {formData.supplierType === 'FORMAL' && (
+                    <span className="text-sm text-gray-500">(recomendado)</span>
+                  )}
+                </Label>
                 <Input
                   id="taxId"
                   name="taxId"
@@ -181,6 +197,79 @@ export default function CreateSupplierPage() {
                   placeholder="Calle Principal #123, Sector Industrial, Santo Domingo"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Tipo de Proveedor */}
+          <div className="mb-6 pt-6 border-t">
+            <h2 className="text-lg font-semibold mb-4">Tipo de Proveedor</h2>
+            <div className="grid grid-cols-1 gap-6">
+              {/* Selector de Tipo */}
+              <div>
+                <Label htmlFor="supplierType">
+                  Tipo <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.supplierType}
+                  onValueChange={(value: 'FORMAL' | 'INFORMAL') => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      supplierType: value,
+                      isInformal: value === 'INFORMAL',
+                    }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FORMAL">
+                      Proveedor Formal (con RNC)
+                    </SelectItem>
+                    <SelectItem value="INFORMAL">
+                      Proveedor Informal (sin RNC - Requiere B11)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-gray-500 mt-1">
+                  Los proveedores informales generarán NCF B11 automáticamente
+                </p>
+              </div>
+
+              {/* Alert para Proveedores Informales */}
+              {formData.supplierType === 'INFORMAL' && (
+                <Alert className="bg-yellow-50 border-yellow-200">
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription className="text-yellow-800">
+                    <strong>Proveedor Informal:</strong> Este proveedor generará
+                    automáticamente un NCF tipo B11 (Comprobante para Regímenes
+                    Especiales) al recibir mercancía. Debe especificar el motivo
+                    por el cual es un proveedor informal.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Motivo para Proveedores Informales */}
+              {formData.supplierType === 'INFORMAL' && (
+                <div>
+                  <Label htmlFor="informalReason">
+                    Motivo (Proveedor Informal){' '}
+                    <span className="text-red-500">*</span>
+                  </Label>
+                  <Textarea
+                    id="informalReason"
+                    name="informalReason"
+                    value={formData.informalReason}
+                    onChange={handleChange}
+                    rows={3}
+                    required={formData.supplierType === 'INFORMAL'}
+                    placeholder="Ej: Productor agrícola sin registro mercantil, artesano local, etc."
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Explique por qué este proveedor es informal
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

@@ -62,6 +62,16 @@ const formSchema = z.object({
     message: 'El rango final debe ser mayor al rango inicial',
     path: ['rangeEnd'],
   }
+).refine(
+  (data) => {
+    const validFrom = new Date(data.validFrom);
+    const validUntil = new Date(data.validUntil);
+    return validUntil > validFrom;
+  },
+  {
+    message: 'La fecha de vencimiento debe ser posterior a la fecha de inicio',
+    path: ['validUntil'],
+  }
 );
 
 type FormValues = z.infer<typeof formSchema>;
@@ -108,9 +118,13 @@ export default function CreateNcfSequencePage() {
       router.push('/ncf/sequences');
     } catch (error: any) {
       console.error('Error creando secuencia:', error);
-      toast.error(
-        error.response?.data?.message || 'Error al crear la secuencia NCF'
-      );
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo crear la secuencia NCF';
+      toast.error('Error al crear la secuencia NCF', {
+        description: errorMessage,
+      });
     } finally {
       setLoading(false);
     }

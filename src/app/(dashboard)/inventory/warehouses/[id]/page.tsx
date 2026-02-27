@@ -40,9 +40,15 @@ export default function WarehouseDetailsPage({ params }: WarehouseDetailsPagePro
       try {
         const data = await WarehouseService.getWarehouseById(warehouseId);
         setWarehouse(data);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading warehouse:', error);
-        toast.error('Error al cargar los datos del almacén');
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          'No se pudieron cargar los datos del almacén';
+        toast.error('Error al cargar almacén', {
+          description: errorMessage,
+        });
         router.push('/inventory/warehouses');
       } finally {
         setLoading(false);
@@ -57,9 +63,15 @@ export default function WarehouseDetailsPage({ params }: WarehouseDetailsPagePro
       await WarehouseService.deleteWarehouse(warehouseId);
       toast.success('Almacén eliminado exitosamente');
       router.push('/inventory/warehouses');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting warehouse:', error);
-      toast.error('Error al eliminar el almacén');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'No se pudo eliminar el almacén';
+      toast.error('Error al eliminar almacén', {
+        description: errorMessage,
+      });
     } finally {
       setIsDeleteDialogOpen(false);
     }
