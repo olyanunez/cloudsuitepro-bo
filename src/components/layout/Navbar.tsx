@@ -550,6 +550,10 @@ export default function Navbar() {
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Mi Perfil</span>
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.open('https://docs.cloudsuitepro.online', '_blank')}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
+                  <span>Ayuda</span>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
@@ -725,6 +729,17 @@ export default function Navbar() {
                 </div>
               );
             })}
+            <SheetClose asChild>
+              <a
+                href="https://docs.cloudsuitepro.online"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-2 py-1 rounded-md text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
+                <span>Ayuda</span>
+              </a>
+            </SheetClose>
           </nav>
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button variant="outline" className="w-full" onClick={() => {
