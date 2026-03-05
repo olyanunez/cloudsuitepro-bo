@@ -20,6 +20,9 @@ export interface UserPreferences {
   dateFormat: string;
   timeFormat: string;
   firstDayOfWeek: string;
+  // Impresión
+  printBrowserInvoice: boolean;
+  printThermalVoucher: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,6 +42,8 @@ export interface UpdateUserPreferencesDto {
   dateFormat?: string;
   timeFormat?: string;
   firstDayOfWeek?: string;
+  printBrowserInvoice?: boolean;
+  printThermalVoucher?: boolean;
 }
 
 class UserPreferencesService {
