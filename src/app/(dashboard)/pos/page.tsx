@@ -11,6 +11,7 @@ import { CustomerService, Customer } from '@/lib/services/customerService';
 import ncfService, { NcfConfiguration, ncfTypeLabels, NcfType } from '@/lib/services/ncfService';
 import { TenantService, Tenant } from '@/lib/services/tenantService';
 import TenantSettingsService, { TenantSettings } from '@/lib/services/tenantSettingsService';
+import UserPreferencesService, { UserPreferences } from '@/lib/services/userPreferencesService';
 import { printInvoice } from '@/lib/utils/invoicePrint';
 import {
   playSuccessBeepIfEnabled,
@@ -160,6 +161,9 @@ export default function PosPage() {
   // Estado para configuración del tenant
   const [tenantSettings, setTenantSettings] = useState<TenantSettings | null>(null);
 
+  // Estado para preferencias del usuario
+  const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
+
   // Log inicial para debug e inicializar audio
   useEffect(() => {
     console.log('🎯 POS Page Mounted');
@@ -221,8 +225,19 @@ export default function PosPage() {
       }
     };
 
+    const loadUserPreferences = async () => {
+      try {
+        const preferences = await UserPreferencesService.getPreferences();
+        setUserPreferences(preferences);
+        console.log('👤 User Preferences loaded:', preferences);
+      } catch (error) {
+        console.error('Error loading user preferences:', error);
+      }
+    };
+
     loadTenantInfo();
     loadTenantSettings();
+    loadUserPreferences();
   }, []);
 
   // Cargar el warehouse de la sucursal activa
@@ -707,34 +722,52 @@ export default function PosPage() {
       console.log('🖨️ Checking auto-print settings:', {
         tenantSettings,
         autoPrintReceipts: tenantSettings?.autoPrintReceipts,
+        userPreferences,
+        printBrowserInvoice: userPreferences?.printBrowserInvoice,
+        printThermalVoucher: userPreferences?.printThermalVoucher,
       });
 
       if (tenantSettings?.autoPrintReceipts) {
-        try {
-          console.log('🖨️ Auto-printing receipt (autoPrintReceipts is enabled)');
+        // Determinar razón de exención si aplica
+        const exemptionReason = isExemptFromTax && selectedCustomer
+          ? selectedCustomer.taxRegime === 'EXPORT'
+            ? 'Cliente exportador - NCF tipo B16 (Art. 343 Código Tributario)'
+            : selectedCustomer.taxRegime === 'GOVERNMENT'
+              ? 'Entidad gubernamental - NCF tipo B15 (Art. 343 Código Tributario)'
+              : 'Régimen especial - NCF tipo B14 (Art. 343 Código Tributario)'
+          : undefined;
 
-          // Determinar razón de exención si aplica
-          const exemptionReason = isExemptFromTax && selectedCustomer
-            ? selectedCustomer.taxRegime === 'EXPORT'
-              ? 'Cliente exportador - NCF tipo B16 (Art. 343 Código Tributario)'
-              : selectedCustomer.taxRegime === 'GOVERNMENT'
-                ? 'Entidad gubernamental - NCF tipo B15 (Art. 343 Código Tributario)'
-                : 'Régimen especial - NCF tipo B14 (Art. 343 Código Tributario)'
-            : undefined;
+        // Imprimir factura estándar en navegador si está habilitado
+        if (userPreferences?.printBrowserInvoice) {
+          try {
+            console.log('🖨️ Printing browser invoice (printBrowserInvoice is enabled)');
+            printInvoice({
+              invoice,
+              tenantInfo,
+              itbisRate: ncfConfig?.itbisRate || 18,
+              includeLogo: tenantSettings?.includeLogo ?? true,
+              invoiceFooter: tenantSettings?.invoiceFooter || undefined,
+              termsAndConditions: tenantSettings?.termsAndConditions || undefined,
+              isExemptFromTax,
+              taxExemptionReason: exemptionReason,
+            });
+          } catch (error) {
+            console.error('Error printing browser invoice:', error);
+          }
+        }
 
-          printInvoice({
-            invoice,
-            tenantInfo,
-            itbisRate: ncfConfig?.itbisRate || 18,
-            includeLogo: tenantSettings?.includeLogo ?? true,
-            invoiceFooter: tenantSettings?.invoiceFooter || undefined,
-            termsAndConditions: tenantSettings?.termsAndConditions || undefined,
-            isExemptFromTax,
-            taxExemptionReason: exemptionReason,
-          });
-        } catch (error) {
-          console.error('Error auto-printing receipt:', error);
-          // No mostramos toast de error para no interrumpir el flujo
+        // Imprimir voucher térmico si está habilitado
+        if (userPreferences?.printThermalVoucher) {
+          try {
+            console.log('🖨️ Printing thermal voucher (printThermalVoucher is enabled)');
+            await printThermalVoucher(invoice, tenantInfo);
+          } catch (error) {
+            console.error('Error printing thermal voucher:', error);
+          }
+        }
+
+        if (!userPreferences?.printBrowserInvoice && !userPreferences?.printThermalVoucher) {
+          console.log('🖨️ No print preferences enabled, skipping automatic print');
         }
       } else {
         console.log('🖨️ Auto-print is disabled, skipping automatic print');
@@ -888,8 +921,86 @@ export default function PosPage() {
     }
   };
 
+  // Función para imprimir voucher térmico
+  const printThermalVoucher = async (invoice: Invoice, tenant: Tenant | null) => {
+    try {
+      // Formatear los items de la factura
+      const items = invoice.items.map(item => ({
+        quantity: item.quantity,
+        name: item.variant?.product?.name || 'Producto',
+        description: item.variant?.sku || '',
+        price: parseFloat(item.unitPrice),
+        total: parseFloat(item.totalPrice)
+      }));
+
+      // Mapear el método de pago
+      const paymentMethodMap: Record<string, string> = {
+        'CASH': 'Efectivo',
+        'CARD': 'Tarjeta',
+        'TRANSFER': 'Transferencia',
+        'CREDIT': 'Crédito'
+      };
+
+      // Preparar datos para el Printer Service
+      const printData = {
+        companyName: tenant?.name || 'CloudSuite Pro',
+        companyAddress: tenant?.address || '',
+        companyRnc: tenant?.rnc || '',
+        companyPhone: tenant?.phone || '',
+        invoiceNumber: invoice.invoiceNumber,
+        ncf: invoice.ncf || undefined,
+        date: new Date(invoice.createdAt).toISOString(),
+        customerName: invoice.customer
+          ? `${invoice.customer.name}${invoice.customer.lastName ? ` ${invoice.customer.lastName}` : ''}`
+          : 'Consumidor Final',
+        customerRnc: invoice.customer?.taxId || undefined,
+        items,
+        subtotal: parseFloat(invoice.subtotal),
+        tax: parseFloat(invoice.tax),
+        discount: parseFloat(invoice.discount),
+        total: parseFloat(invoice.total),
+        paymentMethod: paymentMethodMap[invoice.paymentMethod] || invoice.paymentMethod,
+        footer: tenantSettings?.invoiceFooter || undefined
+      };
+
+      // Enviar a Printer Service
+      const response = await fetch('http://localhost:9100/print/invoice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(printData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Error al comunicarse con el servicio de impresión');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        console.log('✅ Voucher térmico impreso exitosamente');
+      } else {
+        throw new Error(result.error || 'Error desconocido');
+      }
+    } catch (error: any) {
+      console.error('❌ Error printing thermal voucher:', error);
+
+      // Mostrar mensaje de error más específico
+      if (error.message?.includes('fetch')) {
+        toast.error('No se pudo conectar con el servicio de impresión térmica', {
+          description: 'Asegúrate de que CloudSuite Printer Service esté ejecutándose'
+        });
+      } else {
+        toast.error('Error al imprimir voucher térmico', {
+          description: error.message
+        });
+      }
+    }
+  };
+
   // Función para imprimir la factura
-  const handlePrintInvoice = () => {
+  const handlePrintInvoice = async () => {
     if (!completedInvoice || !ncfConfig) return;
 
     try {
@@ -910,16 +1021,30 @@ export default function PosPage() {
             : 'Régimen especial - NCF tipo B14 (Art. 343 Código Tributario)'
         : undefined;
 
-      printInvoice({
-        invoice: completedInvoice,
-        tenantInfo,
-        itbisRate,
-        includeLogo: tenantSettings?.includeLogo ?? true,
-        invoiceFooter: tenantSettings?.invoiceFooter || undefined,
-        termsAndConditions: tenantSettings?.termsAndConditions || undefined,
-        isExemptFromTax: isExempt,
-        taxExemptionReason: exemptionReason,
-      });
+      // Imprimir factura estándar en navegador si está habilitado
+      if (!userPreferences || userPreferences.printBrowserInvoice) {
+        console.log('🖨️ Printing browser invoice (manual print button)');
+        printInvoice({
+          invoice: completedInvoice,
+          tenantInfo,
+          itbisRate,
+          includeLogo: tenantSettings?.includeLogo ?? true,
+          invoiceFooter: tenantSettings?.invoiceFooter || undefined,
+          termsAndConditions: tenantSettings?.termsAndConditions || undefined,
+          isExemptFromTax: isExempt,
+          taxExemptionReason: exemptionReason,
+        });
+      }
+
+      // Imprimir voucher térmico si está habilitado
+      if (userPreferences?.printThermalVoucher) {
+        console.log('🖨️ Printing thermal voucher (manual print button)');
+        await printThermalVoucher(completedInvoice, tenantInfo);
+      }
+
+      if (userPreferences && !userPreferences.printBrowserInvoice && !userPreferences.printThermalVoucher) {
+        toast.warning('No hay preferencias de impresión habilitadas. Ve a Configuración → Sistema para configurarlas.');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Error al imprimir la factura');
     }
