@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Monitor, Bell, Globe, Save } from 'lucide-react';
+import { Monitor, Bell, Globe, Save, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import UserPreferencesService, { UserPreferences } from '@/lib/services/userPreferencesService';
 import { applyTheme } from '@/components/providers/ThemeProvider';
@@ -81,6 +81,8 @@ export default function SystemTab() {
         dateFormat: preferences.dateFormat,
         timeFormat: preferences.timeFormat,
         firstDayOfWeek: preferences.firstDayOfWeek,
+        printBrowserInvoice: preferences.printBrowserInvoice,
+        printThermalVoucher: preferences.printThermalVoucher,
       });
       toast.success('Preferencias guardadas correctamente');
     } catch (error: any) {
@@ -134,7 +136,7 @@ export default function SystemTab() {
             </CardTitle>
             <CardDescription>Personaliza cómo se ve la aplicación</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6">{/* Tema */}
             {/* Tema */}
             <div className="space-y-2">
               <Label htmlFor="theme">Tema</Label>
@@ -291,7 +293,64 @@ export default function SystemTab() {
         </Card>
       </div>
 
-      {/* Segunda fila - Configuración Regional en ancho completo */}
+      {/* Segunda fila - Preferencias de Impresión */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Printer className="h-5 w-5" />
+            Preferencias de Impresión
+          </CardTitle>
+          <CardDescription>Configura cómo deseas imprimir las facturas en el POS</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Imprimir factura estándar (navegador)</Label>
+                <p className="text-sm text-muted-foreground">
+                  Imprime la factura tradicional con formato completo usando el navegador
+                </p>
+              </div>
+              <Switch
+                checked={preferences.printBrowserInvoice}
+                onCheckedChange={(checked) => handleChange('printBrowserInvoice', checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Imprimir voucher térmico</Label>
+                <p className="text-sm text-muted-foreground">
+                  Imprime un comprobante compacto usando impresora térmica vía Printer Service
+                </p>
+              </div>
+              <Switch
+                checked={preferences.printThermalVoucher}
+                onCheckedChange={(checked) => handleChange('printThermalVoucher', checked)}
+              />
+            </div>
+
+            {!preferences.printBrowserInvoice && !preferences.printThermalVoucher && (
+              <div className="rounded-md bg-yellow-50 dark:bg-yellow-900/20 p-4">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  ⚠️ <strong>Advertencia:</strong> No has seleccionado ninguna opción de impresión.
+                  Las facturas no se imprimirán automáticamente.
+                </p>
+              </div>
+            )}
+
+            {preferences.printBrowserInvoice && preferences.printThermalVoucher && (
+              <div className="rounded-md bg-blue-50 dark:bg-blue-900/20 p-4">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  ℹ️ Se imprimirán ambos formatos: factura estándar y voucher térmico.
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tercera fila - Configuración Regional en ancho completo */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
