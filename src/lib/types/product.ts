@@ -141,6 +141,30 @@ export interface ProductAttributeAssignmentDto {
   isRequired?: boolean;
 }
 
+export interface CreateVariantInlineDto {
+  sku: string;
+  barcode?: string;
+  name?: string;
+  price: number;
+  cost: number;
+  minStock?: number;
+  maxStock?: number;
+  isDefault?: boolean;
+  attributeValueIds?: number[];
+}
+
+export interface UpdateVariantInlineDto {
+  id?: number;
+  sku?: string;
+  barcode?: string;
+  name?: string;
+  price?: number;
+  cost?: number;
+  minStock?: number;
+  maxStock?: number;
+  attributeValueIds?: number[];
+}
+
 export interface CreateProductDto {
   code: string;
   name: string;
@@ -149,6 +173,7 @@ export interface CreateProductDto {
   isStockable?: boolean;
   categoryId: number;
   attributes?: ProductAttributeAssignmentDto[];
+  variants?: CreateVariantInlineDto[];
 }
 
 export interface UpdateProductDto {
@@ -162,6 +187,7 @@ export interface UpdateProductDto {
   imagesToDelete?: number[];
   imagesOrder?: string;
   primaryImageId?: number;
+  variants?: UpdateVariantInlineDto[];
 }
 
 export interface CreateProductVariantDto {

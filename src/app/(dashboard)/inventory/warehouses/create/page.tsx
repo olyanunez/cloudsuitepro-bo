@@ -42,9 +42,11 @@ export default function CreateWarehousePage() {
       await WarehouseService.createWarehouse(formData);
       toast.success('Almacén creado exitosamente');
       router.push('/inventory/warehouses');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating warehouse:', error);
-      toast.error('Error al crear el almacén');
+      toast.error('Error al crear el almacén', {
+        description: error.message || 'No se pudo crear el cliente',
+      });
     } finally {
       setSaving(false);
     }
