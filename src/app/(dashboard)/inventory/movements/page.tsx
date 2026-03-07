@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 // Type guard to check if movement is variant-based
 function isVariantMovement(movement: InventoryMovement | VariantInventoryMovement): movement is VariantInventoryMovement {

@@ -24,7 +24,7 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Link from 'next/link';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 import Image from 'next/image';
 

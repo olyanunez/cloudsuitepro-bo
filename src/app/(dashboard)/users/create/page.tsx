@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function CreateUserPage() {
   const router = useRouter();
