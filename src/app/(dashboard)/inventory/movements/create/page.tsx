@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -590,80 +590,80 @@ export default function CreateMovementPage() {
 
                   {batchMode === 'new' && (
                     <>
-                  <div className="space-y-2">
-                    <label htmlFor="expirationDate" className="text-sm font-medium">
-                      Fecha de Caducidad
-                    </label>
-                    <Input
-                      id="expirationDate"
-                      type="date"
-                      value={expirationDate}
-                      onChange={(e) => setExpirationDate(e.target.value)}
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <label htmlFor="expirationDate" className="text-sm font-medium">
+                          Fecha de Caducidad
+                        </label>
+                        <Input
+                          id="expirationDate"
+                          type="date"
+                          value={expirationDate}
+                          onChange={(e) => setExpirationDate(e.target.value)}
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="manufacturingDate" className="text-sm font-medium">
-                      Fecha de Fabricación
-                    </label>
-                    <Input
-                      id="manufacturingDate"
-                      type="date"
-                      value={manufacturingDate}
-                      onChange={(e) => setManufacturingDate(e.target.value)}
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <label htmlFor="manufacturingDate" className="text-sm font-medium">
+                          Fecha de Fabricación
+                        </label>
+                        <Input
+                          id="manufacturingDate"
+                          type="date"
+                          value={manufacturingDate}
+                          onChange={(e) => setManufacturingDate(e.target.value)}
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="supplierName" className="text-sm font-medium">
-                      Proveedor
-                    </label>
-                    <Input
-                      id="supplierName"
-                      value={supplierName}
-                      onChange={(e) => setSupplierName(e.target.value)}
-                      placeholder="Nombre del proveedor"
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <label htmlFor="supplierName" className="text-sm font-medium">
+                          Proveedor
+                        </label>
+                        <Input
+                          id="supplierName"
+                          value={supplierName}
+                          onChange={(e) => setSupplierName(e.target.value)}
+                          placeholder="Nombre del proveedor"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="purchaseOrderRef" className="text-sm font-medium">
-                      Orden de Compra
-                    </label>
-                    <Input
-                      id="purchaseOrderRef"
-                      value={purchaseOrderRef}
-                      onChange={(e) => setPurchaseOrderRef(e.target.value)}
-                      placeholder="Referencia de OC"
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <label htmlFor="purchaseOrderRef" className="text-sm font-medium">
+                          Orden de Compra
+                        </label>
+                        <Input
+                          id="purchaseOrderRef"
+                          value={purchaseOrderRef}
+                          onChange={(e) => setPurchaseOrderRef(e.target.value)}
+                          placeholder="Referencia de OC"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="location" className="text-sm font-medium">
-                      Ubicación Física
-                    </label>
-                    <Input
-                      id="location"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="Ej: Pasillo A, Estante 3"
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <label htmlFor="location" className="text-sm font-medium">
+                          Ubicación Física
+                        </label>
+                        <Input
+                          id="location"
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
+                          placeholder="Ej: Pasillo A, Estante 3"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="batchNumber" className="text-sm font-medium">
-                      Número de Lote
-                    </label>
-                    <Input
-                      id="batchNumber"
-                      value={batchNumber}
-                      onChange={(e) => setBatchNumber(e.target.value)}
-                      placeholder="Dejar vacío para generarlo automáticamente"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Si se deja vacío, se generará automáticamente con el formato LOTE-YYYY-NNNNNN
-                    </p>
-                  </div>
+                      <div className="space-y-2">
+                        <label htmlFor="batchNumber" className="text-sm font-medium">
+                          Número de Lote
+                        </label>
+                        <Input
+                          id="batchNumber"
+                          value={batchNumber}
+                          onChange={(e) => setBatchNumber(e.target.value)}
+                          placeholder="Dejar vacío para generarlo automáticamente"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Si se deja vacío, se generará automáticamente con el formato LOTE-YYYY-NNNNNN
+                        </p>
+                      </div>
                     </>
                   )}
                 </>

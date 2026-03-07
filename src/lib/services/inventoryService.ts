@@ -114,7 +114,12 @@ export const ProductService = {
     // Agregar campos del producto
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        formData.append(key, value.toString());
+        // Si es variants o attributes, serializar como JSON
+        if (key === 'variants' || key === 'attributes') {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, value.toString());
+        }
       }
     });
 

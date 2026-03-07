@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WarehouseService } from '@/lib/services/inventoryService';
 import { Warehouse } from '@/lib/types/inventory';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { ArrowLeftIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import Link from 'next/link';
 import {

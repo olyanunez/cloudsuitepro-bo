@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 // Usamos elementos HTML estándar en lugar de componentes UI personalizados
 
 export default function EditUserPage() {

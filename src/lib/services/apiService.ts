@@ -77,8 +77,19 @@ const handleApiError = async (response: Response) => {
     throw new Error('Sesión expirada. Por favor, inicie sesión nuevamente.');
   }
 
-  const error = await response.json();
-  throw new Error(error.message || 'Error en la petición');
+  let errorData;
+  try {
+    errorData = await response.json();
+  } catch {
+    errorData = { message: 'Error en la petición' };
+  }
+
+  // Crear un error personalizado con toda la información del backend
+  const error: any = new Error(errorData.message || 'Error en la petición');
+  error.statusCode = errorData.statusCode || response.status;
+  error.error = errorData.error;
+  error.data = errorData;
+  throw error;
 };
 
 /**

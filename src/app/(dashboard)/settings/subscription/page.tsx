@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Loader2, CreditCard, Calendar, AlertCircle, CheckCircle2, XCircle, Users, Package, Building2, Warehouse, Check } from 'lucide-react';
 import { SubscriptionService } from '@/lib/services/subscriptionService';
 import { Subscription, Plan, UsageStats } from '@/lib/types/subscription';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { getTenantId } from '@/lib/services/apiService';
 import Image from 'next/image';
 

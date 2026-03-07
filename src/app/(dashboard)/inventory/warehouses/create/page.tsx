@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WarehouseService } from '@/lib/services/inventoryService';
 import { CreateWarehouseDto } from '@/lib/types/inventory';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -42,9 +42,11 @@ export default function CreateWarehousePage() {
       await WarehouseService.createWarehouse(formData);
       toast.success('Almacén creado exitosamente');
       router.push('/inventory/warehouses');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating warehouse:', error);
-      toast.error('Error al crear el almacén');
+      toast.error('Error al crear el almacén', {
+        description: error.message || 'No se pudo crear el cliente',
+      });
     } finally {
       setSaving(false);
     }

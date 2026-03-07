@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { SubscriptionService } from '@/lib/services/subscriptionService';
 import { Subscription } from '@/lib/types/subscription';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { getTenantId } from '@/lib/services/apiService';
 import { PayPalSubscriptionButton } from '@/components/subscription/PayPalSubscriptionButton';
 

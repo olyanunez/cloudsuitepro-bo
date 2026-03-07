@@ -344,9 +344,9 @@ export default function EditProductPage() {
       prev.map((variant, i) =>
         i === index
           ? {
-              ...variant,
-              [field]: value === '' ? undefined : value,
-            }
+            ...variant,
+            [field]: value === '' ? undefined : value,
+          }
           : variant
       )
     );
@@ -471,7 +471,7 @@ export default function EditProductPage() {
     try {
       setSaving(true);
 
-      // 1. Update product basic information and product images
+      // 1. Preparar datos del producto y variantes inline
       const newProductImageFiles = images.filter((img) => img.file).map((img) => img.file!);
 
       const currentProductImageIds = images.filter((img) => img.id).map((img) => img.id!);
@@ -482,46 +482,65 @@ export default function EditProductPage() {
       const primaryProductImage = images.find((img) => img.isPrimary && img.id);
       const primaryProductImageId = primaryProductImage?.id;
 
+      // Preparar variantes inline (mismo formato que en create)
+      const variantsInline = formData.hasVariants
+        ? variants.map((variant, i) => {
+          const attributeValueIds = Object.values(variant.attributeAssignments);
+          return {
+            id: variant.id,
+            sku: variant.sku,
+            barcode: variant.barcode || undefined,
+            name: variant.name || undefined,
+            price: variant.price || 0,
+            cost: variant.cost || 0,
+            minStock: variant.minStock || 0,
+            maxStock: variant.maxStock || undefined,
+            isDefault: i === 0,
+            attributeValueIds: attributeValueIds.length > 0 ? attributeValueIds : undefined,
+          };
+        })
+        : product.variants?.[0]
+          ? [{
+            id: product.variants[0].id,
+            sku: simpleVariant.sku,
+            barcode: simpleVariant.barcode || undefined,
+            price: simpleVariant.price || 0,
+            cost: simpleVariant.cost || 0,
+            minStock: simpleVariant.minStock || 0,
+            maxStock: simpleVariant.maxStock || undefined,
+            isDefault: true,
+            attributeValueIds:
+              Object.keys(simpleVariant.attributeAssignments).length > 0
+                ? Object.values(simpleVariant.attributeAssignments)
+                : undefined,
+          }]
+          : undefined;
+
+      // Actualizar producto con variantes en una sola transacción
       await ProductService.updateProduct(
         productId,
-        formData,
+        {
+          ...formData,
+          variants: variantsInline,
+        },
         newProductImageFiles,
         productImagesToDelete,
         primaryProductImageId
       );
 
-      // 2. Handle variants and their images
+      // 2. Subir imágenes de variantes después de la actualización
       if (formData.hasVariants) {
-        // Update variant data and images for each variant
         for (const variant of variants) {
           if (variant.id) {
-            // Update variant data (price, cost, attributes, etc.)
-            const attributeValueIds = Object.values(variant.attributeAssignments);
-            await productVariantsService.update(variant.id, {
-              sku: variant.sku,
-              barcode: variant.barcode || undefined,
-              name: variant.name || undefined,
-              price: variant.price,
-              cost: variant.cost,
-              minStock: variant.minStock || 0,
-              maxStock: variant.maxStock || undefined,
-              attributeValueIds: attributeValueIds.length > 0 ? attributeValueIds : undefined,
-            });
-
-            // Process images for existing variants
+            // Subir nuevas imágenes
             const newImages = variant.images.filter((img) => img.file);
-            console.log(`Variant ${variant.id}: ${newImages.length} new images to upload`);
-
-            // Upload new images
             if (newImages.length > 0) {
               const imageFiles = newImages.map((img) => img.file!);
-              console.log('Uploading images for variant', variant.id, imageFiles);
               await productVariantsService.uploadImages(variant.id, imageFiles);
             }
 
-            // Delete images marked for deletion
+            // Eliminar imágenes marcadas
             if (variant.imagesToDelete && variant.imagesToDelete.length > 0) {
-              console.log(`Deleting ${variant.imagesToDelete.length} images from variant ${variant.id}`);
               for (const imageId of variant.imagesToDelete) {
                 await productVariantsService.deleteImage(variant.id, imageId);
               }
@@ -529,28 +548,15 @@ export default function EditProductPage() {
           }
         }
       } else {
-        // Simple mode: update the single variant
+        // Simple mode: manejar imágenes de la variante única
         const defaultVariant = product.variants?.[0];
         if (defaultVariant?.id) {
-          const attributeValueIds = Object.values(simpleVariant.attributeAssignments);
-          await productVariantsService.update(defaultVariant.id, {
-            sku: simpleVariant.sku,
-            barcode: simpleVariant.barcode || undefined,
-            price: simpleVariant.price,
-            cost: simpleVariant.cost,
-            minStock: simpleVariant.minStock || 0,
-            maxStock: simpleVariant.maxStock || undefined,
-            attributeValueIds: attributeValueIds.length > 0 ? attributeValueIds : undefined,
-          });
-
-          // Upload new images
           const newImages = simpleVariantImages.filter((img) => img.file);
           if (newImages.length > 0) {
             const imageFiles = newImages.map((img) => img.file!);
             await productVariantsService.uploadImages(defaultVariant.id, imageFiles);
           }
 
-          // Delete images marked for deletion
           if (simpleVariantImagesToDelete.length > 0) {
             for (const imageId of simpleVariantImagesToDelete) {
               await productVariantsService.deleteImage(defaultVariant.id, imageId);
@@ -946,227 +952,227 @@ export default function EditProductPage() {
                   Agregar Variante
                 </Button>
 
-            {errors.variants && <p className="text-red-500 text-xs">{errors.variants}</p>}
+                {errors.variants && <p className="text-red-500 text-xs">{errors.variants}</p>}
 
-            {variants.length > 0 && (
-              <div className="mt-6 space-y-4 max-h-[500px] overflow-y-auto">
-                <h3 className="font-semibold text-sm">Variantes ({variants.length})</h3>
-                {variants.map((variant, index) => (
-                  <div
-                    key={index}
-                    className="border border-gray-200 dark:border-gray-600 rounded-md p-4 space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium text-sm">
-                        Variante {index + 1}
-                        {variant.name ? ` - ${variant.name}` : ''}
-                      </p>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeVariant(index)}
-                        className="text-red-500 hover:text-red-700"
+                {variants.length > 0 && (
+                  <div className="mt-6 space-y-4 max-h-[500px] overflow-y-auto">
+                    <h3 className="font-semibold text-sm">Variantes ({variants.length})</h3>
+                    {variants.map((variant, index) => (
+                      <div
+                        key={index}
+                        className="border border-gray-200 dark:border-gray-600 rounded-md p-4 space-y-3"
                       >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium text-sm">
+                            Variante {index + 1}
+                            {variant.name ? ` - ${variant.name}` : ''}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeVariant(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
 
-                    {/* Basic Fields */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs">
-                          SKU <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          value={variant.sku}
-                          onChange={(e) => updateVariant(index, 'sku', e.target.value)}
-                          className="mt-1 h-8 text-sm"
-                        />
-                      </div>
-
-                      <div>
-                        <Label className="text-xs">Código de Barras</Label>
-                        <Input
-                          value={variant.barcode || ''}
-                          onChange={(e) => updateVariant(index, 'barcode', e.target.value)}
-                          className="mt-1 h-8 text-sm"
-                          placeholder="Opcional"
-                        />
-                      </div>
-
-                      <div>
-                        <Label className="text-xs">Nombre Variante</Label>
-                        <Input
-                          value={variant.name || ''}
-                          onChange={(e) => updateVariant(index, 'name', e.target.value)}
-                          className="mt-1 h-8 text-sm"
-                          placeholder="Ej: Rojo - XL"
-                        />
-                      </div>
-
-                      <div>
-                        <Label className="text-xs">
-                          Precio <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={variant.price?.toString() || ''}
-                          onChange={(e) =>
-                            updateVariant(
-                              index,
-                              'price',
-                              e.target.value === '' ? undefined : Number(e.target.value)
-                            )
-                          }
-                          className="mt-1 h-8 text-sm"
-                          placeholder="0.00"
-                        />
-                      </div>
-
-                      <div>
-                        <Label className="text-xs">Costo</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={variant.cost?.toString() || ''}
-                          onChange={(e) =>
-                            updateVariant(
-                              index,
-                              'cost',
-                              e.target.value === '' ? undefined : Number(e.target.value)
-                            )
-                          }
-                          className="mt-1 h-8 text-sm"
-                          placeholder="0.00"
-                        />
-                      </div>
-
-                      <div>
-                        <Label className="text-xs">Stock Mínimo</Label>
-                        <Input
-                          type="number"
-                          value={variant.minStock?.toString() || '0'}
-                          onChange={(e) =>
-                            updateVariant(
-                              index,
-                              'minStock',
-                              e.target.value === '' ? 0 : Number(e.target.value)
-                            )
-                          }
-                          className="mt-1 h-8 text-sm"
-                          min="0"
-                        />
-                      </div>
-
-                      <div>
-                        <Label className="text-xs">Stock Máximo</Label>
-                        <Input
-                          type="number"
-                          value={variant.maxStock?.toString() || ''}
-                          onChange={(e) =>
-                            updateVariant(
-                              index,
-                              'maxStock',
-                              e.target.value === '' ? undefined : Number(e.target.value)
-                            )
-                          }
-                          className="mt-1 h-8 text-sm"
-                          min="0"
-                          placeholder="Opcional"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Attribute Assignments */}
-                    {attributes.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                        <Label className="text-xs font-semibold mb-2 block">
-                          Atributos de la Variante
-                        </Label>
+                        {/* Basic Fields */}
                         <div className="grid grid-cols-2 gap-3">
-                          {attributes.map((attr) => (
-                            <div key={attr.id}>
-                              <Label className="text-xs">{attr.displayName}</Label>
-                              <Select
-                                value={
-                                  variant.attributeAssignments[attr.id]?.toString() || 'none'
-                                }
-                                onValueChange={(value) =>
-                                  updateVariantAttribute(
-                                    index,
-                                    attr.id,
-                                    value === 'none' ? null : Number(value)
-                                  )
-                                }
-                              >
-                                <SelectTrigger className="mt-1 h-8 text-sm">
-                                  <SelectValue placeholder="Seleccione..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="none">
-                                    <span className="text-gray-400">Sin asignar</span>
-                                  </SelectItem>
-                                  {attr.values?.map((value) => (
-                                    <SelectItem key={value.id} value={value.id.toString()}>
-                                      {value.displayName}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                          <div>
+                            <Label className="text-xs">
+                              SKU <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              value={variant.sku}
+                              onChange={(e) => updateVariant(index, 'sku', e.target.value)}
+                              className="mt-1 h-8 text-sm"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs">Código de Barras</Label>
+                            <Input
+                              value={variant.barcode || ''}
+                              onChange={(e) => updateVariant(index, 'barcode', e.target.value)}
+                              className="mt-1 h-8 text-sm"
+                              placeholder="Opcional"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs">Nombre Variante</Label>
+                            <Input
+                              value={variant.name || ''}
+                              onChange={(e) => updateVariant(index, 'name', e.target.value)}
+                              className="mt-1 h-8 text-sm"
+                              placeholder="Ej: Rojo - XL"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs">
+                              Precio <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={variant.price?.toString() || ''}
+                              onChange={(e) =>
+                                updateVariant(
+                                  index,
+                                  'price',
+                                  e.target.value === '' ? undefined : Number(e.target.value)
+                                )
+                              }
+                              className="mt-1 h-8 text-sm"
+                              placeholder="0.00"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs">Costo</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={variant.cost?.toString() || ''}
+                              onChange={(e) =>
+                                updateVariant(
+                                  index,
+                                  'cost',
+                                  e.target.value === '' ? undefined : Number(e.target.value)
+                                )
+                              }
+                              className="mt-1 h-8 text-sm"
+                              placeholder="0.00"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs">Stock Mínimo</Label>
+                            <Input
+                              type="number"
+                              value={variant.minStock?.toString() || '0'}
+                              onChange={(e) =>
+                                updateVariant(
+                                  index,
+                                  'minStock',
+                                  e.target.value === '' ? 0 : Number(e.target.value)
+                                )
+                              }
+                              className="mt-1 h-8 text-sm"
+                              min="0"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs">Stock Máximo</Label>
+                            <Input
+                              type="number"
+                              value={variant.maxStock?.toString() || ''}
+                              onChange={(e) =>
+                                updateVariant(
+                                  index,
+                                  'maxStock',
+                                  e.target.value === '' ? undefined : Number(e.target.value)
+                                )
+                              }
+                              className="mt-1 h-8 text-sm"
+                              min="0"
+                              placeholder="Opcional"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Attribute Assignments */}
+                        {attributes.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                            <Label className="text-xs font-semibold mb-2 block">
+                              Atributos de la Variante
+                            </Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              {attributes.map((attr) => (
+                                <div key={attr.id}>
+                                  <Label className="text-xs">{attr.displayName}</Label>
+                                  <Select
+                                    value={
+                                      variant.attributeAssignments[attr.id]?.toString() || 'none'
+                                    }
+                                    onValueChange={(value) =>
+                                      updateVariantAttribute(
+                                        index,
+                                        attr.id,
+                                        value === 'none' ? null : Number(value)
+                                      )
+                                    }
+                                  >
+                                    <SelectTrigger className="mt-1 h-8 text-sm">
+                                      <SelectValue placeholder="Seleccione..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="none">
+                                        <span className="text-gray-400">Sin asignar</span>
+                                      </SelectItem>
+                                      {attr.values?.map((value) => (
+                                        <SelectItem key={value.id} value={value.id.toString()}>
+                                          {value.displayName}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              ))}
                             </div>
-                          ))}
+                          </div>
+                        )}
+
+                        {/* Variant Images */}
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                          <Label className="text-xs font-semibold mb-2 block">
+                            Imágenes de la Variante
+                          </Label>
+
+                          <div className="flex flex-wrap gap-3 mb-3">
+                            {variant.images.map((img, imgIdx) => (
+                              <div
+                                key={imgIdx}
+                                className="relative w-20 h-20 rounded border border-gray-300 dark:border-gray-600 overflow-hidden group"
+                              >
+                                <Image
+                                  src={img.preview}
+                                  alt={`Variant ${index + 1} image ${imgIdx + 1}`}
+                                  fill
+                                  className="object-cover"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeVariantImage(index, imgIdx)}
+                                  className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <XIcon className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                            <label className="w-20 h-20 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded cursor-pointer hover:border-primary transition-colors">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="hidden"
+                                onChange={(e) => handleVariantImageUpload(index, e.target.files)}
+                              />
+                              <ImageIcon className="h-8 w-8 text-gray-400" />
+                            </label>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Agregue imágenes específicas para esta variante
+                          </p>
                         </div>
                       </div>
-                    )}
-
-                    {/* Variant Images */}
-                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                      <Label className="text-xs font-semibold mb-2 block">
-                        Imágenes de la Variante
-                      </Label>
-
-                      <div className="flex flex-wrap gap-3 mb-3">
-                        {variant.images.map((img, imgIdx) => (
-                          <div
-                            key={imgIdx}
-                            className="relative w-20 h-20 rounded border border-gray-300 dark:border-gray-600 overflow-hidden group"
-                          >
-                            <Image
-                              src={img.preview}
-                              alt={`Variant ${index + 1} image ${imgIdx + 1}`}
-                              fill
-                              className="object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeVariantImage(index, imgIdx)}
-                              className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <XIcon className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ))}
-                        <label className="w-20 h-20 flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded cursor-pointer hover:border-primary transition-colors">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            className="hidden"
-                            onChange={(e) => handleVariantImageUpload(index, e.target.files)}
-                          />
-                          <ImageIcon className="h-8 w-8 text-gray-400" />
-                        </label>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        Agregue imágenes específicas para esta variante
-                      </p>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                )}
               </div>
             )}
           </div>

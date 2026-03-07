@@ -2,7 +2,7 @@
 
 import { PayPalButtons, PayPalScriptProvider, usePayPalScriptReducer } from '@paypal/react-paypal-js';
 import { useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { Loader2, CreditCard } from 'lucide-react';
 import { getAuthToken } from '@/lib/services/apiService';
 

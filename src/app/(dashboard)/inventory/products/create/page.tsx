@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeftIcon, SaveIcon, PlusIcon, TrashIcon, ImageIcon, XIcon } from 'lucide-react';
 import Image from 'next/image';
+import { toast } from 'sonner';
 import { productsService } from '@/lib/services/productsService';
 import { productCategoriesService } from '@/lib/services/productCategoriesService';
 import { productAttributesService } from '@/lib/services/product-attributes.service';
@@ -114,9 +115,10 @@ export default function CreateProductPage() {
         ]);
         setCategories(categoriesData);
         setAttributes(attributesData);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading reference data:', error);
-        alert('Ocurrió un error al cargar los datos de referencia.');
+        const errorMessage = error?.message || 'Ocurrió un error al cargar los datos de referencia.';
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -273,9 +275,9 @@ export default function CreateProductPage() {
       prev.map((variant, i) =>
         i === index
           ? {
-              ...variant,
-              [field]: value === '' ? undefined : value,
-            }
+            ...variant,
+            [field]: value === '' ? undefined : value,
+          }
           : variant
       )
     );
@@ -365,76 +367,76 @@ export default function CreateProductPage() {
     try {
       setSaving(true);
 
-      // Step 1: Create the product
-      const createdProduct = await productsService.create(formData);
-
-      // Step 2: Create variant(s)
-      if (formData.hasVariants) {
-        // Multiple variants
-        for (let i = 0; i < variants.length; i++) {
-          const variant = variants[i];
-
-          // Extract attributeValueIds from attributeAssignments
+      // Preparar variantes inline para enviar junto con el producto
+      const variantsInline = formData.hasVariants
+        ? variants.map((variant, i) => {
           const attributeValueIds = Object.values(variant.attributeAssignments);
-
-          // Fix SKU if it was generated with empty product code (starts with "-")
           let finalSku = variant.sku;
           if (finalSku.startsWith('-')) {
             finalSku = `${formData.code}-${i + 1}`;
           }
-
-          const variantDto: CreateProductVariantDto = {
-            productId: createdProduct.id,
+          return {
             sku: finalSku,
             barcode: variant.barcode || undefined,
             name: variant.name || undefined,
-            price: variant.price,
-            cost: variant.cost,
+            price: variant.price || 0,
+            cost: variant.cost || 0,
             minStock: variant.minStock || 0,
             maxStock: variant.maxStock || undefined,
             isDefault: i === 0,
             attributeValueIds: attributeValueIds.length > 0 ? attributeValueIds : undefined,
           };
+        })
+        : [
+          {
+            sku: simpleVariant.sku,
+            barcode: simpleVariant.barcode || undefined,
+            price: simpleVariant.price || 0,
+            cost: simpleVariant.cost || 0,
+            minStock: simpleVariant.minStock || 0,
+            maxStock: simpleVariant.maxStock || undefined,
+            isDefault: true,
+            attributeValueIds:
+              Object.keys(simpleVariant.attributeAssignments).length > 0
+                ? Object.values(simpleVariant.attributeAssignments)
+                : undefined,
+          },
+        ];
 
-          // Create variant
-          const createdVariant = await productVariantsService.create(variantDto);
+      // Crear producto con variantes en una sola transacción
+      const createdProduct = await productsService.create({
+        ...formData,
+        variants: variantsInline,
+      });
 
-          // Upload variant images if any
-          if (variant.images.length > 0) {
-            const imageFiles = variant.images.map(img => img.file);
-            await productVariantsService.uploadImages(createdVariant.id, imageFiles);
+      // Subir imágenes de variantes después de la creación
+      if (createdProduct.variants && createdProduct.variants.length > 0) {
+        if (formData.hasVariants) {
+          // Subir imágenes para cada variante múltiple
+          for (let i = 0; i < variants.length; i++) {
+            const variant = variants[i];
+            const createdVariant = createdProduct.variants[i];
+            if (variant.images.length > 0 && createdVariant) {
+              const imageFiles = variant.images.map(img => img.file);
+              await productVariantsService.uploadImages(createdVariant.id, imageFiles);
+            }
           }
-        }
-      } else {
-        // Single variant (simple mode)
-        const attributeValueIds = Object.values(simpleVariant.attributeAssignments);
-
-        const variantDto: CreateProductVariantDto = {
-          productId: createdProduct.id,
-          sku: simpleVariant.sku,
-          barcode: simpleVariant.barcode || undefined,
-          price: simpleVariant.price,
-          cost: simpleVariant.cost,
-          minStock: simpleVariant.minStock || 0,
-          maxStock: simpleVariant.maxStock || undefined,
-          isDefault: true,
-          attributeValueIds: attributeValueIds.length > 0 ? attributeValueIds : undefined,
-        };
-
-        const createdVariant = await productVariantsService.create(variantDto);
-
-        // Upload variant images if any
-        if (simpleVariantImages.length > 0) {
-          const imageFiles = simpleVariantImages.map(img => img.file);
-          await productVariantsService.uploadImages(createdVariant.id, imageFiles);
+        } else {
+          // Subir imágenes para variante simple
+          if (simpleVariantImages.length > 0 && createdProduct.variants[0]) {
+            const imageFiles = simpleVariantImages.map(img => img.file);
+            await productVariantsService.uploadImages(createdProduct.variants[0].id, imageFiles);
+          }
         }
       }
 
       console.log('Product and variants created successfully');
+      toast.success('Producto creado exitosamente');
       router.push('/inventory/products');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating product:', error);
-      alert('Ocurrió un error al crear el producto.');
+      const errorMessage = error?.message || 'Ocurrió un error al crear el producto.';
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }

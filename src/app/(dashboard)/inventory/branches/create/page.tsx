@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { BranchService, WarehouseService } from '@/lib/services/inventoryService';
 import { CreateBranchDto, Warehouse } from '@/lib/types/inventory';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { ArrowLeftIcon, SaveIcon, PackageIcon, XIcon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -113,9 +113,18 @@ export default function CreateBranchPage() {
 
       toast.success('Sucursal creada exitosamente');
       router.push('/inventory/branches');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating branch:', error);
-      toast.error('Error al crear la sucursal');
+      console.log('Error object:', {
+        message: error?.message,
+        statusCode: error?.statusCode,
+        data: error?.data
+      });
+
+      // El error puede venir directamente del message o estar anidado
+      const errorMessage = error?.message || 'Error al crear la sucursal';
+      console.log('Showing toast with message:', errorMessage);
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -149,93 +158,93 @@ export default function CreateBranchPage() {
                 <CardTitle>Información de la Sucursal</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label htmlFor="code" className="text-sm font-medium">
-                  Código <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  id="code"
-                  name="code"
-                  value={formData.code}
-                  onChange={handleInputChange}
-                  placeholder="Ej: SUC-001"
-                  required
-                />
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label htmlFor="code" className="text-sm font-medium">
+                      Código <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      id="code"
+                      name="code"
+                      value={formData.code}
+                      onChange={handleInputChange}
+                      placeholder="Ej: SUC-001"
+                      required
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium">
-                  Nombre <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Nombre de la sucursal"
-                  required
-                />
-              </div>
-            </div>
+                  <div className="space-y-2">
+                    <label htmlFor="name" className="text-sm font-medium">
+                      Nombre <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="Nombre de la sucursal"
+                      required
+                    />
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label htmlFor="phone" className="text-sm font-medium">
-                  Teléfono
-                </label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={formData.phone || ''}
-                  onChange={handleInputChange}
-                  placeholder="(809) 555-1234"
-                  maxLength={14}
-                />
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label htmlFor="phone" className="text-sm font-medium">
+                      Teléfono
+                    </label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={formData.phone || ''}
+                      onChange={handleInputChange}
+                      placeholder="(809) 555-1234"
+                      maxLength={14}
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email || ''}
-                  onChange={handleInputChange}
-                  placeholder="sucursal@empresa.com"
-                />
-              </div>
-            </div>
+                  <div className="space-y-2">
+                    <label htmlFor="email" className="text-sm font-medium">
+                      Email
+                    </label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email || ''}
+                      onChange={handleInputChange}
+                      placeholder="sucursal@empresa.com"
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <label htmlFor="address" className="text-sm font-medium">
-                Dirección
-              </label>
-              <Input
-                id="address"
-                name="address"
-                value={formData.address || ''}
-                onChange={handleInputChange}
-                placeholder="Dirección de la sucursal"
-              />
-            </div>
+                <div className="space-y-2">
+                  <label htmlFor="address" className="text-sm font-medium">
+                    Dirección
+                  </label>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={formData.address || ''}
+                    onChange={handleInputChange}
+                    placeholder="Dirección de la sucursal"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                Descripción
-              </label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description || ''}
-                onChange={handleInputChange}
-                placeholder="Descripción de la sucursal"
-                rows={4}
-              />
-            </div>
+                <div className="space-y-2">
+                  <label htmlFor="description" className="text-sm font-medium">
+                    Descripción
+                  </label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formData.description || ''}
+                    onChange={handleInputChange}
+                    placeholder="Descripción de la sucursal"
+                    rows={4}
+                  />
+                </div>
 
               </CardContent>
             </Card>
