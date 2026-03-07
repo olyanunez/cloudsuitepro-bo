@@ -3,8 +3,18 @@
 import { Card } from '@/components/ui/card';
 import { Target, Eye, Heart, Award, Users, Globe } from 'lucide-react';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 export function AboutSection() {
+  const [activeCompanies, setActiveCompanies] = useState<number>(0);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/stats/active-companies`)
+      .then(res => res.json())
+      .then(data => setActiveCompanies(data.count))
+      .catch(err => console.error('Error fetching active companies:', err));
+  }, []);
+
   return (
     <section id="nosotros" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -77,7 +87,7 @@ export function AboutSection() {
                   incluye punto de venta, facturación electrónica, reportes avanzados y mucho más.
                 </p>
                 <p>
-                  Hoy, más de 500 empresas confían en CloudSuite Pro para gestionar sus operaciones
+                  Hoy, más de {activeCompanies > 0 ? activeCompanies : '...'} empresas confían en CloudSuite Pro para gestionar sus operaciones
                   diarias, procesando miles de transacciones y ayudando a nuestros clientes a
                   tomar decisiones más inteligentes basadas en datos reales.
                 </p>
@@ -137,11 +147,11 @@ export function AboutSection() {
         {/* Team Stats */}
         <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div>
-            <p className="text-4xl font-bold text-yellow-500 mb-2">500+</p>
+            <p className="text-4xl font-bold text-yellow-500 mb-2">{(activeCompanies ? activeCompanies + "+" : false) || '...'}</p>
             <p className="text-gray-600">Empresas Activas</p>
           </div>
           <div>
-            <p className="text-4xl font-bold text-yellow-500 mb-2">2K+</p>
+            <p className="text-4xl font-bold text-yellow-500 mb-2">30+</p>
             <p className="text-gray-600">Usuarios Diarios</p>
           </div>
           <div>

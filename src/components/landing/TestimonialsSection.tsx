@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/card';
 import { Star, Quote } from 'lucide-react';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 interface Testimonial {
   name: string;
@@ -65,6 +66,15 @@ const testimonials: Testimonial[] = [
 ];
 
 export function TestimonialsSection() {
+  const [activeCompanies, setActiveCompanies] = useState<number>(0);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/stats/active-companies`)
+      .then(res => res.json())
+      .then(data => setActiveCompanies(data.count))
+      .catch(err => console.error('Error fetching active companies:', err));
+  }, []);
+
   return (
     <section id="testimonios" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-yellow-50">
       <div className="max-w-7xl mx-auto">
@@ -74,7 +84,7 @@ export function TestimonialsSection() {
             Lo que dicen nuestros clientes
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Más de 500 empresas confían en CloudSuite Pro para gestionar sus operaciones diarias
+            {activeCompanies > 0 ? `Más de ${activeCompanies} empresas confían en CloudSuite Pro` : 'Empresas confían en CloudSuite Pro'} para gestionar sus operaciones diarias
           </p>
         </div>
 
@@ -120,7 +130,7 @@ export function TestimonialsSection() {
         <div className="bg-gradient-to-br from-yellow-400 to-orange-400 rounded-2xl p-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center text-white">
             <div>
-              <p className="text-5xl font-bold mb-2">500+</p>
+              <p className="text-5xl font-bold mb-2">{(activeCompanies ? activeCompanies + "+" : false) || '...'}</p>
               <p className="text-lg opacity-90">Empresas Activas</p>
             </div>
             <div>

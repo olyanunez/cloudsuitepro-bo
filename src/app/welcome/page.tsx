@@ -17,8 +17,18 @@ import {
 } from 'lucide-react';
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
 import { Footer } from '@/components/landing/Footer';
+import { useEffect, useState } from 'react';
 
 export default function Welcome() {
+  const [activeCompanies, setActiveCompanies] = useState<number>(0);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/stats/active-companies`)
+      .then(res => res.json())
+      .then(data => setActiveCompanies(data.count))
+      .catch(err => console.error('Error fetching active companies:', err));
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navbar */}
@@ -224,7 +234,7 @@ export default function Welcome() {
                 </p>
                 <div className="grid grid-cols-3 gap-6 mb-8">
                   <div>
-                    <p className="text-4xl font-bold">500+</p>
+                    <p className="text-4xl font-bold">{(activeCompanies ? activeCompanies + "+" : false) || '...'}</p>
                     <p className="text-sm">Empresas</p>
                   </div>
                   <div>
