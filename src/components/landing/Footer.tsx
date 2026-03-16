@@ -119,17 +119,12 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <a href="https://docs.cloudsuitepro.online/" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
                   Documentación
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <a href="/contacto" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
                   Centro de Ayuda
                 </a>
               </li>
