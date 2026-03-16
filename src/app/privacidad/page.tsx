@@ -150,7 +150,7 @@ export default function PrivacyPage() {
               </p>
               <ul className="list-none mb-4 space-y-2">
                 <li><strong>Email:</strong> cloudsuitep@gmail.com</li>
-                <li><strong>Teléfono:</strong> +1 (809) 555-0100</li>
+                <li><strong>Teléfono:</strong> +1 (829) 657-1774</li>
                 <li><strong>Dirección:</strong> Av. Winston Churchill, Santo Domingo, RD</li>
               </ul>
             </section>
