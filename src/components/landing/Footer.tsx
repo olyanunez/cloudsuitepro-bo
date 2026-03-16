@@ -119,17 +119,12 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <a href="https://docs.cloudsuitepro.online/" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
                   Documentación
                 </a>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <a href="/contacto" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
                   Centro de Ayuda
                 </a>
               </li>
@@ -175,15 +170,12 @@ export function Footer() {
 
             {/* Legal Links */}
             <div className="flex space-x-6">
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+              <Link href="/terminos" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
                 Términos de Servicio
-              </a>
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+              </Link>
+              <Link href="/privacidad" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
                 Política de Privacidad
-              </a>
-              <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
-                Cookies
-              </a>
+              </Link>
             </div>
           </div>
         </div>
