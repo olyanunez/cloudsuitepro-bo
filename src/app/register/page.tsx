@@ -45,6 +45,8 @@ function RegisterContent() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [activeCompanies, setActiveCompanies] = useState<number>(0);
+
   // Definición de los pasos
   const steps = [
     {
@@ -128,6 +130,13 @@ function RegisterContent() {
         });
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/stats/active-companies`)
+      .then(res => res.json())
+      .then(data => setActiveCompanies(data.count))
+      .catch(err => console.error('Error fetching active companies:', err));
+  }, []);
 
   // Función para volver al paso anterior
   const handlePrevStep = () => {
@@ -514,7 +523,7 @@ function RegisterContent() {
           <div className="mt-12 pt-8 border-t border-gray-700">
             <div className="grid grid-cols-3 gap-8 text-center">
               <div>
-                <p className="text-3xl font-bold text-yellow-400">500+</p>
+                <p className="text-3xl font-bold text-yellow-400">{(activeCompanies ? activeCompanies + "+" : false) || '...'}</p>
                 <p className="text-sm text-gray-400 mt-1">Empresas confían</p>
               </div>
               <div>

@@ -138,8 +138,8 @@ export function Footer() {
               <li className="flex items-start space-x-3 text-sm">
                 <Mail className="h-5 w-5 text-yellow-400 flex-shrink-0" />
                 <div className="text-gray-400">
-                  <p>contacto@cloudsuitepro.online</p>
-                  <p>soporte@cloudsuitepro.online</p>
+                  <p>cloudsuitep@gmail.com</p>
+                  <p>cloudsuitep@gmail.com</p>
                 </div>
               </li>
               <li className="flex items-start space-x-3 text-sm">
