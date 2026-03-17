@@ -24,6 +24,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import ProtectedPage from '@/components/ProtectedPage';
+import { FeatureGate } from '@/components/subscription/FeatureGate';
 
 interface Supplier {
   id: number;
@@ -363,6 +365,8 @@ export default function CreatePurchaseOrderPage() {
   }
 
   return (
+    <ProtectedPage screenCode="PURCHASE_ORDERS" requiredPermission="CREATE">
+      <FeatureGate feature="hasPurchaseOrders">
     <div className="container mx-auto py-8">
       <div className="mb-6 flex items-center">
         <Link href="/purchase-orders">
@@ -845,5 +849,7 @@ export default function CreatePurchaseOrderPage() {
         </div>
       </form>
     </div>
+      </FeatureGate>
+    </ProtectedPage>
   );
 }

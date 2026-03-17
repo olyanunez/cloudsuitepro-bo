@@ -11,6 +11,7 @@ import { PurchaseOrderService } from '@/lib/services/purchaseOrderService';
 import { PurchaseOrder, PurchaseOrderStatus } from '@/lib/types/purchase-order';
 import { usePermissions } from '@/lib/hooks/usePermissions';
 import ProtectedPage from '@/components/ProtectedPage';
+import { FeatureGate } from '@/components/subscription/FeatureGate';
 
 // Estilos para impresión
 const printStyles = `
@@ -152,6 +153,7 @@ export default function PurchaseOrderDetailPage() {
 
   return (
     <ProtectedPage screenCode="PURCHASE_ORDERS" requiredPermission="VIEW">
+      <FeatureGate feature="hasPurchaseOrders">
       <style>{printStyles}</style>
 
       {/* Header - No imprimible */}
@@ -642,6 +644,7 @@ export default function PurchaseOrderDetailPage() {
           <p className="mt-1">Generado el {new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
         </div>
       </div>
+      </FeatureGate>
     </ProtectedPage>
   );
 }

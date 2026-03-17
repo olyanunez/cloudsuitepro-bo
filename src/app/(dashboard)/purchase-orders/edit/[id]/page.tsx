@@ -18,6 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import ProtectedPage from '@/components/ProtectedPage';
+import { FeatureGate } from '@/components/subscription/FeatureGate';
 
 interface Supplier {
   id: number;
@@ -377,6 +379,8 @@ export default function EditPurchaseOrderPage() {
   }
 
   return (
+    <ProtectedPage screenCode="PURCHASE_ORDERS" requiredPermission="UPDATE">
+      <FeatureGate feature="hasPurchaseOrders">
     <div className="container mx-auto py-8">
       <div className="mb-6 flex items-center">
         <Link href={`/purchase-orders/${id}`}>
@@ -734,5 +738,7 @@ export default function EditPurchaseOrderPage() {
         </div>
       </form>
     </div>
+      </FeatureGate>
+    </ProtectedPage>
   );
 }

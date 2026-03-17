@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { useBranch } from '@/lib/contexts/BranchContext';
 import { usePermissions } from '@/lib/hooks/usePermissions';
+import { useSubscription } from '@/lib/hooks/useSubscription';
 import { DashboardService } from '@/lib/services/dashboardService';
 import { CashSessionService } from '@/lib/services/cashSessionService';
 import UserPreferencesService from '@/lib/services/userPreferencesService';
@@ -29,6 +30,7 @@ import ProtectedPage from '@/components/ProtectedPage';
 export default function DashboardPage() {
   const pathname = usePathname();
   const { activeBranchId } = useBranch();
+  const { subscription, loading: subscriptionLoading } = useSubscription();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastPath, setLastPath] = useState('');
@@ -39,6 +41,18 @@ export default function DashboardPage() {
   const { canView: canViewCustomers } = usePermissions('CUSTOMERS');
   const { canView: canViewCashSessions } = usePermissions('CASH_SESSIONS');
   const { canView: canViewNcf } = usePermissions('NCF');
+
+  // Función para verificar si el plan tiene un feature específico
+  const hasFeature = useCallback((featureName: string): boolean => {
+    if (!subscription?.plan) return false; // Si no hay suscripción cargada, NO mostrar por defecto
+    return (subscription.plan as any)[featureName] === true;
+  }, [subscription]);
+
+  // Combinar permisos con features del plan
+  const showInventory = canViewInventory && hasFeature('hasInventory');
+  const showBatchTracking = canViewInventory && hasFeature('hasBatchTracking');
+  const showNcf = canViewNcf && hasFeature('hasNCF');
+  const showDgiiReports = canViewNcf && hasFeature('hasDGIIReports');
 
   // Estados para datos
   const [salesStats, setSalesStats] = useState<any>(null);
@@ -102,14 +116,17 @@ export default function DashboardPage() {
         );
       }
 
-      // Solo cargar datos de inventario si tiene permiso
-      if (canViewInventory) {
+      // Solo cargar datos de inventario si tiene permiso y feature
+      if (showInventory) {
         inventoryIndex = promises.length;
         promises.push(DashboardService.getStockValuation());
 
         lowStockIndex = promises.length;
         promises.push(DashboardService.getLowStockReport());
+      }
 
+      // Solo cargar lotes si tiene el feature de batch tracking
+      if (showBatchTracking) {
         batchesIndex = promises.length;
         promises.push(BatchService.getExpiringBatches(30).catch(() => []));
       }
@@ -126,8 +143,8 @@ export default function DashboardPage() {
         );
       }
 
-      // Solo cargar datos de NCF si tiene permiso
-      if (canViewNcf) {
+      // Solo cargar datos de NCF si tiene permiso y feature
+      if (showNcf) {
         ncfStatsIndex = promises.length;
         promises.push(ncfService.getDashboardStats().catch(() => null));
 
@@ -159,11 +176,14 @@ export default function DashboardPage() {
     }
   };
 
-  // Cargar datos cuando estamos en el dashboard
+  // Cargar datos cuando estamos en el dashboard y la suscripción está cargada
   useEffect(() => {
+    // Esperar a que la suscripción esté cargada antes de hacer llamadas a la API
+    if (subscriptionLoading) return;
+
     console.log('✅ Dashboard page active - Loading data...', { lastPath, pathname });
     loadDashboardData();
-  }, [activeBranchId, canViewInvoices, canViewInventory, canViewCashSessions, canViewNcf]);
+  }, [activeBranchId, canViewInvoices, showInventory, showBatchTracking, canViewCashSessions, showNcf, subscriptionLoading]);
 
 
   // Cargar preferencias del usuario
@@ -201,7 +221,7 @@ export default function DashboardPage() {
     return sum + diff + diffVouchers;
   }, 0);
 
-  if (loading) {
+  if (loading || subscriptionLoading) {
     return (
       <div className="container mx-auto py-8">
         <div className="flex items-center justify-center h-96">
@@ -251,21 +271,19 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Sección de Inventario - Solo si tiene permiso de ver inventario */}
-        {canViewInventory && (
-          <>
-            <InventorySection
-              totalValue={inventoryData?.summary?.totalValue || 0}
-              lowStockCount={lowStockData?.count || 0}
-              totalProducts={inventoryData?.summary?.totalItems || 0}
-              lowStockItems={lowStockData?.items || []}
-            />
+        {/* Sección de Inventario - Solo si tiene permiso y feature de inventario */}
+        {showInventory && (
+          <InventorySection
+            totalValue={inventoryData?.summary?.totalValue || 0}
+            lowStockCount={lowStockData?.count || 0}
+            totalProducts={inventoryData?.summary?.totalItems || 0}
+            lowStockItems={lowStockData?.items || []}
+          />
+        )}
 
-            {/* Widget de Lotes por Vencer */}
-            {
-              <BatchExpirationWidget expiringBatches={expiringBatches} />
-            }
-          </>
+        {/* Widget de Lotes por Vencer - Solo si tiene feature de batch tracking */}
+        {showBatchTracking && (
+          <BatchExpirationWidget expiringBatches={expiringBatches} />
         )}
 
         {/* Sesiones de Caja y Top Clientes */}
@@ -294,8 +312,8 @@ export default function DashboardPage() {
           {canViewCustomers && <TopCustomersWidget />}
         </div>
 
-        {/* Sección de NCF / Cumplimiento Fiscal - Solo si tiene permiso */}
-        {canViewNcf && (
+        {/* Sección de NCF / Cumplimiento Fiscal - Solo si tiene permiso y feature */}
+        {showNcf && (
           <>
             <div className="grid gap-4 md:grid-cols-3">
               <NcfUsageChart data={ncfUsageData || []} />

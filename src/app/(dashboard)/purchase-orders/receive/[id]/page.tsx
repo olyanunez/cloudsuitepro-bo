@@ -15,6 +15,7 @@ import {
   ReceivePurchaseOrderItem
 } from '@/lib/types/purchase-order';
 import ProtectedPage from '@/components/ProtectedPage';
+import { FeatureGate } from '@/components/subscription/FeatureGate';
 
 export default function ReceivePurchaseOrderPage() {
   const router = useRouter();
@@ -202,6 +203,7 @@ export default function ReceivePurchaseOrderPage() {
 
   return (
     <ProtectedPage screenCode="PURCHASE_ORDERS" requiredPermission="UPDATE">
+      <FeatureGate feature="hasPurchaseOrders">
       <div className="container mx-auto py-8">
         <div className="mb-6 flex items-center">
           <Link href={`/purchase-orders/${id}`}>
@@ -464,6 +466,7 @@ export default function ReceivePurchaseOrderPage() {
           </div>
         </form>
       </div>
+      </FeatureGate>
     </ProtectedPage>
   );
 }

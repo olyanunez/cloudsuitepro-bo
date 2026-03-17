@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Loader2, CreditCard, Calendar, AlertCircle, CheckCircle2, XCircle, Users, Package, Building2, Warehouse, Check } from 'lucide-react';
+import { Loader2, CreditCard, Calendar, AlertCircle, CheckCircle2, XCircle, Users, Package, Building2, Warehouse, Check, FileText, HardDrive } from 'lucide-react';
 import { SubscriptionService } from '@/lib/services/subscriptionService';
 import { Subscription, Plan, UsageStats } from '@/lib/types/subscription';
 import { toast } from 'sonner';
@@ -369,6 +369,54 @@ export default function SubscriptionPage() {
                 />
               )}
             </div>
+
+            {/* Secuencias NCF - Solo mostrar si el plan tiene NCF */}
+            {subscription.plan.hasNCF && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm font-medium">Secuencias NCF</span>
+                  </div>
+                  <span className="text-sm text-gray-600">
+                    {usageStats.activeNCFSequences || 0} / {subscription.currentMaxNCFSequences || '∞'}
+                  </span>
+                </div>
+                {subscription.currentMaxNCFSequences && (
+                  <Progress
+                    value={getUsagePercentage(usageStats.activeNCFSequences || 0, subscription.currentMaxNCFSequences)}
+                    className="h-2"
+                    indicatorClassName={getUsageColor(
+                      getUsagePercentage(usageStats.activeNCFSequences || 0, subscription.currentMaxNCFSequences)
+                    )}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Almacenamiento */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <HardDrive className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm font-medium">Almacenamiento</span>
+                </div>
+                <span className="text-sm text-gray-600">
+                  {usageStats.storageUsedGB >= 1
+                    ? `${usageStats.storageUsedGB.toFixed(2)} GB`
+                    : `${usageStats.storageUsedMB?.toFixed(2) || 0} MB`} / {subscription.currentMaxStorageGB ? `${subscription.currentMaxStorageGB} GB` : '∞'}
+                </span>
+              </div>
+              {subscription.currentMaxStorageGB && (
+                <Progress
+                  value={getUsagePercentage(usageStats.storageUsedGB || 0, subscription.currentMaxStorageGB)}
+                  className="h-2"
+                  indicatorClassName={getUsageColor(
+                    getUsagePercentage(usageStats.storageUsedGB || 0, subscription.currentMaxStorageGB)
+                  )}
+                />
+              )}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -455,16 +503,70 @@ export default function SubscriptionPage() {
                 <span>Facturación Electrónica (NCF)</span>
               </div>
             )}
+            {subscription.plan.hasAllNCFTypes && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Todos los Tipos de NCF</span>
+              </div>
+            )}
+            {subscription.plan.hasDGIIReports && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Reportes DGII (606, 607, 608)</span>
+              </div>
+            )}
+            {subscription.plan.hasAccountsPayable && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Cuentas por Pagar</span>
+              </div>
+            )}
+            {subscription.plan.hasFinancialReports && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Reportes Financieros</span>
+              </div>
+            )}
             {subscription.plan.hasAdvancedReports && (
               <div className="flex items-center space-x-2 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
                 <span>Reportes Avanzados</span>
               </div>
             )}
+            {subscription.plan.hasExport && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Exportación de Datos</span>
+              </div>
+            )}
+            {subscription.plan.hasCustomReports && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Reportes Personalizados</span>
+              </div>
+            )}
             {subscription.plan.hasAPIAccess && (
               <div className="flex items-center space-x-2 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
                 <span>Acceso API</span>
+              </div>
+            )}
+            {subscription.plan.hasWebhooks && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Webhooks</span>
+              </div>
+            )}
+            {subscription.plan.hasBasicReports && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Reportes Básicos</span>
+              </div>
+            )}
+            {subscription.plan.hasEmailSupport && (
+              <div className="flex items-center space-x-2 text-sm">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span>Soporte por Email</span>
               </div>
             )}
           </div>
@@ -537,6 +639,26 @@ export default function SubscriptionPage() {
                           {plan.maxBranches ? `${plan.maxBranches} sucursales` : 'Sucursales ilimitadas'}
                         </span>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <Warehouse className="h-4 w-4" />
+                        <span>
+                          {plan.maxWarehouses ? `${plan.maxWarehouses} almacenes` : 'Almacenes ilimitados'}
+                        </span>
+                      </div>
+                      {plan.hasNCF && (
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          <span>
+                            {plan.maxNCFSequences ? `${plan.maxNCFSequences} secuencias NCF` : 'Secuencias NCF ilimitadas'}
+                          </span>
+                        </div>
+                      )}
+                      {plan.maxStorageGB && (
+                        <div className="flex items-center gap-2">
+                          <HardDrive className="h-4 w-4" />
+                          <span>{plan.maxStorageGB} GB de almacenamiento</span>
+                        </div>
+                      )}
                       {plan.hasAPIAccess && (
                         <div className="flex items-center gap-2 text-green-600">
                           <CheckCircle2 className="h-4 w-4" />
@@ -547,6 +669,12 @@ export default function SubscriptionPage() {
                         <div className="flex items-center gap-2 text-green-600">
                           <CheckCircle2 className="h-4 w-4" />
                           <span>Contabilidad Completa</span>
+                        </div>
+                      )}
+                      {plan.hasNCF && (
+                        <div className="flex items-center gap-2 text-green-600">
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span>Facturación NCF</span>
                         </div>
                       )}
                     </div>
