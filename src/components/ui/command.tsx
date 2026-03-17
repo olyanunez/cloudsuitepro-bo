@@ -112,17 +112,28 @@ CommandSeparator.displayName = CommandPrimitive.Separator.displayName
 
 const CommandItem = React.forwardRef<
     React.ElementRef<typeof CommandPrimitive.Item>,
-    React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
->(({ className, ...props }, ref) => (
-    <CommandPrimitive.Item
-        ref={ref}
-        className={cn(
-            "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent hover:text-accent-foreground",
-            className
-        )}
-        {...props}
-    />
-))
+    React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item> & { onSelect?: (value: string) => void }
+>(({ className, onSelect, value, ...props }, ref) => {
+    const handleClick = React.useCallback(() => {
+        if (onSelect && value) {
+            onSelect(value)
+        }
+    }, [onSelect, value])
+
+    return (
+        <CommandPrimitive.Item
+            ref={ref}
+            value={value}
+            onSelect={onSelect}
+            onClick={handleClick}
+            className={cn(
+                "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-accent hover:text-accent-foreground",
+                className
+            )}
+            {...props}
+        />
+    )
+})
 
 CommandItem.displayName = CommandPrimitive.Item.displayName
 

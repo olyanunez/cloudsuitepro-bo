@@ -84,7 +84,7 @@ export function AboutSection() {
                 <p>
                   A lo largo de estos años, hemos crecido de ser una simple herramienta de
                   inventario a convertirnos en una suite completa de gestión empresarial que
-                  incluye punto de venta, facturación electrónica, reportes avanzados y mucho más.
+                  incluye punto de venta, facturas electrónicas, reportes avanzados y mucho más.
                 </p>
                 <p>
                   Hoy, más de {activeCompanies > 0 ? activeCompanies : '...'} empresas confían en CloudSuite Pro para gestionar sus operaciones

@@ -58,7 +58,7 @@
 - ✅ Contabilidad básica
 - ❌ Contabilidad completa (NO tiene)
 - ❌ Costo de ventas (COGS) (NO tiene)
-- ✅ Facturación electrónica (NCF)
+- ✅ Facturas electrónicas (NCF)
 - ❌ Todos los tipos de NCF (NO tiene)
 - ❌ Reportes DGII (NO tiene)
 - ❌ Reportes avanzados (NO tiene)
@@ -134,7 +134,7 @@
 - ✅ Costo de ventas (COGS)
 - ✅ Reportes financieros
 - ✅ Cuentas por pagar
-- ✅ Facturación electrónica (NCF)
+- ✅ Facturas electrónicas (NCF)
 - ✅ Todos los tipos de NCF
 - ✅ Reportes DGII
 - ✅ Reportes avanzados
@@ -210,7 +210,7 @@
 - ✅ Costo de ventas (COGS)
 - ✅ Reportes financieros
 - ✅ Cuentas por pagar
-- ✅ Facturación electrónica (NCF)
+- ✅ Facturas electrónicas (NCF)
 - ✅ Todos los tipos de NCF
 - ✅ Reportes DGII
 - ✅ Reportes avanzados
