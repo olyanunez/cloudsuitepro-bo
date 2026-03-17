@@ -103,6 +103,8 @@ export interface Subscription {
   currentMaxBranches: number | null;
   currentMaxWarehouses: number | null;
   currentMaxProducts: number | null;
+  currentMaxStorageGB: number | null;
+  currentMaxNCFSequences: number | null;
   currentFeatures: Record<string, boolean> | null;
 
   // Dates
@@ -130,6 +132,10 @@ export interface UsageStats {
   activeBranches: number;
   activeWarehouses: number;
   activeProducts: number;
+  activeNCFSequences: number;
+  storageUsedGB: number;
+  storageUsedMB?: number;
+  storageUsedBytes?: number;
   recordedAt?: string;
   createdAt?: string;
   // Aliases para compatibilidad con la UI
