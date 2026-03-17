@@ -1141,20 +1141,20 @@ export default function PosPage() {
           </div>
         </PageHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Panel de búsqueda y productos */}
-          <div className="lg:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Panel de búsqueda y productos - más estrecho */}
+          <div className="lg:col-span-4 space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Search className="h-5 w-5" />
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Search className="h-4 w-4" />
                   Buscar Productos
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="relative">
                   <Input
-                    placeholder="Buscar o escanear código de barras..."
+                    placeholder="Buscar o escanear..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className={`w-full ${isScannerDetected ? 'ring-2 ring-green-500' : ''}`}
@@ -1178,29 +1178,26 @@ export default function PosPage() {
 
                 {/* Resultados de búsqueda */}
                 {searchQuery.trim() && !loading && searchResults.length === 0 && (
-                  <div className="mt-4 border rounded-lg p-8 text-center">
-                    <Search className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-30" />
-                    <p className="text-muted-foreground font-medium">No se encontraron productos</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Intenta con otro término de búsqueda
-                    </p>
+                  <div className="mt-4 border rounded-lg p-6 text-center">
+                    <Search className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-30" />
+                    <p className="text-sm text-muted-foreground">No se encontraron productos</p>
                   </div>
                 )}
 
                 {searchResults.length > 0 && (
-                  <div className="mt-4 border rounded-lg divide-y max-h-96 overflow-y-auto">
+                  <div className="mt-4 border rounded-lg divide-y max-h-[calc(100vh-300px)] overflow-y-auto">
                     {searchResults.map((product) => {
                       const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
 
                       return (
                         <div
                           key={product.id}
-                          className="p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                          className="p-3 hover:bg-muted/50 cursor-pointer transition-colors"
                           onClick={() => addToCart(product)}
                         >
-                          <div className="flex items-start gap-4">
+                          <div className="flex items-start gap-3">
                             {/* Imagen del producto */}
-                            <div className="relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
+                            <div className="relative w-14 h-14 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
                               {primaryImage ? (
                                 <Image
                                   src={primaryImage.url}
@@ -1210,35 +1207,23 @@ export default function PosPage() {
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                  <ImageIcon className="h-10 w-10 text-gray-400" />
+                                  <ImageIcon className="h-6 w-6 text-gray-400" />
                                 </div>
                               )}
                             </div>
 
                             {/* Información del producto */}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium">{product.name}</p>
-                                <Badge variant="outline">{product.code}</Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {product.description}
-                              </p>
-                              <div className="flex items-center gap-3 mt-2">
-                                <Badge variant="secondary">
-                                  {product.category.name}
-                                </Badge>
-                                <span className="text-sm text-muted-foreground">
+                              <p className="font-medium text-sm truncate">{product.name}</p>
+                              <p className="text-xs text-muted-foreground">{product.code}</p>
+                              <div className="flex items-center justify-between mt-1">
+                                <span className="text-xs text-muted-foreground">
                                   Stock: {product.stock.quantity}
                                 </span>
+                                <p className="text-sm font-bold text-primary">
+                                  {formatCurrency(product.price)}
+                                </p>
                               </div>
-                            </div>
-
-                            {/* Precio */}
-                            <div className="text-right flex-shrink-0">
-                              <p className="text-lg font-bold text-primary">
-                                {formatCurrency(product.price)}
-                              </p>
                             </div>
                           </div>
                         </div>
@@ -1250,10 +1235,10 @@ export default function PosPage() {
             </Card>
           </div>
 
-          {/* Panel del carrito */}
-          <div className="space-y-4">
+          {/* Panel del carrito - más ancho con layout de 2 columnas */}
+          <div className="lg:col-span-8">
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <ShoppingCart className="h-5 w-5" />
@@ -1271,15 +1256,19 @@ export default function PosPage() {
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
                 {cart.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                  <div className="text-center py-12 text-muted-foreground">
+                    <ShoppingCart className="h-16 w-16 mx-auto mb-3 opacity-20" />
                     <p>El carrito está vacío</p>
+                    <p className="text-sm mt-1">Busca productos para agregarlos</p>
                   </div>
                 ) : (
-                  <>
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Columna izquierda: Productos del carrito */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Productos</h3>
+                      <div className="space-y-3 max-h-[calc(100vh-350px)] overflow-y-auto pr-2">
                       {cart.map((item) => (
                         <div key={item.id} className="border rounded-lg p-3">
                           <div className="flex items-start justify-between mb-2">
@@ -1356,7 +1345,11 @@ export default function PosPage() {
                         <span className="text-primary">{formatCurrency(total)}</span>
                       </div>
                     </div>
+                    </div>
 
+                    {/* Columna derecha: Cliente y Pago */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Cliente y Pago</h3>
                     {/* Buscador de clientes */}
                     <div className="space-y-2">
                       <Label>Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}</Label>
@@ -1756,7 +1749,8 @@ export default function PosPage() {
                         </>
                       )}
                     </Button>
-                  </>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
