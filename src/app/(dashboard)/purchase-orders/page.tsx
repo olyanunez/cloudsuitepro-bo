@@ -11,6 +11,7 @@ import { PlusIcon, SearchIcon, PencilIcon, TrashIcon, EyeIcon, Send, FileText, C
 import { toast } from 'sonner';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePermissions } from '@/lib/hooks/usePermissions';
+import { FeatureGate } from '@/components/subscription/FeatureGate';
 import PageHeader from '@/components/layout/PageHeader';
 import { ExportButton } from '@/components/ui/export-button';
 import {
@@ -198,6 +199,7 @@ export default function PurchaseOrdersPage() {
 
   return (
     <ProtectedPage screenCode="PURCHASE_ORDERS" requiredPermission="VIEW">
+      <FeatureGate feature="hasPurchaseOrders">
       <div className="container mx-auto py-8">
         <PageHeader
           title="Órdenes de Compra"
@@ -530,6 +532,7 @@ export default function PurchaseOrdersPage() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+      </FeatureGate>
     </ProtectedPage>
   );
 }

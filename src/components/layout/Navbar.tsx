@@ -31,6 +31,7 @@ import ProfileService from '@/lib/services/profileService'
 import UserPreferencesService from '@/lib/services/userPreferencesService'
 import LowStockService, { LowStockItem } from '@/lib/services/lowStockService'
 import { Bell, AlertTriangle, ArrowRight } from 'lucide-react'
+import { useSubscription } from '@/lib/hooks/useSubscription'
 
 // Definición de los elementos del menú
 // screenCode: código de la pantalla para validar permisos (null = sin permisos requeridos)
@@ -42,7 +43,7 @@ const menuItems = [
   { name: 'Punto de Venta', href: '/pos', icon: 'shopping-cart', screenCode: 'POS' },
   { name: 'Sesiones de Caja', href: '/cash-sessions', icon: 'hand-coins', screenCode: 'CASH_SESSIONS' },
   { name: 'Facturas', href: '/invoices', icon: 'file-text', screenCode: 'INVOICE' },
-  { name: 'Notas de Crédito', href: '/credit-notes', icon: 'undo-2', screenCode: 'CREDIT_NOTE' },
+  { name: 'Notas de Crédito', href: '/credit-notes', icon: 'undo-2', screenCode: 'CREDIT_NOTE', requiredFeature: 'hasCreditNotes' },
   { name: 'Notas de Débito', href: '/debit-notes', icon: 'trending-up', screenCode: 'DEBIT_NOTE' },
   { name: 'Gastos Menores', href: '/minor-expenses', icon: 'wallet', screenCode: 'MINOR_EXPENSES' },
   {
@@ -50,12 +51,13 @@ const menuItems = [
     href: '/accounting',
     icon: 'calculator',
     screenCode: null, // Este es un contenedor, no requiere permisos
+    requiredFeature: 'hasFullAccounting',
     submenu: [
-      { name: 'Panel Contable', href: '/accounting', icon: 'layout-dashboard', screenCode: 'ACCOUNTING' },
-      { name: 'Plan de Cuentas', href: '/accounting/accounts', icon: 'book-open', screenCode: 'ACCOUNTING' },
-      { name: 'Asientos Contables', href: '/accounting/journal-entries', icon: 'file-text', screenCode: 'ACCOUNTING' },
-      { name: 'Balance General', href: '/accounting/reports/balance-sheet', icon: 'bar-chart-3', screenCode: 'ACCOUNTING' },
-      { name: 'Estado de Resultados', href: '/accounting/reports/income-statement', icon: 'trending-up', screenCode: 'ACCOUNTING' },
+      { name: 'Panel Contable', href: '/accounting', icon: 'layout-dashboard', screenCode: 'ACCOUNTING', requiredFeature: 'hasFullAccounting' },
+      { name: 'Plan de Cuentas', href: '/accounting/accounts', icon: 'book-open', screenCode: 'ACCOUNTING', requiredFeature: 'hasFullAccounting' },
+      { name: 'Asientos Contables', href: '/accounting/journal-entries', icon: 'file-text', screenCode: 'ACCOUNTING', requiredFeature: 'hasFullAccounting' },
+      { name: 'Balance General', href: '/accounting/reports/balance-sheet', icon: 'bar-chart-3', screenCode: 'ACCOUNTING', requiredFeature: 'hasFullAccounting' },
+      { name: 'Estado de Resultados', href: '/accounting/reports/income-statement', icon: 'trending-up', screenCode: 'ACCOUNTING', requiredFeature: 'hasFullAccounting' },
     ]
   },
   {
@@ -63,11 +65,12 @@ const menuItems = [
     href: '/ncf',
     icon: 'file-check',
     screenCode: null, // Este es un contenedor, no requiere permisos
+    requiredFeature: 'hasNCF',
     submenu: [
-      { name: 'Dashboard NCF', href: '/ncf', icon: 'layout-dashboard', screenCode: 'NCF' },
-      { name: 'Secuencias NCF', href: '/ncf/sequences', icon: 'hash', screenCode: 'NCF' },
-      { name: 'Reportes DGII', href: '/ncf/reports', icon: 'file-text', screenCode: 'DGII' },
-      { name: 'Configuración NCF', href: '/ncf/config', icon: 'settings', screenCode: 'NCF' },
+      { name: 'Dashboard NCF', href: '/ncf', icon: 'layout-dashboard', screenCode: 'NCF', requiredFeature: 'hasNCF' },
+      { name: 'Secuencias NCF', href: '/ncf/sequences', icon: 'hash', screenCode: 'NCF', requiredFeature: 'hasNCF' },
+      { name: 'Reportes DGII', href: '/ncf/reports', icon: 'file-text', screenCode: 'DGII', requiredFeature: 'hasDGIIReports' },
+      { name: 'Configuración NCF', href: '/ncf/config', icon: 'settings', screenCode: 'NCF', requiredFeature: 'hasNCF' },
     ]
   },
   {
@@ -76,13 +79,13 @@ const menuItems = [
     icon: 'archive',
     screenCode: null, // Este es un contenedor, no requiere permisos
     submenu: [
-      { name: 'Inventario', href: '/inventory/items', icon: 'box', screenCode: 'INVENTORY' },
-      { name: 'Lotes', href: '/inventory/batches', icon: 'layers', screenCode: 'INVENTORY' },
+      { name: 'Inventario', href: '/inventory/items', icon: 'box', screenCode: 'INVENTORY', requiredFeature: 'hasInventory' },
+      { name: 'Lotes', href: '/inventory/batches', icon: 'layers', screenCode: 'INVENTORY', requiredFeature: 'hasBatchTracking' },
       { name: 'Categorías', href: '/inventory/categories', icon: 'tag', screenCode: 'PRODUCT_CATEGORY' },
       { name: 'Productos', href: '/inventory/products', icon: 'shopping-bag', screenCode: 'PRODUCTS' },
-      { name: 'Sucursales', href: '/inventory/branches', icon: 'building-2', screenCode: 'BRANCH' },
-      { name: 'Almacenes', href: '/inventory/warehouses', icon: 'building', screenCode: 'WAREHOUSE' },
-      { name: 'Movimientos', href: '/inventory/movements', icon: 'repeat', screenCode: 'MOVEMENTS' },
+      { name: 'Sucursales', href: '/inventory/branches', icon: 'building-2', screenCode: 'BRANCH', requiredFeature: 'hasMultiBranch' },
+      { name: 'Almacenes', href: '/inventory/warehouses', icon: 'building', screenCode: 'WAREHOUSE', requiredFeature: 'hasMultiWarehouse' },
+      { name: 'Movimientos', href: '/inventory/movements', icon: 'repeat', screenCode: 'MOVEMENTS', requiredFeature: 'hasInventory' },
       { name: 'Reportes', href: '/inventory/reports', icon: 'bar-chart-2', screenCode: 'INVENTORY_REPORT' },
     ]
   },
@@ -92,8 +95,8 @@ const menuItems = [
     icon: 'truck',
     screenCode: null, // Este es un contenedor, no requiere permisos
     submenu: [
-      { name: 'Proveedores', href: '/suppliers', icon: 'truck', screenCode: 'SUPPLIERS' },
-      { name: 'Órdenes de Compra', href: '/purchase-orders', icon: 'file-text', screenCode: 'PURCHASE_ORDERS' },
+      { name: 'Proveedores', href: '/suppliers', icon: 'truck', screenCode: 'SUPPLIERS', requiredFeature: 'hasSuppliers' },
+      { name: 'Órdenes de Compra', href: '/purchase-orders', icon: 'file-text', screenCode: 'PURCHASE_ORDERS', requiredFeature: 'hasPurchaseOrders' },
     ]
   },
   {
@@ -276,6 +279,7 @@ export default function Navbar() {
   const [lowStockCount, setLowStockCount] = useState(0)
   const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([])
   const [lowStockDropdownOpen, setLowStockDropdownOpen] = useState(false)
+  const { subscription } = useSubscription()
 
   // Cargar perfil del usuario
   React.useEffect(() => {
@@ -336,18 +340,34 @@ export default function Navbar() {
     return () => clearInterval(interval)
   }, [])
 
+  // Función para verificar si el plan tiene una feature específica
+  const hasFeature = React.useCallback((featureName: string): boolean => {
+    if (!subscription?.plan) return true // Si no hay suscripción cargada, mostrar por defecto
+    return (subscription.plan as any)[featureName] === true
+  }, [subscription])
+
   // Función para verificar si un item debe ser visible
-  const shouldShowMenuItem = (item: any) => {
+  const shouldShowMenuItem = React.useCallback((item: any) => {
+    // Verificar feature del plan primero
+    if (item.requiredFeature && !hasFeature(item.requiredFeature)) {
+      return false
+    }
+
     // Si no tiene screenCode, es de acceso libre
     if (!item.screenCode) return true
 
     // Verificar si el usuario tiene permiso VIEW para esta pantalla
     return PermissionService.canView(item.screenCode)
-  }
+  }, [hasFeature])
 
-  // Filtrar items del menú basado en permisos
+  // Filtrar items del menú basado en permisos y features del plan
   const filteredMenuItems = React.useMemo(() => {
     return menuItems.map(item => {
+      // Verificar si el item padre tiene feature requerida
+      if ((item as any).requiredFeature && !hasFeature((item as any).requiredFeature)) {
+        return null
+      }
+
       // Si el item tiene submenú, filtrar los items del submenú
       if (item.submenu) {
         const filteredSubmenu = item.submenu.filter(shouldShowMenuItem)
@@ -364,7 +384,7 @@ export default function Navbar() {
       // Para items sin submenú, verificar permisos directamente
       return shouldShowMenuItem(item) ? item : null
     }).filter(Boolean) // Remover items null
-  }, []) // Se recalcula cuando cambian los permisos (en login/logout)
+  }, [subscription, shouldShowMenuItem, hasFeature]) // Se recalcula cuando cambian los permisos o la suscripción
 
   // Inicializar submenús abiertos basados en la ruta actual
   React.useEffect(() => {
