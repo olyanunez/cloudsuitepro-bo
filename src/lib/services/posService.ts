@@ -3,6 +3,7 @@ import { apiGet, apiPost } from './apiService';
 export interface ProductStock {
   id: number;
   code: string;
+  barcode?: string;
   name: string;
   description: string;
   price: string;
@@ -138,6 +139,21 @@ export class PosService {
     });
 
     return apiGet<ProductStock[]>(`/pos/products/search?${queryParams}`);
+  }
+
+  /**
+   * Obtiene los productos más vendidos del almacén
+   */
+  static async getTopSellingProducts(params: {
+    warehouseId: number;
+    limit?: number;
+  }): Promise<ProductStock[]> {
+    const queryParams = new URLSearchParams({
+      warehouseId: params.warehouseId.toString(),
+      ...(params.limit && { limit: params.limit.toString() }),
+    });
+
+    return apiGet<ProductStock[]>(`/pos/products/top-selling?${queryParams}`);
   }
 
   /**

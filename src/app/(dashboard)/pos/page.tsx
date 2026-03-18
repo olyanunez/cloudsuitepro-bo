@@ -103,6 +103,8 @@ export default function PosPage() {
   // Estados
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ProductStock[]>([]);
+  const [topSellingProducts, setTopSellingProducts] = useState<ProductStock[]>([]);
+  const [loadingTopSelling, setLoadingTopSelling] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'TRANSFER' | 'CREDIT'>('CASH');
   const [paymentReference, setPaymentReference] = useState('');
@@ -322,6 +324,33 @@ export default function PosPage() {
 
     loadCurrentSession();
   }, [activeBranchId]); // ✅ Se recarga cuando cambia la sucursal activa
+
+  // Cargar productos más vendidos cuando cambia el warehouse
+  useEffect(() => {
+    const loadTopSellingProducts = async () => {
+      if (!activeWarehouseId) {
+        setTopSellingProducts([]);
+        return;
+      }
+
+      setLoadingTopSelling(true);
+      try {
+        const products = await PosService.getTopSellingProducts({
+          warehouseId: activeWarehouseId,
+          limit: 10,
+        });
+        setTopSellingProducts(products);
+        console.log('🔥 Top selling products loaded:', products.length);
+      } catch (error) {
+        console.error('Error loading top selling products:', error);
+        setTopSellingProducts([]);
+      } finally {
+        setLoadingTopSelling(false);
+      }
+    };
+
+    loadTopSellingProducts();
+  }, [activeWarehouseId]);
 
   // Búsqueda de productos con debounce
   useEffect(() => {
@@ -1315,6 +1344,7 @@ export default function PosPage() {
                   </div>
                 )}
 
+                {/* Resultados de búsqueda */}
                 {searchResults.length > 0 && (
                   <div className="mt-4 border rounded-lg divide-y max-h-[calc(100vh-300px)] overflow-y-auto">
                     {searchResults.map((product) => {
@@ -1345,12 +1375,9 @@ export default function PosPage() {
 
                             {/* Información del producto */}
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate">{product.name}</p>
-                              <p className="text-xs text-muted-foreground">{product.code}</p>
-                              <div className="flex items-center justify-between mt-1">
-                                <span className="text-xs text-muted-foreground">
-                                  Stock: {product.stock.quantity}
-                                </span>
+                              <p className="font-medium text-sm truncate" title={product.name}>{product.name}</p>
+                              <p className="text-xs text-muted-foreground">{product.barcode || product.code}</p>
+                              <div className="flex items-center justify-end mt-1">
                                 <p className="text-sm font-bold text-primary">
                                   {formatCurrency(product.price)}
                                 </p>
@@ -1360,6 +1387,65 @@ export default function PosPage() {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+
+                {/* Productos más vendidos - Se muestran cuando no hay búsqueda */}
+                {!searchQuery.trim() && !loading && topSellingProducts.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                      <span className="text-orange-500">🔥</span> Más vendidos
+                    </p>
+                    <div className="border rounded-lg divide-y max-h-[calc(100vh-340px)] overflow-y-auto">
+                      {topSellingProducts.map((product) => {
+                        const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+
+                        return (
+                          <div
+                            key={product.id}
+                            className="p-3 hover:bg-muted/50 cursor-pointer transition-colors"
+                            onClick={() => addToCart(product)}
+                          >
+                            <div className="flex items-start gap-3">
+                              {/* Imagen del producto */}
+                              <div className="relative w-14 h-14 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
+                                {primaryImage ? (
+                                  <Image
+                                    src={primaryImage.url}
+                                    alt={product.name}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <ImageIcon className="h-6 w-6 text-gray-400" />
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Información del producto */}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate" title={product.name}>{product.name}</p>
+                                <p className="text-xs text-muted-foreground">{product.barcode || product.code}</p>
+                                <div className="flex items-center justify-end mt-1">
+                                  <p className="text-sm font-bold text-primary">
+                                    {formatCurrency(product.price)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Loading state para productos más vendidos */}
+                {!searchQuery.trim() && loadingTopSelling && (
+                  <div className="mt-4 border rounded-lg p-6 text-center">
+                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Cargando productos más vendidos...</p>
                   </div>
                 )}
               </CardContent>
