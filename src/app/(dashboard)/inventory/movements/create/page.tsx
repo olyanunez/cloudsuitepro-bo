@@ -19,9 +19,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { ArrowLeftIcon, SaveIcon } from 'lucide-react';
+import { ArrowLeftIcon, SaveIcon, Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function CreateMovementPage() {
@@ -62,6 +76,8 @@ export default function CreateMovementPage() {
   // UI state
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
+  const [productPopoverOpen, setProductPopoverOpen] = useState<boolean>(false);
+  const [productSearchQuery, setProductSearchQuery] = useState<string>('');
   const [errors, setErrors] = useState<{
     type?: string;
     variantId?: string;
@@ -353,22 +369,80 @@ export default function CreateMovementPage() {
                 <label htmlFor="product-filter" className="text-sm font-medium">
                   Filtrar por Producto (Opcional)
                 </label>
-                <Select value={selectedProductId} onValueChange={(value) => {
-                  setSelectedProductId(value);
-                  setVariantId(''); // Reset variant selection when product filter changes
-                }}>
-                  <SelectTrigger id="product-filter">
-                    <SelectValue placeholder="Todos los productos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos los productos</SelectItem>
-                    {products.map(product => (
-                      <SelectItem key={product.id} value={product.id.toString()}>
-                        {product.name} ({product.code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={productPopoverOpen} onOpenChange={setProductPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={productPopoverOpen}
+                      className="w-full justify-between font-normal"
+                    >
+                      {selectedProductId && selectedProductId !== 'all'
+                        ? products.find(p => p.id.toString() === selectedProductId)?.name || 'Todos los productos'
+                        : 'Todos los productos'}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command shouldFilter={false}>
+                      <CommandInput
+                        placeholder="Buscar producto..."
+                        value={productSearchQuery}
+                        onValueChange={setProductSearchQuery}
+                      />
+                      <CommandList>
+                        <CommandEmpty>No se encontraron productos.</CommandEmpty>
+                        <CommandGroup>
+                          {(!productSearchQuery || 'todos los productos'.includes(productSearchQuery.toLowerCase())) && (
+                            <CommandItem
+                              value="todos-los-productos"
+                              onSelect={() => {
+                                setSelectedProductId('all');
+                                setVariantId('');
+                                setProductSearchQuery('');
+                                setProductPopoverOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedProductId === 'all' || !selectedProductId ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              Todos los productos
+                            </CommandItem>
+                          )}
+                          {products
+                            .filter(product =>
+                              !productSearchQuery ||
+                              product.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                              product.code.toLowerCase().includes(productSearchQuery.toLowerCase())
+                            )
+                            .map(product => (
+                              <CommandItem
+                                key={product.id}
+                                value={product.id.toString()}
+                                onSelect={() => {
+                                  setSelectedProductId(product.id.toString());
+                                  setVariantId('');
+                                  setProductSearchQuery('');
+                                  setProductPopoverOpen(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedProductId === product.id.toString() ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {product.name} ({product.code})
+                              </CommandItem>
+                            ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
                 <p className="text-xs text-muted-foreground">
                   Filtre las variantes por producto para facilitar la búsqueda
                 </p>

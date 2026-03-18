@@ -92,7 +92,7 @@ export function PricingSection() {
     if (plan.hasCOGS) features.push('Costo de ventas (COGS)');
     if (plan.hasFinancialReports) features.push('Reportes financieros');
     if (plan.hasAccountsPayable) features.push('Cuentas por pagar');
-    if (plan.hasNCF) features.push('Facturación electrónica (NCF)');
+    if (plan.hasNCF) features.push('Facturas electrónicas (NCF)');
     if (plan.hasAllNCFTypes) features.push('Todos los tipos de NCF');
     if (plan.hasDGIIReports) features.push('Reportes DGII');
 

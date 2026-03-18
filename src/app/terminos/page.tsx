@@ -28,7 +28,7 @@ export default function TermsPage() {
               <ul className="list-disc pl-6 mb-4 space-y-2">
                 <li>Punto de venta (POS)</li>
                 <li>Gestión de inventario</li>
-                <li>Facturación electrónica con NCF</li>
+                <li>Facturas electrónicas con NCF</li>
                 <li>Control de clientes y proveedores</li>
                 <li>Reportes y análisis de ventas</li>
                 <li>Gestión contable básica</li>

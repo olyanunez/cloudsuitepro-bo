@@ -500,7 +500,7 @@ export default function SubscriptionPage() {
             {subscription.plan.hasNCF && (
               <div className="flex items-center space-x-2 text-sm">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span>Facturación Electrónica (NCF)</span>
+                <span>Facturas electrónicas (NCF)</span>
               </div>
             )}
             {subscription.plan.hasAllNCFTypes && (

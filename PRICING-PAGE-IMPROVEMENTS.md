@@ -128,7 +128,7 @@ $29
 ✓ Gestión de inventario
 ✓ Notas de crédito
 ✓ Contabilidad básica
-✓ Facturación electrónica (NCF)
+✓ Facturas electrónicas (NCF)
 ✓ Reportes básicos
 ✓ Soporte por email
 

@@ -80,11 +80,16 @@ import {
   VolumeX,
   Receipt,
   AlertTriangle,
+  Percent,
+  Tag,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 interface CartItem extends ProductStock {
   cartQuantity: number;
+  discountType?: 'percentage' | 'fixed';
+  discountValue?: number;
+  discountReason?: string;
 }
 
 export default function PosPage() {
@@ -93,10 +98,13 @@ export default function PosPage() {
   const { canView, hasPermission } = usePermissions('POS');
   const canCashExpense = hasPermission('CAN_CASH_EXPENSE');
   const canSellCredit = hasPermission('CAN_SELL_CREDIT');
+  const canDiscount = hasPermission('DISCOUNT');
 
   // Estados
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ProductStock[]>([]);
+  const [topSellingProducts, setTopSellingProducts] = useState<ProductStock[]>([]);
+  const [loadingTopSelling, setLoadingTopSelling] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'TRANSFER' | 'CREDIT'>('CASH');
   const [paymentReference, setPaymentReference] = useState('');
@@ -163,6 +171,15 @@ export default function PosPage() {
 
   // Estado para preferencias del usuario
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
+
+  // Estados para descuentos
+  const [globalDiscountType, setGlobalDiscountType] = useState<'percentage' | 'fixed'>('percentage');
+  const [globalDiscountValue, setGlobalDiscountValue] = useState<string>('');
+  const [showItemDiscountModal, setShowItemDiscountModal] = useState(false);
+  const [itemToDiscount, setItemToDiscount] = useState<CartItem | null>(null);
+  const [itemDiscountType, setItemDiscountType] = useState<'percentage' | 'fixed'>('percentage');
+  const [itemDiscountValue, setItemDiscountValue] = useState<string>('');
+  const [itemDiscountReason, setItemDiscountReason] = useState<string>('');
 
   // Log inicial para debug e inicializar audio
   useEffect(() => {
@@ -307,6 +324,33 @@ export default function PosPage() {
 
     loadCurrentSession();
   }, [activeBranchId]); // ✅ Se recarga cuando cambia la sucursal activa
+
+  // Cargar productos más vendidos cuando cambia el warehouse
+  useEffect(() => {
+    const loadTopSellingProducts = async () => {
+      if (!activeWarehouseId) {
+        setTopSellingProducts([]);
+        return;
+      }
+
+      setLoadingTopSelling(true);
+      try {
+        const products = await PosService.getTopSellingProducts({
+          warehouseId: activeWarehouseId,
+          limit: 10,
+        });
+        setTopSellingProducts(products);
+        console.log('🔥 Top selling products loaded:', products.length);
+      } catch (error) {
+        console.error('Error loading top selling products:', error);
+        setTopSellingProducts([]);
+      } finally {
+        setLoadingTopSelling(false);
+      }
+    };
+
+    loadTopSellingProducts();
+  }, [activeWarehouseId]);
 
   // Búsqueda de productos con debounce
   useEffect(() => {
@@ -559,13 +603,105 @@ export default function PosPage() {
     setSellAsFinalConsumer(false);
     setSendEmail(false);
     setCustomerEmail('');
+    // Limpiar descuentos
+    setGlobalDiscountValue('');
+    setGlobalDiscountType('percentage');
+  };
+
+  // Abrir modal de descuento para un ítem
+  const openItemDiscountModal = (item: CartItem) => {
+    setItemToDiscount(item);
+    setItemDiscountType(item.discountType || 'percentage');
+    setItemDiscountValue(item.discountValue?.toString() || '');
+    setItemDiscountReason(item.discountReason || '');
+    setShowItemDiscountModal(true);
+  };
+
+  // Aplicar descuento al ítem
+  const applyItemDiscount = () => {
+    if (!itemToDiscount) return;
+
+    const discountVal = parseFloat(itemDiscountValue) || 0;
+
+    // Validar que el descuento no sea negativo
+    if (discountVal < 0) {
+      toast.error('El descuento no puede ser negativo');
+      return;
+    }
+
+    // Validar que el porcentaje no sea mayor a 100
+    if (itemDiscountType === 'percentage' && discountVal > 100) {
+      toast.error('El descuento no puede ser mayor al 100%');
+      return;
+    }
+
+    // Validar que el monto fijo no sea mayor al total del ítem
+    const itemTotal = parseFloat(itemToDiscount.price) * itemToDiscount.cartQuantity;
+    if (itemDiscountType === 'fixed' && discountVal > itemTotal) {
+      toast.error(`El descuento no puede ser mayor a ${formatCurrency(itemTotal)}`);
+      return;
+    }
+
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.id === itemToDiscount.id
+          ? {
+            ...item,
+            discountType: discountVal > 0 ? itemDiscountType : undefined,
+            discountValue: discountVal > 0 ? discountVal : undefined,
+            discountReason: discountVal > 0 ? itemDiscountReason.trim() || undefined : undefined,
+          }
+          : item
+      )
+    );
+
+    setShowItemDiscountModal(false);
+    setItemToDiscount(null);
+    setItemDiscountValue('');
+    setItemDiscountReason('');
+
+    if (discountVal > 0) {
+      toast.success('Descuento aplicado');
+    } else {
+      toast.success('Descuento eliminado');
+    }
+  };
+
+  // Quitar descuento de un ítem
+  const removeItemDiscount = (productId: number) => {
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.id === productId
+          ? { ...item, discountType: undefined, discountValue: undefined, discountReason: undefined }
+          : item
+      )
+    );
+  };
+
+  // Función para calcular el descuento de un ítem
+  const calculateItemDiscount = (item: CartItem): number => {
+    if (!item.discountValue || item.discountValue <= 0) return 0;
+    const itemTotal = parseFloat(item.price) * item.cartQuantity;
+    if (item.discountType === 'percentage') {
+      return itemTotal * (item.discountValue / 100);
+    }
+    return Math.min(item.discountValue, itemTotal); // No puede ser mayor que el total del ítem
   };
 
   // Calcular totales
-  const subtotal = cart.reduce(
+  const subtotalBeforeItemDiscounts = cart.reduce(
     (sum, item) => sum + parseFloat(item.price) * item.cartQuantity,
     0
   );
+
+  // Calcular total de descuentos por ítem
+  const itemDiscountsTotal = cart.reduce(
+    (sum, item) => sum + calculateItemDiscount(item),
+    0
+  );
+
+  // Subtotal después de descuentos por ítem
+  const subtotal = subtotalBeforeItemDiscounts - itemDiscountsTotal;
 
   // Determinar si el cliente está exento de ITBIS
   const isExemptFromTax = selectedCustomer &&
@@ -576,8 +712,17 @@ export default function PosPage() {
 
   const taxRate = 0.18; // 18% ITBIS
   const tax = isExemptFromTax ? 0 : subtotal * taxRate;
-  const discount = 0; // Puedes agregar lógica de descuentos aquí
-  const total = subtotal + tax - discount;
+
+  // Calcular descuento global
+  const globalDiscountAmount = globalDiscountValue && parseFloat(globalDiscountValue) > 0
+    ? globalDiscountType === 'percentage'
+      ? subtotal * (parseFloat(globalDiscountValue) / 100)
+      : Math.min(parseFloat(globalDiscountValue), subtotal)
+    : 0;
+
+  // Descuento total (ítems + global)
+  const discount = itemDiscountsTotal + globalDiscountAmount;
+  const total = subtotalBeforeItemDiscounts + tax - discount;
 
   // Validar y mostrar confirmación de pago
   const handlePaymentClick = () => {
@@ -672,11 +817,18 @@ export default function PosPage() {
     setShowPaymentConfirmation(false);
     setProcessingPayment(true);
     try {
-      const items: InvoiceItem[] = cart.map((item) => ({
-        variantId: item.id,
-        quantity: item.cartQuantity,
-        unitPrice: parseFloat(item.price),
-      }));
+      const items: InvoiceItem[] = cart.map((item) => {
+        const itemDiscount = calculateItemDiscount(item);
+        return {
+          variantId: item.id,
+          quantity: item.cartQuantity,
+          unitPrice: parseFloat(item.price),
+          discount: itemDiscount,
+          discountType: item.discountType === 'percentage' ? 'PERCENTAGE' as const : item.discountType === 'fixed' ? 'FIXED' as const : undefined,
+          discountValue: item.discountValue,
+          discountReason: item.discountReason,
+        };
+      });
 
       const invoice = await PosService.createInvoice({
         // Si está marcado como consumidor final, NO enviar el customerId para evitar conflictos con clientes RUI
@@ -686,6 +838,14 @@ export default function PosPage() {
         subtotal,
         tax,
         discount,
+        globalDiscountType: globalDiscountValue && parseFloat(globalDiscountValue) > 0
+          ? (globalDiscountType === 'percentage' ? 'PERCENTAGE' : 'FIXED')
+          : undefined,
+        globalDiscountValue: globalDiscountValue && parseFloat(globalDiscountValue) > 0
+          ? parseFloat(globalDiscountValue)
+          : undefined,
+        globalDiscountAmount: globalDiscountAmount > 0 ? globalDiscountAmount : undefined,
+        itemDiscountsTotal: itemDiscountsTotal > 0 ? itemDiscountsTotal : undefined,
         total,
         paymentMethod,
         paymentReference: paymentReference.trim() || undefined,
@@ -1141,20 +1301,20 @@ export default function PosPage() {
           </div>
         </PageHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Panel de búsqueda y productos */}
-          <div className="lg:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Panel de búsqueda y productos - más estrecho */}
+          <div className="lg:col-span-4 space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Search className="h-5 w-5" />
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Search className="h-4 w-4" />
                   Buscar Productos
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="relative">
                   <Input
-                    placeholder="Buscar o escanear código de barras..."
+                    placeholder="Buscar o escanear..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className={`w-full ${isScannerDetected ? 'ring-2 ring-green-500' : ''}`}
@@ -1178,29 +1338,27 @@ export default function PosPage() {
 
                 {/* Resultados de búsqueda */}
                 {searchQuery.trim() && !loading && searchResults.length === 0 && (
-                  <div className="mt-4 border rounded-lg p-8 text-center">
-                    <Search className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-30" />
-                    <p className="text-muted-foreground font-medium">No se encontraron productos</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Intenta con otro término de búsqueda
-                    </p>
+                  <div className="mt-4 border rounded-lg p-6 text-center">
+                    <Search className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-30" />
+                    <p className="text-sm text-muted-foreground">No se encontraron productos</p>
                   </div>
                 )}
 
+                {/* Resultados de búsqueda */}
                 {searchResults.length > 0 && (
-                  <div className="mt-4 border rounded-lg divide-y max-h-96 overflow-y-auto">
+                  <div className="mt-4 border rounded-lg divide-y max-h-[calc(100vh-300px)] overflow-y-auto">
                     {searchResults.map((product) => {
                       const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
 
                       return (
                         <div
                           key={product.id}
-                          className="p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                          className="p-3 hover:bg-muted/50 cursor-pointer transition-colors"
                           onClick={() => addToCart(product)}
                         >
-                          <div className="flex items-start gap-4">
+                          <div className="flex items-start gap-3">
                             {/* Imagen del producto */}
-                            <div className="relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
+                            <div className="relative w-14 h-14 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
                               {primaryImage ? (
                                 <Image
                                   src={primaryImage.url}
@@ -1210,35 +1368,20 @@ export default function PosPage() {
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                  <ImageIcon className="h-10 w-10 text-gray-400" />
+                                  <ImageIcon className="h-6 w-6 text-gray-400" />
                                 </div>
                               )}
                             </div>
 
                             {/* Información del producto */}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium">{product.name}</p>
-                                <Badge variant="outline">{product.code}</Badge>
+                              <p className="font-medium text-sm truncate" title={product.name}>{product.name}</p>
+                              <p className="text-xs text-muted-foreground">{product.barcode || product.code}</p>
+                              <div className="flex items-center justify-end mt-1">
+                                <p className="text-sm font-bold text-primary">
+                                  {formatCurrency(product.price)}
+                                </p>
                               </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {product.description}
-                              </p>
-                              <div className="flex items-center gap-3 mt-2">
-                                <Badge variant="secondary">
-                                  {product.category.name}
-                                </Badge>
-                                <span className="text-sm text-muted-foreground">
-                                  Stock: {product.stock.quantity}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Precio */}
-                            <div className="text-right flex-shrink-0">
-                              <p className="text-lg font-bold text-primary">
-                                {formatCurrency(product.price)}
-                              </p>
                             </div>
                           </div>
                         </div>
@@ -1246,14 +1389,73 @@ export default function PosPage() {
                     })}
                   </div>
                 )}
+
+                {/* Productos más vendidos - Se muestran cuando no hay búsqueda */}
+                {!searchQuery.trim() && !loading && topSellingProducts.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                      <span className="text-orange-500">🔥</span> Más vendidos
+                    </p>
+                    <div className="border rounded-lg divide-y max-h-[calc(100vh-340px)] overflow-y-auto">
+                      {topSellingProducts.map((product) => {
+                        const primaryImage = product.images?.find(img => img.isPrimary) || product.images?.[0];
+
+                        return (
+                          <div
+                            key={product.id}
+                            className="p-3 hover:bg-muted/50 cursor-pointer transition-colors"
+                            onClick={() => addToCart(product)}
+                          >
+                            <div className="flex items-start gap-3">
+                              {/* Imagen del producto */}
+                              <div className="relative w-14 h-14 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">
+                                {primaryImage ? (
+                                  <Image
+                                    src={primaryImage.url}
+                                    alt={product.name}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <ImageIcon className="h-6 w-6 text-gray-400" />
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Información del producto */}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate" title={product.name}>{product.name}</p>
+                                <p className="text-xs text-muted-foreground">{product.barcode || product.code}</p>
+                                <div className="flex items-center justify-end mt-1">
+                                  <p className="text-sm font-bold text-primary">
+                                    {formatCurrency(product.price)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Loading state para productos más vendidos */}
+                {!searchQuery.trim() && loadingTopSelling && (
+                  <div className="mt-4 border rounded-lg p-6 text-center">
+                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Cargando productos más vendidos...</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Panel del carrito */}
-          <div className="space-y-4">
+          {/* Panel del carrito - más ancho con layout de 2 columnas */}
+          <div className="lg:col-span-8">
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <ShoppingCart className="h-5 w-5" />
@@ -1271,492 +1473,595 @@ export default function PosPage() {
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
                 {cart.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                  <div className="text-center py-12 text-muted-foreground">
+                    <ShoppingCart className="h-16 w-16 mx-auto mb-3 opacity-20" />
                     <p>El carrito está vacío</p>
+                    <p className="text-sm mt-1">Busca productos para agregarlos</p>
                   </div>
                 ) : (
-                  <>
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
-                      {cart.map((item) => (
-                        <div key={item.id} className="border rounded-lg p-3">
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate">{item.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {formatCurrency(item.price)} c/u
-                              </p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Columna izquierda: Productos del carrito */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Productos</h3>
+                      <div className="space-y-3 max-h-[calc(100vh-350px)] overflow-y-auto pr-2">
+                        {cart.map((item) => {
+                          const itemTotal = parseFloat(item.price) * item.cartQuantity;
+                          const itemDiscount = calculateItemDiscount(item);
+                          const itemFinalPrice = itemTotal - itemDiscount;
+
+                          return (
+                            <div key={item.id} className={`border rounded-lg p-3 ${item.discountValue ? 'border-green-300 bg-green-50/50 dark:border-green-800 dark:bg-green-900/20' : ''}`}>
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium truncate">{item.name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {formatCurrency(item.price)} c/u
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {canDiscount && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className={`h-6 w-6 ${item.discountValue ? 'text-green-600' : 'text-muted-foreground hover:text-primary'}`}
+                                      onClick={() => openItemDiscountModal(item)}
+                                      title="Aplicar descuento"
+                                    >
+                                      <Percent className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 text-destructive"
+                                    onClick={() => removeFromCart(item.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => decreaseQuantity(item.id)}
+                                  >
+                                    <Minus className="h-3 w-3" />
+                                  </Button>
+                                  <span className="w-8 text-center font-medium">
+                                    {item.cartQuantity}
+                                  </span>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => increaseQuantity(item.id)}
+                                  >
+                                    <Plus className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                                <div className="text-right">
+                                  {item.discountValue ? (
+                                    <>
+                                      <p className="text-xs text-muted-foreground line-through">
+                                        {formatCurrency(itemTotal)}
+                                      </p>
+                                      <p className="font-bold text-green-600">
+                                        {formatCurrency(itemFinalPrice)}
+                                      </p>
+                                      <p className="text-xs text-green-600">
+                                        -{item.discountType === 'percentage' ? `${item.discountValue}%` : formatCurrency(item.discountValue)}
+                                      </p>
+                                    </>
+                                  ) : (
+                                    <p className="font-bold">
+                                      {formatCurrency(itemTotal)}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              {item.discountReason && (
+                                <p className="text-xs text-muted-foreground italic mt-1">
+                                  Razón: {item.discountReason}
+                                </p>
+                              )}
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-destructive shrink-0"
-                              onClick={() => removeFromCart(item.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                          );
+                        })}
+                      </div>
+
+                      <Separator />
+
+                      {/* Descuento Global - Solo visible si tiene permiso */}
+                      {canDiscount && (
+                        <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Tag className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium">Descuento General</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={globalDiscountType}
+                              onValueChange={(value: 'percentage' | 'fixed') => setGlobalDiscountType(value)}
+                            >
+                              <SelectTrigger className="w-20 h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="percentage">%</SelectItem>
+                                <SelectItem value="fixed">RD$</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Input
+                              type="number"
+                              min="0"
+                              max={globalDiscountType === 'percentage' ? '100' : undefined}
+                              step="0.01"
+                              placeholder="0"
+                              value={globalDiscountValue}
+                              onChange={(e) => setGlobalDiscountValue(e.target.value)}
+                              className="h-8 flex-1"
+                            />
+                            {globalDiscountValue && parseFloat(globalDiscountValue) > 0 && (
                               <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="icon"
-                                className="h-7 w-7"
-                                onClick={() => decreaseQuantity(item.id)}
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                onClick={() => setGlobalDiscountValue('')}
                               >
-                                <Minus className="h-3 w-3" />
+                                <X className="h-4 w-4" />
                               </Button>
-                              <span className="w-8 text-center font-medium">
-                                {item.cartQuantity}
-                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <Separator />
+
+                      {/* Totales */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Subtotal:</span>
+                          <span>{formatCurrency(subtotalBeforeItemDiscounts)}</span>
+                        </div>
+                        {itemDiscountsTotal > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Desc. productos:</span>
+                            <span className="text-green-600">
+                              -{formatCurrency(itemDiscountsTotal)}
+                            </span>
+                          </div>
+                        )}
+                        {tax > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">ITBIS:</span>
+                            <span>{formatCurrency(tax)}</span>
+                          </div>
+                        )}
+                        {globalDiscountAmount > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Desc. general:</span>
+                            <span className="text-green-600">
+                              -{formatCurrency(globalDiscountAmount)}
+                            </span>
+                          </div>
+                        )}
+                        <Separator />
+                        <div className="flex justify-between text-lg font-bold">
+                          <span>Total:</span>
+                          <span className="text-primary">{formatCurrency(total)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Columna derecha: Cliente y Pago */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">Cliente y Pago</h3>
+                      {/* Buscador de clientes */}
+                      <div className="space-y-2">
+                        <Label>Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}</Label>
+                        {selectedCustomer ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
+                              <div className="flex items-center gap-2">
+                                <UserIcon className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                  <p className="font-medium text-sm">
+                                    {selectedCustomer.name}{selectedCustomer.lastName ? ` ${selectedCustomer.lastName}` : ''}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">{selectedCustomer.code}</p>
+                                </div>
+                              </div>
                               <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => increaseQuantity(item.id)}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedCustomer(null);
+                                  setCustomerSearch('');
+                                  setCustomerSearchResults([]);
+                                  setSellAsFinalConsumer(false);
+                                }}
+                                className="h-7 w-7 p-0"
                               >
-                                <Plus className="h-3 w-3" />
+                                <X className="h-4 w-4" />
                               </Button>
                             </div>
-                            <p className="font-bold">
-                              {formatCurrency(parseFloat(item.price) * item.cartQuantity)}
+                            {(selectedCustomer.taxRegime === 'RUI' || selectedCustomer.taxRegime === 'SPECIAL_REGIME' || selectedCustomer.taxRegime === 'GOVERNMENT' || selectedCustomer.taxRegime === 'EXPORT') && (
+                              <div className={`flex items-center gap-2 p-2 rounded-md border ${selectedCustomer.taxRegime === 'RUI'
+                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                                : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                  : selectedCustomer.taxRegime === 'EXPORT'
+                                    ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+                                    : 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
+                                }`}>
+                                <CheckCircle className={`h-4 w-4 ${selectedCustomer.taxRegime === 'RUI'
+                                  ? 'text-blue-600 dark:text-blue-400'
+                                  : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                    ? 'text-green-600 dark:text-green-400'
+                                    : selectedCustomer.taxRegime === 'EXPORT'
+                                      ? 'text-orange-600 dark:text-orange-400'
+                                      : 'text-purple-600 dark:text-purple-400'
+                                  }`} />
+                                <div className="flex-1">
+                                  <p className={`text-xs font-medium ${selectedCustomer.taxRegime === 'RUI'
+                                    ? 'text-blue-900 dark:text-blue-100'
+                                    : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                      ? 'text-green-900 dark:text-green-100'
+                                      : selectedCustomer.taxRegime === 'EXPORT'
+                                        ? 'text-orange-900 dark:text-orange-100'
+                                        : 'text-purple-900 dark:text-purple-100'
+                                    }`}>
+                                    {selectedCustomer.taxRegime === 'RUI'
+                                      ? 'Contribuyente RUI'
+                                      : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                        ? 'Entidad Gubernamental'
+                                        : selectedCustomer.taxRegime === 'EXPORT'
+                                          ? 'Cliente Exportador'
+                                          : 'Régimen Especial'}
+                                  </p>
+                                  <p className={`text-xs ${selectedCustomer.taxRegime === 'RUI'
+                                    ? 'text-blue-700 dark:text-blue-300'
+                                    : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                      ? 'text-green-700 dark:text-green-300'
+                                      : selectedCustomer.taxRegime === 'EXPORT'
+                                        ? 'text-orange-700 dark:text-orange-300'
+                                        : 'text-purple-700 dark:text-purple-300'
+                                    }`}>
+                                    {selectedCustomer.taxRegime === 'RUI'
+                                      ? 'Requiere NCF B12'
+                                      : selectedCustomer.taxRegime === 'GOVERNMENT'
+                                        ? 'Requiere NCF B15'
+                                        : selectedCustomer.taxRegime === 'EXPORT'
+                                          ? 'Requiere NCF B16 (Exento ITBIS)'
+                                          : 'Requiere NCF B14'}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            {/* Alerta cuando no hay secuencias NCF disponibles */}
+                            {missingNcfSequence && requiredNcfType && (
+                              <Alert variant="destructive" className="mt-2">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>Sin secuencias NCF disponibles</AlertTitle>
+                                <AlertDescription className="text-xs">
+                                  No hay secuencias activas de tipo <strong>{ncfTypeLabels[requiredNcfType]}</strong> para este cliente.
+                                  {' '}
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="h-auto p-0 text-xs underline"
+                                    onClick={() => router.push('/ncf/sequences/create')}
+                                  >
+                                    Crear secuencia
+                                  </Button>
+                                </AlertDescription>
+                              </Alert>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <Input
+                              placeholder="Buscar cliente..."
+                              value={customerSearch}
+                              onChange={(e) => setCustomerSearch(e.target.value)}
+                              className="w-full"
+                            />
+                            {loadingCustomers && (
+                              <div className="absolute right-3 top-3">
+                                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                              </div>
+                            )}
+                            {customerSearchResults.length > 0 && (
+                              <div className="absolute z-10 w-full mt-1 border rounded-md bg-background shadow-lg max-h-48 overflow-y-auto">
+                                {customerSearchResults.map((customer) => (
+                                  <button
+                                    key={customer.id}
+                                    className="w-full px-3 py-2 text-left hover:bg-muted/50 flex items-center gap-2 border-b last:border-b-0"
+                                    onClick={() => {
+                                      setSelectedCustomer(customer);
+                                      setCustomerSearch('');
+                                      setCustomerSearchResults([]);
+                                    }}
+                                  >
+                                    <UserIcon className="h-4 w-4 text-muted-foreground" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-sm truncate">
+                                        {customer.name}{customer.lastName ? ` ${customer.lastName}` : ''}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">{customer.code}</p>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Checkbox para vender como consumidor final */}
+                      {selectedCustomer && selectedCustomer.taxId && (
+                        <div className="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                          <input
+                            type="checkbox"
+                            id="sellAsFinalConsumer"
+                            checked={sellAsFinalConsumer}
+                            onChange={(e) => setSellAsFinalConsumer(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                          />
+                          <Label htmlFor="sellAsFinalConsumer" className="cursor-pointer text-sm font-medium">
+                            Vender como consumidor final (sin NCF {
+                              selectedCustomer?.taxRegime === 'RUI' ? 'B12'
+                                : selectedCustomer?.taxRegime === 'SPECIAL_REGIME' ? 'B14'
+                                  : selectedCustomer?.taxRegime === 'GOVERNMENT' ? 'B15'
+                                    : selectedCustomer?.taxRegime === 'EXPORT' ? 'B16'
+                                      : 'B01'})
+                          </Label>
+                        </div>
+                      )}
+
+                      {/* Información de crédito del cliente */}
+                      {selectedCustomer && selectedCustomer.allowCredit && canSellCredit && (
+                        <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              Crédito Habilitado
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Límite:</span>
+                              <span className="ml-1 font-medium">
+                                {selectedCustomer.creditLimit > 0
+                                  ? formatCurrency(selectedCustomer.creditLimit)
+                                  : 'Sin límite'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Saldo:</span>
+                              <span className="ml-1 font-medium text-orange-600">
+                                {formatCurrency(selectedCustomer.currentBalance)}
+                              </span>
+                            </div>
+                            {selectedCustomer.creditLimit > 0 && (
+                              <div className="col-span-2">
+                                <span className="text-muted-foreground">Disponible:</span>
+                                <span className="ml-1 font-medium text-green-600">
+                                  {formatCurrency(selectedCustomer.creditLimit - selectedCustomer.currentBalance)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Campos para cliente no registrado (solo si no hay cliente seleccionado) */}
+                      {!selectedCustomer && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="manualCustomerRnc">
+                              RNC / Cédula (Opcional)
+                            </Label>
+                            <Input
+                              id="manualCustomerRnc"
+                              placeholder="Ej: 131793916 o 00112345678"
+                              value={manualCustomerRnc}
+                              onChange={(e) => setManualCustomerRnc(e.target.value)}
+                              maxLength={11}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Ingrese RNC (9 dígitos) o Cédula (11 dígitos) para generar NCF tipo B01
                             </p>
                           </div>
-                        </div>
-                      ))}
-                    </div>
 
-                    <Separator />
-
-                    {/* Totales */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Subtotal:</span>
-                        <span>{formatCurrency(subtotal)}</span>
-                      </div>
-                      {tax > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">ITBIS:</span>
-                          <span>{formatCurrency(tax)}</span>
-                        </div>
-                      )}
-                      {discount > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Descuento:</span>
-                          <span className="text-destructive">
-                            -{formatCurrency(discount).replace('RD$', '')}
-                          </span>
-                        </div>
-                      )}
-                      <Separator />
-                      <div className="flex justify-between text-lg font-bold">
-                        <span>Total:</span>
-                        <span className="text-primary">{formatCurrency(total)}</span>
-                      </div>
-                    </div>
-
-                    {/* Buscador de clientes */}
-                    <div className="space-y-2">
-                      <Label>Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}</Label>
-                      {selectedCustomer ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between p-3 border rounded-md bg-muted/50">
-                            <div className="flex items-center gap-2">
-                              <UserIcon className="h-4 w-4 text-muted-foreground" />
-                              <div>
-                                <p className="font-medium text-sm">
-                                  {selectedCustomer.name}{selectedCustomer.lastName ? ` ${selectedCustomer.lastName}` : ''}
-                                </p>
-                                <p className="text-xs text-muted-foreground">{selectedCustomer.code}</p>
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedCustomer(null);
-                                setCustomerSearch('');
-                                setCustomerSearchResults([]);
-                                setSellAsFinalConsumer(false);
-                              }}
-                              className="h-7 w-7 p-0"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
+                          <div className="space-y-2">
+                            <Label htmlFor="manualCustomerName">
+                              Nombre del Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}
+                            </Label>
+                            <Input
+                              id="manualCustomerName"
+                              placeholder="Ej: Juan Pérez"
+                              value={manualCustomerName}
+                              onChange={(e) => setManualCustomerName(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Nombre para incluir en el comprobante fiscal
+                            </p>
                           </div>
-                          {(selectedCustomer.taxRegime === 'RUI' || selectedCustomer.taxRegime === 'SPECIAL_REGIME' || selectedCustomer.taxRegime === 'GOVERNMENT' || selectedCustomer.taxRegime === 'EXPORT') && (
-                            <div className={`flex items-center gap-2 p-2 rounded-md border ${selectedCustomer.taxRegime === 'RUI'
-                              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                              : selectedCustomer.taxRegime === 'GOVERNMENT'
-                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                                : selectedCustomer.taxRegime === 'EXPORT'
-                                  ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-                                  : 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
-                              }`}>
-                              <CheckCircle className={`h-4 w-4 ${selectedCustomer.taxRegime === 'RUI'
-                                ? 'text-blue-600 dark:text-blue-400'
-                                : selectedCustomer.taxRegime === 'GOVERNMENT'
-                                  ? 'text-green-600 dark:text-green-400'
-                                  : selectedCustomer.taxRegime === 'EXPORT'
-                                    ? 'text-orange-600 dark:text-orange-400'
-                                    : 'text-purple-600 dark:text-purple-400'
-                                }`} />
-                              <div className="flex-1">
-                                <p className={`text-xs font-medium ${selectedCustomer.taxRegime === 'RUI'
-                                  ? 'text-blue-900 dark:text-blue-100'
-                                  : selectedCustomer.taxRegime === 'GOVERNMENT'
-                                    ? 'text-green-900 dark:text-green-100'
-                                    : selectedCustomer.taxRegime === 'EXPORT'
-                                      ? 'text-orange-900 dark:text-orange-100'
-                                      : 'text-purple-900 dark:text-purple-100'
-                                  }`}>
-                                  {selectedCustomer.taxRegime === 'RUI'
-                                    ? 'Contribuyente RUI'
-                                    : selectedCustomer.taxRegime === 'GOVERNMENT'
-                                      ? 'Entidad Gubernamental'
-                                      : selectedCustomer.taxRegime === 'EXPORT'
-                                        ? 'Cliente Exportador'
-                                        : 'Régimen Especial'}
-                                </p>
-                                <p className={`text-xs ${selectedCustomer.taxRegime === 'RUI'
-                                  ? 'text-blue-700 dark:text-blue-300'
-                                  : selectedCustomer.taxRegime === 'GOVERNMENT'
-                                    ? 'text-green-700 dark:text-green-300'
-                                    : selectedCustomer.taxRegime === 'EXPORT'
-                                      ? 'text-orange-700 dark:text-orange-300'
-                                      : 'text-purple-700 dark:text-purple-300'
-                                  }`}>
-                                  {selectedCustomer.taxRegime === 'RUI'
-                                    ? 'Requiere NCF B12'
-                                    : selectedCustomer.taxRegime === 'GOVERNMENT'
-                                      ? 'Requiere NCF B15'
-                                      : selectedCustomer.taxRegime === 'EXPORT'
-                                        ? 'Requiere NCF B16 (Exento ITBIS)'
-                                        : 'Requiere NCF B14'}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                          {/* Alerta cuando no hay secuencias NCF disponibles */}
-                          {missingNcfSequence && requiredNcfType && (
-                            <Alert variant="destructive" className="mt-2">
-                              <AlertTriangle className="h-4 w-4" />
-                              <AlertTitle>Sin secuencias NCF disponibles</AlertTitle>
-                              <AlertDescription className="text-xs">
-                                No hay secuencias activas de tipo <strong>{ncfTypeLabels[requiredNcfType]}</strong> para este cliente.
-                                {' '}
-                                <Button
-                                  variant="link"
-                                  size="sm"
-                                  className="h-auto p-0 text-xs underline"
-                                  onClick={() => router.push('/ncf/sequences/create')}
-                                >
-                                  Crear secuencia
-                                </Button>
-                              </AlertDescription>
-                            </Alert>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="relative">
+                        </>
+                      )}
+
+                      {/* Campo de NCF manual (solo si está permitido) */}
+                      {ncfConfig?.allowManualNcf && (
+                        <div className="space-y-2">
+                          <Label htmlFor="manualNcf">
+                            NCF Manual {ncfConfig?.requireNcfForInvoice && !ncfConfig?.autoAssignNcf ? '*' : '(Opcional)'}
+                          </Label>
                           <Input
-                            placeholder="Buscar cliente..."
-                            value={customerSearch}
-                            onChange={(e) => setCustomerSearch(e.target.value)}
-                            className="w-full"
+                            id="manualNcf"
+                            placeholder="Ej: E01000000123"
+                            value={manualNcf}
+                            onChange={(e) => setManualNcf(e.target.value.toUpperCase())}
+                            className="font-mono"
+                            maxLength={13}
                           />
-                          {loadingCustomers && (
-                            <div className="absolute right-3 top-3">
-                              <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-                            </div>
-                          )}
-                          {customerSearchResults.length > 0 && (
-                            <div className="absolute z-10 w-full mt-1 border rounded-md bg-background shadow-lg max-h-48 overflow-y-auto">
-                              {customerSearchResults.map((customer) => (
-                                <button
-                                  key={customer.id}
-                                  className="w-full px-3 py-2 text-left hover:bg-muted/50 flex items-center gap-2 border-b last:border-b-0"
-                                  onClick={() => {
-                                    setSelectedCustomer(customer);
-                                    setCustomerSearch('');
-                                    setCustomerSearchResults([]);
-                                  }}
-                                >
-                                  <UserIcon className="h-4 w-4 text-muted-foreground" />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm truncate">
-                                      {customer.name}{customer.lastName ? ` ${customer.lastName}` : ''}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">{customer.code}</p>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                          <p className="text-xs text-muted-foreground">
+                            Formato: E + 2 dígitos de tipo + 8 dígitos de secuencia
+                          </p>
                         </div>
                       )}
-                    </div>
 
-                    {/* Checkbox para vender como consumidor final */}
-                    {selectedCustomer && selectedCustomer.taxId && (
-                      <div className="flex items-center space-x-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                      {/* Checkbox para enviar factura por email */}
+                      <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-md">
                         <input
                           type="checkbox"
-                          id="sellAsFinalConsumer"
-                          checked={sellAsFinalConsumer}
-                          onChange={(e) => setSellAsFinalConsumer(e.target.checked)}
+                          id="sendEmail"
+                          checked={sendEmail}
+                          onChange={(e) => setSendEmail(e.target.checked)}
                           className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                         />
-                        <Label htmlFor="sellAsFinalConsumer" className="cursor-pointer text-sm font-medium">
-                          Vender como consumidor final (sin NCF {
-                            selectedCustomer?.taxRegime === 'RUI' ? 'B12'
-                              : selectedCustomer?.taxRegime === 'SPECIAL_REGIME' ? 'B14'
-                                : selectedCustomer?.taxRegime === 'GOVERNMENT' ? 'B15'
-                                  : selectedCustomer?.taxRegime === 'EXPORT' ? 'B16'
-                                    : 'B01'})
+                        <Label htmlFor="sendEmail" className="cursor-pointer text-sm font-medium">
+                          Enviar factura por correo electrónico
                         </Label>
                       </div>
-                    )}
 
-                    {/* Información de crédito del cliente */}
-                    {selectedCustomer && selectedCustomer.allowCredit && canSellCredit && (
-                      <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                            Crédito Habilitado
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Límite:</span>
-                            <span className="ml-1 font-medium">
-                              {selectedCustomer.creditLimit > 0
-                                ? formatCurrency(selectedCustomer.creditLimit)
-                                : 'Sin límite'}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Saldo:</span>
-                            <span className="ml-1 font-medium text-orange-600">
-                              {formatCurrency(selectedCustomer.currentBalance)}
-                            </span>
-                          </div>
-                          {selectedCustomer.creditLimit > 0 && (
-                            <div className="col-span-2">
-                              <span className="text-muted-foreground">Disponible:</span>
-                              <span className="ml-1 font-medium text-green-600">
-                                {formatCurrency(selectedCustomer.creditLimit - selectedCustomer.currentBalance)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Campos para cliente no registrado (solo si no hay cliente seleccionado) */}
-                    {!selectedCustomer && (
-                      <>
+                      {/* Campo de email (solo si checkbox está marcado) */}
+                      {sendEmail && (
                         <div className="space-y-2">
-                          <Label htmlFor="manualCustomerRnc">
-                            RNC / Cédula (Opcional)
+                          <Label htmlFor="customerEmail">
+                            Correo Electrónico {!selectedCustomer?.email ? '*' : '(Opcional)'}
                           </Label>
                           <Input
-                            id="manualCustomerRnc"
-                            placeholder="Ej: 131793916 o 00112345678"
-                            value={manualCustomerRnc}
-                            onChange={(e) => setManualCustomerRnc(e.target.value)}
-                            maxLength={11}
+                            id="customerEmail"
+                            type="email"
+                            placeholder="Ej: cliente@ejemplo.com"
+                            value={customerEmail}
+                            onChange={(e) => setCustomerEmail(e.target.value)}
                           />
                           <p className="text-xs text-muted-foreground">
-                            Ingrese RNC (9 dígitos) o Cédula (11 dígitos) para generar NCF tipo B01
+                            {selectedCustomer?.email
+                              ? 'Email del cliente pre-llenado. Puede modificarlo si el cliente lo desea.'
+                              : 'Ingrese el correo electrónico donde se enviará la factura.'}
                           </p>
                         </div>
+                      )}
 
-                        <div className="space-y-2">
-                          <Label htmlFor="manualCustomerName">
-                            Nombre del Cliente {tenantSettings?.askForCustomer ? '(Requerido)' : '(Opcional)'}
-                          </Label>
-                          <Input
-                            id="manualCustomerName"
-                            placeholder="Ej: Juan Pérez"
-                            value={manualCustomerName}
-                            onChange={(e) => setManualCustomerName(e.target.value)}
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            Nombre para incluir en el comprobante fiscal
-                          </p>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Campo de NCF manual (solo si está permitido) */}
-                    {ncfConfig?.allowManualNcf && (
+                      {/* Método de pago */}
                       <div className="space-y-2">
-                        <Label htmlFor="manualNcf">
-                          NCF Manual {ncfConfig?.requireNcfForInvoice && !ncfConfig?.autoAssignNcf ? '*' : '(Opcional)'}
-                        </Label>
-                        <Input
-                          id="manualNcf"
-                          placeholder="Ej: E01000000123"
-                          value={manualNcf}
-                          onChange={(e) => setManualNcf(e.target.value.toUpperCase())}
-                          className="font-mono"
-                          maxLength={13}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Formato: E + 2 dígitos de tipo + 8 dígitos de secuencia
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Checkbox para enviar factura por email */}
-                    <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-md">
-                      <input
-                        type="checkbox"
-                        id="sendEmail"
-                        checked={sendEmail}
-                        onChange={(e) => setSendEmail(e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                      />
-                      <Label htmlFor="sendEmail" className="cursor-pointer text-sm font-medium">
-                        Enviar factura por correo electrónico
-                      </Label>
-                    </div>
-
-                    {/* Campo de email (solo si checkbox está marcado) */}
-                    {sendEmail && (
-                      <div className="space-y-2">
-                        <Label htmlFor="customerEmail">
-                          Correo Electrónico {!selectedCustomer?.email ? '*' : '(Opcional)'}
-                        </Label>
-                        <Input
-                          id="customerEmail"
-                          type="email"
-                          placeholder="Ej: cliente@ejemplo.com"
-                          value={customerEmail}
-                          onChange={(e) => setCustomerEmail(e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          {selectedCustomer?.email
-                            ? 'Email del cliente pre-llenado. Puede modificarlo si el cliente lo desea.'
-                            : 'Ingrese el correo electrónico donde se enviará la factura.'}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Método de pago */}
-                    <div className="space-y-2">
-                      <Label>Método de Pago</Label>
-                      <Select
-                        value={paymentMethod}
-                        onValueChange={(value: any) => {
-                          setPaymentMethod(value);
-                          // Limpiar referencia al cambiar método de pago
-                          if (value === 'CASH') {
-                            setPaymentReference('');
-                          }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="CASH">
-                            <div className="flex items-center gap-2">
-                              <Banknote className="h-4 w-4" />
-                              Efectivo
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="CARD">
-                            <div className="flex items-center gap-2">
-                              <CreditCard className="h-4 w-4" />
-                              Tarjeta
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="TRANSFER">
-                            <div className="flex items-center gap-2">
-                              <DollarSign className="h-4 w-4" />
-                              Transferencia
-                            </div>
-                          </SelectItem>
-                          {canSellCredit && selectedCustomer?.allowCredit && (
-                            <SelectItem value="CREDIT">
+                        <Label>Método de Pago</Label>
+                        <Select
+                          value={paymentMethod}
+                          onValueChange={(value: any) => {
+                            setPaymentMethod(value);
+                            // Limpiar referencia al cambiar método de pago
+                            if (value === 'CASH') {
+                              setPaymentReference('');
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="CASH">
                               <div className="flex items-center gap-2">
-                                <UserIcon className="h-4 w-4" />
-                                Crédito
+                                <Banknote className="h-4 w-4" />
+                                Efectivo
                               </div>
                             </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Campo de referencia para tarjeta o transferencia */}
-                    {(paymentMethod === 'CARD' || paymentMethod === 'TRANSFER') && (
-                      <div className="space-y-2">
-                        <Label htmlFor="paymentReference">
-                          {paymentMethod === 'CARD' ? 'Número de Voucher *' : 'Referencia de Transferencia *'}
-                        </Label>
-                        <Input
-                          id="paymentReference"
-                          placeholder={
-                            paymentMethod === 'CARD'
-                              ? 'Ej: 123456'
-                              : 'Ej: TRANS-2024-001'
-                          }
-                          value={paymentReference}
-                          onChange={(e) => setPaymentReference(e.target.value)}
-                          className="font-mono"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          {paymentMethod === 'CARD'
-                            ? 'Ingrese el número del voucher de la transacción con tarjeta'
-                            : 'Ingrese la referencia bancaria de la transferencia'}
-                        </p>
+                            <SelectItem value="CARD">
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="h-4 w-4" />
+                                Tarjeta
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="TRANSFER">
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4" />
+                                Transferencia
+                              </div>
+                            </SelectItem>
+                            {canSellCredit && selectedCustomer?.allowCredit && (
+                              <SelectItem value="CREDIT">
+                                <div className="flex items-center gap-2">
+                                  <UserIcon className="h-4 w-4" />
+                                  Crédito
+                                </div>
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
                       </div>
-                    )}
 
-                    {/* Mensaje cuando el botón está deshabilitado por falta de NCF */}
-                    {missingNcfSequence && !sellAsFinalConsumer && (
-                      <Alert variant="destructive">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertTitle>Pago bloqueado</AlertTitle>
-                        <AlertDescription className="text-xs">
-                          Para procesar el pago, debe marcar &quot;Vender como consumidor final&quot; o{' '}
-                          <Button
-                            variant="link"
-                            size="sm"
-                            className="h-auto p-0 text-xs underline"
-                            onClick={() => router.push('/ncf/sequences/create')}
-                          >
-                            crear una secuencia NCF {requiredNcfType}
-                          </Button>
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    {/* Botón de pagar */}
-                    <Button
-                      className="w-full"
-                      size="lg"
-                      onClick={handlePaymentClick}
-                      disabled={processingPayment || (missingNcfSequence && !sellAsFinalConsumer)}
-                    >
-                      {processingPayment ? (
-                        <>
-                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                          Procesando...
-                        </>
-                      ) : (
-                        <>
-                          <DollarSign className="h-5 w-5 mr-2" />
-                          Procesar Pago ({formatCurrency(total)})
-                        </>
+                      {/* Campo de referencia para tarjeta o transferencia */}
+                      {(paymentMethod === 'CARD' || paymentMethod === 'TRANSFER') && (
+                        <div className="space-y-2">
+                          <Label htmlFor="paymentReference">
+                            {paymentMethod === 'CARD' ? 'Número de Voucher *' : 'Referencia de Transferencia *'}
+                          </Label>
+                          <Input
+                            id="paymentReference"
+                            placeholder={
+                              paymentMethod === 'CARD'
+                                ? 'Ej: 123456'
+                                : 'Ej: TRANS-2024-001'
+                            }
+                            value={paymentReference}
+                            onChange={(e) => setPaymentReference(e.target.value)}
+                            className="font-mono"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            {paymentMethod === 'CARD'
+                              ? 'Ingrese el número del voucher de la transacción con tarjeta'
+                              : 'Ingrese la referencia bancaria de la transferencia'}
+                          </p>
+                        </div>
                       )}
-                    </Button>
-                  </>
+
+                      {/* Mensaje cuando el botón está deshabilitado por falta de NCF */}
+                      {missingNcfSequence && !sellAsFinalConsumer && (
+                        <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertTitle>Pago bloqueado</AlertTitle>
+                          <AlertDescription className="text-xs">
+                            Para procesar el pago, debe marcar &quot;Vender como consumidor final&quot; o{' '}
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-xs underline"
+                              onClick={() => router.push('/ncf/sequences/create')}
+                            >
+                              crear una secuencia NCF {requiredNcfType}
+                            </Button>
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      {/* Botón de pagar */}
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        onClick={handlePaymentClick}
+                        disabled={processingPayment || (missingNcfSequence && !sellAsFinalConsumer)}
+                      >
+                        {processingPayment ? (
+                          <>
+                            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                            Procesando...
+                          </>
+                        ) : (
+                          <>
+                            <DollarSign className="h-5 w-5 mr-2" />
+                            Procesar Pago ({formatCurrency(total)})
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -2208,6 +2513,136 @@ export default function PosPage() {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de descuento por ítem - Solo visible si tiene permiso */}
+        <Dialog open={showItemDiscountModal && canDiscount} onOpenChange={setShowItemDiscountModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Percent className="h-5 w-5 text-primary" />
+                Aplicar Descuento
+              </DialogTitle>
+              <DialogDescription>
+                {itemToDiscount && (
+                  <>Aplicar descuento a: <strong>{itemToDiscount.name}</strong></>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              {/* Información del ítem */}
+              {itemToDiscount && (
+                <div className="p-3 bg-muted/50 rounded-lg space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Precio unitario:</span>
+                    <span className="font-medium">{formatCurrency(itemToDiscount.price)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Cantidad:</span>
+                    <span className="font-medium">{itemToDiscount.cartQuantity}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Total:</span>
+                    <span className="font-bold">{formatCurrency(parseFloat(itemToDiscount.price) * itemToDiscount.cartQuantity)}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Tipo de descuento */}
+              <div className="space-y-2">
+                <Label>Tipo de descuento</Label>
+                <Select
+                  value={itemDiscountType}
+                  onValueChange={(value: 'percentage' | 'fixed') => setItemDiscountType(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Porcentaje (%)</SelectItem>
+                    <SelectItem value="fixed">Monto Fijo (RD$)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Valor del descuento */}
+              <div className="space-y-2">
+                <Label>
+                  {itemDiscountType === 'percentage' ? 'Porcentaje de descuento' : 'Monto de descuento'}
+                </Label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min="0"
+                    max={itemDiscountType === 'percentage' ? '100' : undefined}
+                    step="0.01"
+                    placeholder={itemDiscountType === 'percentage' ? 'Ej: 10' : 'Ej: 100'}
+                    value={itemDiscountValue}
+                    onChange={(e) => setItemDiscountValue(e.target.value)}
+                    className="pr-10"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                    {itemDiscountType === 'percentage' ? '%' : 'RD$'}
+                  </span>
+                </div>
+                {itemToDiscount && itemDiscountValue && parseFloat(itemDiscountValue) > 0 && (
+                  <p className="text-sm text-green-600">
+                    Descuento: {itemDiscountType === 'percentage'
+                      ? formatCurrency(parseFloat(itemToDiscount.price) * itemToDiscount.cartQuantity * (parseFloat(itemDiscountValue) / 100))
+                      : formatCurrency(Math.min(parseFloat(itemDiscountValue), parseFloat(itemToDiscount.price) * itemToDiscount.cartQuantity))
+                    }
+                  </p>
+                )}
+              </div>
+
+              {/* Razón del descuento (opcional) */}
+              <div className="space-y-2">
+                <Label>Razón del descuento (opcional)</Label>
+                <Input
+                  placeholder="Ej: Cliente frecuente, Promoción, etc."
+                  value={itemDiscountReason}
+                  onChange={(e) => setItemDiscountReason(e.target.value)}
+                  maxLength={100}
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              {itemToDiscount?.discountValue && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (itemToDiscount) {
+                      removeItemDiscount(itemToDiscount.id);
+                      setShowItemDiscountModal(false);
+                      setItemToDiscount(null);
+                      setItemDiscountValue('');
+                      setItemDiscountReason('');
+                      toast.success('Descuento eliminado');
+                    }
+                  }}
+                  className="text-destructive hover:text-destructive"
+                >
+                  Quitar Descuento
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowItemDiscountModal(false);
+                  setItemToDiscount(null);
+                  setItemDiscountValue('');
+                  setItemDiscountReason('');
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={applyItemDiscount}>
+                Aplicar Descuento
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

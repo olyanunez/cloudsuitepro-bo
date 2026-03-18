@@ -46,8 +46,12 @@ export function printInvoice({
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Factura ${invoice.invoiceNumber}</title>
+        <title></title>
         <style>
+          @page {
+            margin: 10mm;
+            size: auto;
+          }
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
             font-family: Arial, Helvetica, sans-serif;
@@ -187,6 +191,20 @@ export function printInvoice({
           .items-table .text-center {
             text-align: center;
           }
+          .items-table .discount-info {
+            font-size: 9pt;
+            color: #c0392b;
+            margin-top: 2px;
+          }
+          .items-table .discount-badge {
+            display: inline-block;
+            background-color: #fdeaea;
+            color: #c0392b;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 8pt;
+            font-weight: 600;
+          }
 
           /* Sección de totales */
           .totals {
@@ -251,6 +269,11 @@ export function printInvoice({
           @media print {
             body { padding: 10px; }
             .no-print { display: none; }
+            /* Ocultar encabezados y pies de página del navegador */
+            @page {
+              margin-top: 0;
+              margin-bottom: 0;
+            }
           }
         </style>
       </head>
@@ -365,6 +388,7 @@ export function printInvoice({
     // Calcular valores correctamente según tipo de factura
     const unitPriceValue = parseFloat(item.unitPrice.toString());
     const quantity = item.quantity;
+    const itemDiscount = item.discount ? parseFloat(item.discount.toString()) : 0;
 
     let itemPrice, itemTax, itemTotal;
 
@@ -372,21 +396,40 @@ export function printInvoice({
       // Facturas B14, B15, B16 - Exentas
       itemPrice = unitPriceValue * quantity;
       itemTax = 0;
-      itemTotal = itemPrice;
+      itemTotal = itemPrice - itemDiscount;
     } else {
       // Facturas B01, B02 - Calcular ITBIS sobre el precio
       itemPrice = unitPriceValue * quantity;
-      itemTax = itemPrice * itbisRate;
-      itemTotal = itemPrice + itemTax;
+      itemTax = (itemPrice - itemDiscount) * itbisRate;
+      itemTotal = itemPrice - itemDiscount + itemTax;
+    }
+
+    // Formatear información de descuento del ítem
+    const discountType = (item as any).discountType;
+    const discountValue = (item as any).discountValue;
+    const discountReason = (item as any).discountReason;
+
+    let discountDisplay = '';
+    if (itemDiscount > 0 && discountType && discountValue) {
+      const discountLabel = discountType === 'PERCENTAGE'
+        ? `${discountValue}%`
+        : formatCurrency(discountValue);
+      discountDisplay = `
+        <div class="discount-info">
+          <span class="discount-badge">-${discountLabel}</span>
+          ${discountReason ? `<span style="margin-left: 5px; font-style: italic;">${discountReason}</span>` : ''}
+        </div>
+      `;
     }
 
     return `
                 <tr>
                   <td>
                     <div class="product-name">${item.variant.product.name}${item.variant.name ? ` - ${item.variant.name}` : ''}</div>
+                    ${discountDisplay}
                   </td>
                   <td class="text-center">${quantity}</td>
-                  <td class="text-right">${formatCurrency(itemPrice)}</td>
+                  <td class="text-right">${formatCurrency(itemPrice)}${itemDiscount > 0 ? `<br><span style="color: #c0392b; font-size: 9pt;">-${formatCurrency(itemDiscount)}</span>` : ''}</td>
                   <td class="text-right">${formatCurrency(itemTax)}</td>
                   <td class="text-right">${formatCurrency(itemTotal)}</td>
                 </tr>
@@ -395,7 +438,7 @@ export function printInvoice({
             </tbody>
           </table>
 
-          <!-- Totales con desglose de ITBIS -->
+          <!-- Totales con desglose de ITBIS y descuentos -->
           <div class="totals">
             ${(() => {
       // Usar directamente los valores que vienen del backend
@@ -404,6 +447,24 @@ export function printInvoice({
       const invoiceTax = parseFloat(invoice.tax.toString());
       const invoiceDiscount = parseFloat(invoice.discount.toString());
       const invoiceTotal = parseFloat(invoice.total.toString());
+
+      // Nuevos campos de descuento detallado
+      const itemDiscountsTotal = (invoice as any).itemDiscountsTotal
+        ? parseFloat((invoice as any).itemDiscountsTotal.toString())
+        : 0;
+      const globalDiscountAmount = (invoice as any).globalDiscountAmount
+        ? parseFloat((invoice as any).globalDiscountAmount.toString())
+        : 0;
+      const globalDiscountType = (invoice as any).globalDiscountType;
+      const globalDiscountValue = (invoice as any).globalDiscountValue
+        ? parseFloat((invoice as any).globalDiscountValue.toString())
+        : 0;
+
+      // Si hay descuentos detallados, mostrarlos; si no, usar el campo legacy
+      const hasDetailedDiscounts = itemDiscountsTotal > 0 || globalDiscountAmount > 0;
+      const totalDiscount = hasDetailedDiscounts
+        ? itemDiscountsTotal + globalDiscountAmount
+        : invoiceDiscount;
 
       return `
                 <div class="row">
@@ -429,10 +490,29 @@ export function printInvoice({
                   <span class="value">${formatCurrency(0)}</span>
                 </div>
                 `}
-                ${invoiceDiscount > 0 ? `
-                <div class="row">
+                ${hasDetailedDiscounts ? `
+                  ${itemDiscountsTotal > 0 ? `
+                  <div class="row" style="color: #c0392b;">
+                    <span class="label">Descuentos en productos:</span>
+                    <span class="value">-${formatCurrency(itemDiscountsTotal)}</span>
+                  </div>
+                  ` : ''}
+                  ${globalDiscountAmount > 0 ? `
+                  <div class="row" style="color: #c0392b;">
+                    <span class="label">Descuento general${globalDiscountType === 'PERCENTAGE' ? ` (${globalDiscountValue}%)` : ''}:</span>
+                    <span class="value">-${formatCurrency(globalDiscountAmount)}</span>
+                  </div>
+                  ` : ''}
+                  ${(itemDiscountsTotal > 0 && globalDiscountAmount > 0) ? `
+                  <div class="row" style="color: #c0392b; font-weight: bold; border-top: 1px dashed #c0392b; padding-top: 5px;">
+                    <span class="label">Total descuentos:</span>
+                    <span class="value">-${formatCurrency(totalDiscount)}</span>
+                  </div>
+                  ` : ''}
+                ` : invoiceDiscount > 0 ? `
+                <div class="row" style="color: #c0392b;">
                   <span class="label">Descuento:</span>
-                  <span class="value">-${formatCurrency(invoiceDiscount).replace('RD$', 'RD$ ')}</span>
+                  <span class="value">-${formatCurrency(invoiceDiscount)}</span>
                 </div>
                 ` : ''}
                 <div class="row total-row">

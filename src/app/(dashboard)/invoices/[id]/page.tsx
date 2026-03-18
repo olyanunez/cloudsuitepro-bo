@@ -393,7 +393,25 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
                         {InvoiceService.formatCurrency(item.subtotal)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">
-                        {InvoiceService.formatCurrency(item.discount)}
+                        {item.discount > 0 ? (
+                          <div>
+                            <span className="text-red-600 dark:text-red-400">
+                              -{InvoiceService.formatCurrency(item.discount)}
+                            </span>
+                            {item.discountType && item.discountValue && (
+                              <div className="text-xs text-gray-500">
+                                {item.discountType === 'PERCENTAGE' ? `${item.discountValue}%` : `Fijo`}
+                              </div>
+                            )}
+                            {item.discountReason && (
+                              <div className="text-xs text-gray-400 italic">
+                                {item.discountReason}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span>-</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">
                         {InvoiceService.formatCurrency(item.tax)}
@@ -430,12 +448,48 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
               <span className="text-base text-gray-600 dark:text-gray-400">Subtotal:</span>
               <span className="text-base font-medium">{InvoiceService.formatCurrency(invoice.subtotal)}</span>
             </div>
-            <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-2">
-              <span className="text-base text-gray-600 dark:text-gray-400">Descuento:</span>
-              <span className="text-base font-medium text-red-600 dark:text-red-400">
-                -{InvoiceService.formatCurrency(invoice.discount)}
-              </span>
-            </div>
+
+            {/* Desglose de descuentos */}
+            {(invoice.itemDiscountsTotal && invoice.itemDiscountsTotal > 0) ||
+             (invoice.globalDiscountAmount && invoice.globalDiscountAmount > 0) ? (
+              <>
+                {invoice.itemDiscountsTotal && invoice.itemDiscountsTotal > 0 && (
+                  <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-2">
+                    <span className="text-base text-gray-600 dark:text-gray-400">Descuentos en productos:</span>
+                    <span className="text-base font-medium text-red-600 dark:text-red-400">
+                      -{InvoiceService.formatCurrency(invoice.itemDiscountsTotal)}
+                    </span>
+                  </div>
+                )}
+                {invoice.globalDiscountAmount && invoice.globalDiscountAmount > 0 && (
+                  <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-2">
+                    <span className="text-base text-gray-600 dark:text-gray-400">
+                      Descuento general
+                      {invoice.globalDiscountType === 'PERCENTAGE' && invoice.globalDiscountValue
+                        ? ` (${invoice.globalDiscountValue}%)`
+                        : ''}:
+                    </span>
+                    <span className="text-base font-medium text-red-600 dark:text-red-400">
+                      -{InvoiceService.formatCurrency(invoice.globalDiscountAmount)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-2 bg-red-50 dark:bg-red-900/20 -mx-4 px-4 py-1">
+                  <span className="text-base font-semibold text-red-700 dark:text-red-300">Total descuentos:</span>
+                  <span className="text-base font-semibold text-red-700 dark:text-red-300">
+                    -{InvoiceService.formatCurrency(invoice.discount)}
+                  </span>
+                </div>
+              </>
+            ) : invoice.discount > 0 ? (
+              <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-2">
+                <span className="text-base text-gray-600 dark:text-gray-400">Descuento:</span>
+                <span className="text-base font-medium text-red-600 dark:text-red-400">
+                  -{InvoiceService.formatCurrency(invoice.discount)}
+                </span>
+              </div>
+            ) : null}
+
             <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-2">
               <span className="text-base text-gray-600 dark:text-gray-400">Impuestos:</span>
               <span className="text-base font-medium">{InvoiceService.formatCurrency(invoice.tax)}</span>

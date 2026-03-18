@@ -128,7 +128,7 @@ export function HowItWorksSection() {
             {[
               'Sistema POS intuitivo y rápido',
               'Gestión de inventario en tiempo real',
-              'Facturación electrónica',
+              'Facturas electrónicas',
               'Múltiples sucursales y almacenes',
               'Control de usuarios y permisos',
               'Reportes y análisis avanzados',

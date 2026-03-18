@@ -3,6 +3,7 @@ import { apiGet, apiPost } from './apiService';
 export interface ProductStock {
   id: number;
   code: string;
+  barcode?: string;
   name: string;
   description: string;
   price: string;
@@ -27,11 +28,16 @@ export interface ProductStock {
   }>;
 }
 
+export type DiscountType = 'PERCENTAGE' | 'FIXED';
+
 export interface InvoiceItem {
   variantId: number;
   quantity: number;
   unitPrice: number;
   discount?: number;
+  discountType?: DiscountType;
+  discountValue?: number;
+  discountReason?: string;
   tax?: number;
 }
 
@@ -43,6 +49,10 @@ export interface CreateInvoicePayload {
   subtotal: number;
   tax?: number;
   discount?: number;
+  globalDiscountType?: DiscountType;
+  globalDiscountValue?: number;
+  globalDiscountAmount?: number;
+  itemDiscountsTotal?: number;
   total: number;
   paymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | 'CHECK' | 'CREDIT';
   notes?: string;
@@ -129,6 +139,21 @@ export class PosService {
     });
 
     return apiGet<ProductStock[]>(`/pos/products/search?${queryParams}`);
+  }
+
+  /**
+   * Obtiene los productos más vendidos del almacén
+   */
+  static async getTopSellingProducts(params: {
+    warehouseId: number;
+    limit?: number;
+  }): Promise<ProductStock[]> {
+    const queryParams = new URLSearchParams({
+      warehouseId: params.warehouseId.toString(),
+      ...(params.limit && { limit: params.limit.toString() }),
+    });
+
+    return apiGet<ProductStock[]>(`/pos/products/top-selling?${queryParams}`);
   }
 
   /**

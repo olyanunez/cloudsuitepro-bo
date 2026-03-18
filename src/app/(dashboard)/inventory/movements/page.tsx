@@ -281,7 +281,7 @@ export default function MovementsPage() {
           <ExportButton screenCode="MOVEMENTS" onExport={handleExport} />
           <Link href="/inventory/movements/create">
             <Button className="bg-primary hover:bg-primary-600">
-              <PlusIcon className="mr-2 h-4 w-4" />/>
+              <PlusIcon className="mr-2 h-4 w-4" />
               Nuevo Movimiento
             </Button>
           </Link>

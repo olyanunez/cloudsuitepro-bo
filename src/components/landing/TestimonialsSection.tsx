@@ -28,7 +28,7 @@ const testimonials: Testimonial[] = [
     role: 'Propietario',
     company: 'Supermercado El Ahorro',
     content:
-      'La facturación electrónica y el sistema POS son increíblemente rápidos. Nuestros cajeros se adaptaron en menos de una hora. El soporte técnico es excelente, siempre disponibles cuando los necesitamos.',
+      'Las facturas electrónicas y el sistema POS son increíblemente rápidos. Nuestros cajeros se adaptaron en menos de una hora. El soporte técnico es excelente, siempre disponibles cuando los necesitamos.',
     rating: 5,
   },
   {
@@ -60,7 +60,7 @@ const testimonials: Testimonial[] = [
     role: 'Contador',
     company: 'Ferretería La Popular',
     content:
-      'La generación automática de reportes fiscales nos facilita enormemente el trabajo contable. La integración con facturación electrónica funciona sin problemas. Muy recomendado.',
+      'La generación automática de reportes fiscales nos facilita enormemente el trabajo contable. La integración con facturas electrónicas funciona sin problemas. Muy recomendado.',
     rating: 5,
   },
 ];

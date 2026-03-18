@@ -57,6 +57,9 @@ export interface SalesByCashierItem {
   cashierName: string;
   totalInvoices: number;
   totalRevenue: number;
+  totalSubtotal: number;
+  totalDiscount: number;
+  discountPercentage: number;
   averageTicket: number;
   cancelledInvoices: number;
 }
@@ -90,6 +93,44 @@ export interface PeriodComparisonData {
     averageTicketChange: number;
     averageTicketChangePercent: number;
   };
+}
+
+export interface DiscountAnalysisSummary {
+  totalInvoicesWithDiscount: number;
+  totalDiscountAmount: number;
+  totalItemDiscounts: number;
+  totalGlobalDiscounts: number;
+  averageDiscountPerInvoice: number;
+  discountPercentageOfSales: number;
+}
+
+export interface DiscountByCashierItem {
+  userId: number;
+  userName: string;
+  invoiceCount: number;
+  totalDiscount: number;
+  itemDiscounts: number;
+  globalDiscounts: number;
+}
+
+export interface DiscountByProductItem {
+  productId: number;
+  productName: string;
+  timesDiscounted: number;
+  totalDiscountAmount: number;
+  reasons: string[];
+}
+
+export interface DiscountReasonItem {
+  reason: string;
+  count: number;
+}
+
+export interface DiscountAnalysisReport {
+  summary: DiscountAnalysisSummary;
+  byCashier: DiscountByCashierItem[];
+  byProduct: DiscountByProductItem[];
+  topReasons: DiscountReasonItem[];
 }
 
 const reportsService = {
@@ -159,6 +200,16 @@ const reportsService = {
     if (filters?.branchId) params.append('branchId', filters.branchId.toString());
 
     return await apiGet<PeriodComparisonData>(`/reports/period-comparison?${params.toString()}`);
+  },
+
+  async getDiscountAnalysis(filters?: ReportFilters): Promise<DiscountAnalysisReport> {
+    const params = new URLSearchParams();
+    if (filters?.period) params.append('period', filters.period);
+    if (filters?.startDate) params.append('startDate', filters.startDate);
+    if (filters?.endDate) params.append('endDate', filters.endDate);
+    if (filters?.branchId) params.append('branchId', filters.branchId.toString());
+
+    return await apiGet<DiscountAnalysisReport>(`/reports/discount-analysis?${params.toString()}`);
   },
 };
 

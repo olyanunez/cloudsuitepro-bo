@@ -155,7 +155,7 @@ export default function Welcome() {
                 <TrendingUp className="h-6 w-6 text-yellow-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Facturación Electrónica
+                Facturas Electrónicas
               </h3>
               <p className="text-gray-600">
                 Genera facturas profesionales y gestiona tus documentos fiscales con facilidad.
