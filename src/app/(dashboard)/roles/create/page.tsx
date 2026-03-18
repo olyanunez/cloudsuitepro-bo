@@ -378,9 +378,6 @@ export default function CreateRolePage() {
                             <ChevronRightIcon className="h-4 w-4 mr-2" />
                           }
                           <h3 className="font-medium">{screen.name}</h3>
-                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                            {screen.code}
-                          </span>
                           <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded-full">
                             {screen.permissions.length} permisos
                           </span>
@@ -432,7 +429,6 @@ export default function CreateRolePage() {
                                     {permission.description && (
                                       <p className="text-xs text-gray-500 dark:text-gray-400">{permission.description}</p>
                                     )}
-                                    <p className="text-xs text-blue-500 dark:text-blue-400">ID: {screenPermissionId}</p>
                                   </label>
                                 </div>
                               );

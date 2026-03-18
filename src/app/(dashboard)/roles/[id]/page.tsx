@@ -152,12 +152,10 @@ export default function RoleDetailPage() {
                             className="flex items-center p-3 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600"
                           >
                             <div className="w-full">
-                              <div className="flex justify-between items-center mb-1">
-                                <p className="font-medium text-blue-600 dark:text-blue-400">{permission.name}</p>
-                                <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-2 py-1 rounded">{permission.code}</span>
-                              </div>
-                              <p className="text-sm text-gray-600 dark:text-gray-300">{permission.description || `Permiso ID: ${permission.id}`}</p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 bg-gray-100 dark:bg-gray-800 inline-block px-2 py-1 rounded">Módulo: {permission.module || 'General'}</p>
+                              <p className="font-medium text-blue-600 dark:text-blue-400 mb-1">{permission.name}</p>
+                              {permission.description && (
+                                <p className="text-sm text-gray-600 dark:text-gray-300">{permission.description}</p>
+                              )}
                             </div>
                           </div>
                         ))

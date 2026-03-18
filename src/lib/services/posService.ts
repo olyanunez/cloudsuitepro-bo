@@ -27,11 +27,16 @@ export interface ProductStock {
   }>;
 }
 
+export type DiscountType = 'PERCENTAGE' | 'FIXED';
+
 export interface InvoiceItem {
   variantId: number;
   quantity: number;
   unitPrice: number;
   discount?: number;
+  discountType?: DiscountType;
+  discountValue?: number;
+  discountReason?: string;
   tax?: number;
 }
 
@@ -43,6 +48,10 @@ export interface CreateInvoicePayload {
   subtotal: number;
   tax?: number;
   discount?: number;
+  globalDiscountType?: DiscountType;
+  globalDiscountValue?: number;
+  globalDiscountAmount?: number;
+  itemDiscountsTotal?: number;
   total: number;
   paymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | 'CHECK' | 'CREDIT';
   notes?: string;

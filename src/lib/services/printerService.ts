@@ -35,9 +35,17 @@ export interface InvoicePrintData {
         quantity: number;
         price: number;
         total: number;
+        discount?: number;
+        discountType?: 'PERCENTAGE' | 'FIXED';
+        discountValue?: number;
+        discountReason?: string;
     }>;
     subtotal?: number;
     discount?: number;
+    itemDiscountsTotal?: number;
+    globalDiscountType?: 'PERCENTAGE' | 'FIXED';
+    globalDiscountValue?: number;
+    globalDiscountAmount?: number;
     tax?: number;
     total: number;
     paymentMethod?: string;

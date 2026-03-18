@@ -23,6 +23,11 @@ export interface InvoiceItemVariant {
 }
 
 /**
+ * Tipos de descuento
+ */
+export type DiscountType = 'PERCENTAGE' | 'FIXED';
+
+/**
  * Interfaz para un item de factura
  */
 export interface InvoiceItem {
@@ -34,6 +39,9 @@ export interface InvoiceItem {
   subtotal: number;
   tax: number;
   discount: number;
+  discountType?: DiscountType;
+  discountValue?: number;
+  discountReason?: string;
   total: number;
   variant: InvoiceItemVariant;
 }
@@ -96,6 +104,11 @@ export interface Invoice {
   subtotal: number;
   tax: number;
   discount: number;
+  // Campos de descuento detallado
+  globalDiscountType?: DiscountType;
+  globalDiscountValue?: number;
+  globalDiscountAmount?: number;
+  itemDiscountsTotal?: number;
   total: number;
   notes: string | null;
   paymentReference: string | null;
@@ -144,6 +157,10 @@ export interface InvoiceListResponse {
 export interface InvoiceStats {
   totalInvoices: number;
   totalAmount: number;
+  totalDiscount?: number;
+  totalItemDiscounts?: number;
+  totalGlobalDiscounts?: number;
+  averageDiscountPercentage?: number;
   invoicesByPaymentMethod: Array<{
     paymentMethod: string;
     count: number;
