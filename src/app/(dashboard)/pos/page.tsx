@@ -869,6 +869,9 @@ export default function PosPage() {
       setCompletedInvoice(invoice);
       setShowInvoiceModal(true);
 
+      // 🔊 Reproducir sonido de éxito al completar la venta
+      playSuccessBeepIfEnabled();
+
       // Mostrar mensaje de éxito con información de email
       if (sendEmail) {
         toast.success(
