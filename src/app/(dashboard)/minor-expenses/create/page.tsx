@@ -12,6 +12,7 @@ import {
 } from '@/lib/types/minor-expense';
 import { MinorExpenseService } from '@/lib/services/minorExpenseService';
 import { AccountingService, Account } from '@/lib/services/accountingService';
+import ncfService, { NcfConfiguration } from '@/lib/services/ncfService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,6 +39,7 @@ export default function CreateMinorExpensePage() {
     const [loading, setLoading] = useState(false);
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [attachments, setAttachments] = useState<Array<{ name: string; base64: string }>>([]);
+    const [ncfConfig, setNcfConfig] = useState<NcfConfiguration | null>(null);
 
     const [formData, setFormData] = useState<CreateMinorExpenseInput>({
         date: new Date().toISOString().split('T')[0],
@@ -56,7 +58,23 @@ export default function CreateMinorExpensePage() {
 
     useEffect(() => {
         loadAccounts();
+        loadNcfConfig();
     }, []);
+
+    const loadNcfConfig = async () => {
+        try {
+            const config = await ncfService.getConfiguration();
+            setNcfConfig(config);
+        } catch (error) {
+            console.error('Error loading NCF config:', error);
+        }
+    };
+
+    // Obtener la tasa de ITBIS de la configuración (convertir de porcentaje a decimal)
+    const getItbisRate = () => {
+        if (!ncfConfig?.itbisRate) return 0.18;
+        return ncfConfig.itbisRate > 1 ? ncfConfig.itbisRate / 100 : ncfConfig.itbisRate;
+    };
 
     const loadAccounts = async () => {
         try {
@@ -86,7 +104,7 @@ export default function CreateMinorExpensePage() {
 
             // Auto-calculate tax if taxable amount changes
             if (name === 'taxableAmount') {
-                updated.tax = numValue * 0.18; // 18% ITBIS
+                updated.tax = numValue * getItbisRate();
                 updated.amount = numValue + updated.tax;
             }
 
@@ -258,7 +276,7 @@ export default function CreateMinorExpensePage() {
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="tax">ITBIS (18%) *</Label>
+                                    <Label htmlFor="tax">ITBIS ({ncfConfig?.itbisRate || 18}%) *</Label>
                                     <Input
                                         id="tax"
                                         name="tax"

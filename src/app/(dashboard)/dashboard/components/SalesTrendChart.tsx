@@ -50,7 +50,7 @@ export function SalesTrendChart({ data }: SalesTrendChartProps) {
                 <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.05}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid stroke="#e5e7eb" vertical={false} />
             <XAxis dataKey="date" tick={{ fontSize: 12 }} />
             <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
             <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
@@ -94,7 +94,6 @@ export function SalesTrendChart({ data }: SalesTrendChartProps) {
               dataKey="promedio"
               stroke="#f59e0b"
               strokeWidth={2}
-              strokeDasharray="5 5"
               fill="url(#colorPromedio)"
               name="Ticket Promedio"
             />

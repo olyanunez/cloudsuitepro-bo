@@ -157,7 +157,7 @@ export default function CashSessionDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{formatCurrency(totalVentas)}</div>
-              <p className="text-xs text-muted-foreground">{session._count?.invoices || 0} facturas</p>
+              <p className="text-xs text-muted-foreground">{session.invoices?.length || 0} facturas</p>
             </CardContent>
           </Card>
         </div>

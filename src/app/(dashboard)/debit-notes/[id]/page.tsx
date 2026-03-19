@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Printer, Download, XCircle } from 'lucide-react';
 import { debitNoteService, DebitNote } from '@/lib/services/debitNoteService';
+import ncfService, { NcfConfiguration } from '@/lib/services/ncfService';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -31,10 +32,21 @@ export default function DebitNoteDetailPage() {
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [cancellationReason, setCancellationReason] = useState('');
     const [cancelling, setCancelling] = useState(false);
+    const [ncfConfig, setNcfConfig] = useState<NcfConfiguration | null>(null);
 
     useEffect(() => {
         loadDebitNote();
+        loadNcfConfig();
     }, [params.id]);
+
+    const loadNcfConfig = async () => {
+        try {
+            const config = await ncfService.getConfiguration();
+            setNcfConfig(config);
+        } catch (error) {
+            console.error('Error loading NCF config:', error);
+        }
+    };
 
     const loadDebitNote = async () => {
         try {
@@ -295,7 +307,7 @@ export default function DebitNoteDetailPage() {
                             </div>
                         )}
                         <div className="flex justify-between text-muted-foreground">
-                            <span>ITBIS (18%):</span>
+                            <span>ITBIS ({ncfConfig?.itbisRate || 18}%):</span>
                             <span>{formatCurrency(debitNote.tax)}</span>
                         </div>
                         <div className="flex justify-between text-xl font-bold border-t pt-2">

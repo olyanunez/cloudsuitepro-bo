@@ -29,6 +29,11 @@ export function printInvoice({
     throw new Error('No se pudo abrir la ventana de impresión. Por favor, permita las ventanas emergentes.');
   }
 
+  // Asegurar que itbisRate sea un número válido
+  const itbisRateNum = Number(itbisRate) || 18;
+  // Calcular el porcentaje para mostrar (si viene como 0.18 multiplicar por 100, si viene como 18 usar directo)
+  const itbisPercentage = itbisRateNum > 1 ? itbisRateNum : itbisRateNum * 100;
+
   const paymentMethodLabels: Record<string, string> = {
     CASH: 'Efectivo',
     CARD: 'Tarjeta',
@@ -385,24 +390,17 @@ export function printInvoice({
             </thead>
             <tbody>
               ${invoice.items.map(item => {
-    // Calcular valores correctamente según tipo de factura
+    // Usar los valores que ya vienen calculados del backend
     const unitPriceValue = parseFloat(item.unitPrice.toString());
     const quantity = item.quantity;
     const itemDiscount = item.discount ? parseFloat(item.discount.toString()) : 0;
 
-    let itemPrice, itemTax, itemTotal;
+    // Precio base (sin descuento)
+    const itemPrice = unitPriceValue * quantity;
 
-    if (isExemptFromTax && taxExemptionReason) {
-      // Facturas B14, B15, B16 - Exentas
-      itemPrice = unitPriceValue * quantity;
-      itemTax = 0;
-      itemTotal = itemPrice - itemDiscount;
-    } else {
-      // Facturas B01, B02 - Calcular ITBIS sobre el precio
-      itemPrice = unitPriceValue * quantity;
-      itemTax = (itemPrice - itemDiscount) * itbisRate;
-      itemTotal = itemPrice - itemDiscount + itemTax;
-    }
+    // Tax y total vienen directamente del backend (ya calculados correctamente)
+    const itemTax = item.tax ? parseFloat(item.tax.toString()) : 0;
+    const itemTotal = item.total ? parseFloat(item.total.toString()) : (itemPrice - itemDiscount + itemTax);
 
     // Formatear información de descuento del ítem
     const discountType = (item as any).discountType;
@@ -473,7 +471,7 @@ export function printInvoice({
                 </div>
                 ${invoiceTax > 0 ? `
                 <div class="row itbis-row">
-                  <span class="label">ITBIS (${(itbisRate * 100).toFixed(0)}%):</span>
+                  <span class="label">ITBIS (${itbisPercentage.toFixed(0)}%):</span>
                   <span class="value">${formatCurrency(invoiceTax)}</span>
                 </div>
                 ` : invoiceTax === 0 && isExemptFromTax && taxExemptionReason ? `
