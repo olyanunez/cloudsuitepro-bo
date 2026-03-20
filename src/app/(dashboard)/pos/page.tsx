@@ -1149,7 +1149,7 @@ export default function PosPage() {
       const printData = {
         companyName: tenant?.name || 'CloudSuite Pro',
         companyAddress: tenant?.address || '',
-        companyRnc: tenant?.rnc || '',
+        companyRnc: tenant?.taxId || '',
         companyPhone: tenant?.phone || '',
         invoiceNumber: invoice.invoiceNumber,
         ncf: invoice.ncf || undefined,
