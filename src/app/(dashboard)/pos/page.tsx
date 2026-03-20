@@ -1111,13 +1111,21 @@ export default function PosPage() {
   const printThermalVoucher = async (invoice: Invoice, tenant: Tenant | null) => {
     try {
       // Formatear los items de la factura
-      const items = invoice.items.map(item => ({
-        quantity: item.quantity,
-        name: item.variant?.product?.name || 'Producto',
-        description: item.variant?.sku || '',
-        price: parseFloat(item.unitPrice),
-        total: parseFloat(item.totalPrice)
-      }));
+      // total = precio × cantidad (sin ITBIS)
+      const items = invoice.items.map(item => {
+        const unitPrice = parseFloat(item.unitPrice);
+        return {
+          quantity: item.quantity,
+          name: item.variant?.product?.name || 'Producto',
+          description: item.variant?.sku || '',
+          price: unitPrice,
+          total: unitPrice * item.quantity,
+          discount: item.discount ? parseFloat(item.discount) : undefined,
+          discountType: item.discountType || undefined,
+          discountValue: item.discountValue || undefined,
+          discountReason: item.discountReason || undefined,
+        };
+      });
 
       // Mapear el método de pago
       const paymentMethodMap: Record<string, string> = {
@@ -1125,6 +1133,16 @@ export default function PosPage() {
         'CARD': 'Tarjeta',
         'TRANSFER': 'Transferencia',
         'CREDIT': 'Crédito'
+      };
+
+      // Mapear tipo de comprobante (B01, B02, etc. a nombres legibles)
+      const ncfTypeMap: Record<string, string> = {
+        'B01': 'Crédito Fiscal',
+        'B02': 'Consumidor Final',
+        'B14': 'Gubernamental',
+        'B15': 'Regímenes Especiales',
+        'B03': 'Nota de Débito',
+        'B04': 'Nota de Crédito'
       };
 
       // Preparar datos para el Printer Service
@@ -1135,11 +1153,13 @@ export default function PosPage() {
         companyPhone: tenant?.phone || '',
         invoiceNumber: invoice.invoiceNumber,
         ncf: invoice.ncf || undefined,
+        invoiceType: invoice.ncfType ? ncfTypeMap[invoice.ncfType] || invoice.ncfType : undefined,
         date: new Date(invoice.createdAt).toISOString(),
         customerName: invoice.customer
           ? `${invoice.customer.name}${invoice.customer.lastName ? ` ${invoice.customer.lastName}` : ''}`
           : 'Consumidor Final',
         customerRnc: invoice.customer?.taxId || undefined,
+        cashierName: invoice.user?.name || undefined,
         items,
         subtotal: parseFloat(invoice.subtotal),
         tax: parseFloat(invoice.tax),
