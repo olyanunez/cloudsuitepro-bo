@@ -465,6 +465,21 @@ export function printInvoice({
         : invoiceDiscount;
 
       return `
+                ${(itemDiscountsTotal > 0 || globalDiscountAmount > 0) ? `
+                ${itemDiscountsTotal > 0 ? `
+                <div class="row" style="color: #666; font-size: 10pt; font-style: italic;">
+                  <span class="label">Descuentos en productos:</span>
+                  <span class="value">${formatCurrency(itemDiscountsTotal)}</span>
+                </div>
+                ` : ''}
+                ${globalDiscountAmount > 0 ? `
+                <div class="row" style="color: #666; font-size: 10pt; font-style: italic;">
+                  <span class="label">Descuento general${globalDiscountType === 'PERCENTAGE' ? ` (${globalDiscountValue}%)` : ''}:</span>
+                  <span class="value">${formatCurrency(globalDiscountAmount)}</span>
+                </div>
+                ` : ''}
+                <hr style="border: none; border-top: 1px dashed #ccc; margin: 8px 0;">
+                ` : ''}
                 <div class="row">
                   <span class="label">Subtotal${invoiceTax > 0 ? ' (sin ITBIS)' : ''}:</span>
                   <span class="value">${formatCurrency(invoiceSubtotal)}</span>
@@ -488,31 +503,6 @@ export function printInvoice({
                   <span class="value">${formatCurrency(0)}</span>
                 </div>
                 `}
-                ${hasDetailedDiscounts ? `
-                  ${itemDiscountsTotal > 0 ? `
-                  <div class="row" style="color: #c0392b;">
-                    <span class="label">Descuentos en productos:</span>
-                    <span class="value">-${formatCurrency(itemDiscountsTotal)}</span>
-                  </div>
-                  ` : ''}
-                  ${globalDiscountAmount > 0 ? `
-                  <div class="row" style="color: #c0392b;">
-                    <span class="label">Descuento general${globalDiscountType === 'PERCENTAGE' ? ` (${globalDiscountValue}%)` : ''}:</span>
-                    <span class="value">-${formatCurrency(globalDiscountAmount)}</span>
-                  </div>
-                  ` : ''}
-                  ${(itemDiscountsTotal > 0 && globalDiscountAmount > 0) ? `
-                  <div class="row" style="color: #c0392b; font-weight: bold; border-top: 1px dashed #c0392b; padding-top: 5px;">
-                    <span class="label">Total descuentos:</span>
-                    <span class="value">-${formatCurrency(totalDiscount)}</span>
-                  </div>
-                  ` : ''}
-                ` : invoiceDiscount > 0 ? `
-                <div class="row" style="color: #c0392b;">
-                  <span class="label">Descuento:</span>
-                  <span class="value">-${formatCurrency(invoiceDiscount)}</span>
-                </div>
-                ` : ''}
                 <div class="row total-row">
                   <span class="label">TOTAL A PAGAR:</span>
                   <span class="value">${formatCurrency(invoiceTotal)}</span>
