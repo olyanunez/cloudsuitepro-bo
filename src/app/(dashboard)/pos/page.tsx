@@ -585,6 +585,24 @@ export default function PosPage() {
     );
   };
 
+  // Actualizar cantidad directamente
+  const updateCartQuantity = (productId: number, newQuantity: number) => {
+    if (newQuantity < 1) return;
+
+    setCart((prevCart) =>
+      prevCart.map((item) => {
+        if (item.id === productId) {
+          if (newQuantity > item.stock.quantity) {
+            toast.error(`Stock disponible: ${item.stock.quantity}`);
+            return { ...item, cartQuantity: item.stock.quantity };
+          }
+          return { ...item, cartQuantity: newQuantity };
+        }
+        return item;
+      })
+    );
+  };
+
   // Eliminar del carrito
   const removeFromCart = (productId: number) => {
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
@@ -710,7 +728,10 @@ export default function PosPage() {
       selectedCustomer.taxRegime === 'GOVERNMENT' ||
       selectedCustomer.taxRegime === 'SPECIAL_REGIME');
 
-  const taxRate = 0.18; // 18% ITBIS
+  // Obtener el ITBIS de la configuración NCF (convertir de porcentaje a decimal si es necesario)
+  const taxRate = ncfConfig?.itbisRate
+    ? (ncfConfig.itbisRate > 1 ? ncfConfig.itbisRate / 100 : ncfConfig.itbisRate)
+    : 0.18;
   const tax = isExemptFromTax ? 0 : subtotal * taxRate;
 
   // Calcular descuento global
@@ -817,6 +838,7 @@ export default function PosPage() {
     setShowPaymentConfirmation(false);
     setProcessingPayment(true);
     try {
+      // El ITBIS se calcula en el backend - solo enviamos los datos del item sin tax
       const items: InvoiceItem[] = cart.map((item) => {
         const itemDiscount = calculateItemDiscount(item);
         return {
@@ -827,6 +849,7 @@ export default function PosPage() {
           discountType: item.discountType === 'percentage' ? 'PERCENTAGE' as const : item.discountType === 'fixed' ? 'FIXED' as const : undefined,
           discountValue: item.discountValue,
           discountReason: item.discountReason,
+          // tax se calcula en el backend basado en el régimen fiscal del cliente
         };
       });
 
@@ -868,6 +891,9 @@ export default function PosPage() {
       // Mostrar modal de factura
       setCompletedInvoice(invoice);
       setShowInvoiceModal(true);
+
+      // 🔊 Reproducir sonido de éxito al completar la venta
+      playSuccessBeepIfEnabled();
 
       // Mostrar mensaje de éxito con información de email
       if (sendEmail) {
@@ -1085,13 +1111,21 @@ export default function PosPage() {
   const printThermalVoucher = async (invoice: Invoice, tenant: Tenant | null) => {
     try {
       // Formatear los items de la factura
-      const items = invoice.items.map(item => ({
-        quantity: item.quantity,
-        name: item.variant?.product?.name || 'Producto',
-        description: item.variant?.sku || '',
-        price: parseFloat(item.unitPrice),
-        total: parseFloat(item.totalPrice)
-      }));
+      // total = precio × cantidad (sin ITBIS)
+      const items = invoice.items.map(item => {
+        const unitPrice = parseFloat(item.unitPrice);
+        return {
+          quantity: item.quantity,
+          name: item.variant?.product?.name || 'Producto',
+          description: item.variant?.sku || '',
+          price: unitPrice,
+          total: unitPrice * item.quantity,
+          discount: item.discount ? parseFloat(item.discount) : undefined,
+          discountType: item.discountType || undefined,
+          discountValue: item.discountValue || undefined,
+          discountReason: item.discountReason || undefined,
+        };
+      });
 
       // Mapear el método de pago
       const paymentMethodMap: Record<string, string> = {
@@ -1101,19 +1135,31 @@ export default function PosPage() {
         'CREDIT': 'Crédito'
       };
 
+      // Mapear tipo de comprobante (B01, B02, etc. a nombres legibles)
+      const ncfTypeMap: Record<string, string> = {
+        'B01': 'Crédito Fiscal',
+        'B02': 'Consumidor Final',
+        'B14': 'Gubernamental',
+        'B15': 'Regímenes Especiales',
+        'B03': 'Nota de Débito',
+        'B04': 'Nota de Crédito'
+      };
+
       // Preparar datos para el Printer Service
       const printData = {
         companyName: tenant?.name || 'CloudSuite Pro',
         companyAddress: tenant?.address || '',
-        companyRnc: tenant?.rnc || '',
+        companyRnc: tenant?.taxId || '',
         companyPhone: tenant?.phone || '',
         invoiceNumber: invoice.invoiceNumber,
         ncf: invoice.ncf || undefined,
+        invoiceType: invoice.ncfType ? ncfTypeMap[invoice.ncfType] || invoice.ncfType : undefined,
         date: new Date(invoice.createdAt).toISOString(),
         customerName: invoice.customer
           ? `${invoice.customer.name}${invoice.customer.lastName ? ` ${invoice.customer.lastName}` : ''}`
           : 'Consumidor Final',
         customerRnc: invoice.customer?.taxId || undefined,
+        cashierName: invoice.user?.name || undefined,
         items,
         subtotal: parseFloat(invoice.subtotal),
         tax: parseFloat(invoice.tax),
@@ -1532,9 +1578,19 @@ export default function PosPage() {
                                   >
                                     <Minus className="h-3 w-3" />
                                   </Button>
-                                  <span className="w-8 text-center font-medium">
-                                    {item.cartQuantity}
-                                  </span>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max={item.stock.quantity}
+                                    value={item.cartQuantity}
+                                    onChange={(e) => {
+                                      const value = parseInt(e.target.value, 10);
+                                      if (!isNaN(value)) {
+                                        updateCartQuantity(item.id, value);
+                                      }
+                                    }}
+                                    className="w-12 h-7 text-center font-medium border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  />
                                   <Button
                                     variant="outline"
                                     size="icon"
@@ -2265,7 +2321,7 @@ export default function PosPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">
-                    ITBIS (18%):
+                    ITBIS ({ncfConfig?.itbisRate || 18}%):
                     {isExemptFromTax && <span className="ml-1 text-green-600 font-semibold">EXENTO</span>}
                   </span>
                   <span className={`font-medium ${isExemptFromTax ? 'text-green-600 line-through' : ''}`}>
@@ -2469,7 +2525,7 @@ export default function PosPage() {
                         <div className="flex-1">
                           <p className="font-medium">
                             {item.variant.product.name}
-                            {item.variant.name && ` - ${item.variant.name}`}
+                            {item.variant.name && item.variant.name !== 'Default' && ` - ${item.variant.name}`}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             SKU: {item.variant.sku} | Código: {item.variant.product.code}

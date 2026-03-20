@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowLeft, FileText, Download, Printer } from 'lucide-react';
 import { creditNoteService, CreditNote } from '@/lib/services/creditNoteService';
+import ncfService, { NcfConfiguration } from '@/lib/services/ncfService';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -17,10 +18,21 @@ export default function CreditNoteDetailPage() {
   const { toast } = useToast();
   const [creditNote, setCreditNote] = useState<CreditNote | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ncfConfig, setNcfConfig] = useState<NcfConfiguration | null>(null);
 
   useEffect(() => {
     loadCreditNote();
+    loadNcfConfig();
   }, [params.id]);
+
+  const loadNcfConfig = async () => {
+    try {
+      const config = await ncfService.getConfiguration();
+      setNcfConfig(config);
+    } catch (error) {
+      console.error('Error loading NCF config:', error);
+    }
+  };
 
   const loadCreditNote = async () => {
     try {
@@ -306,7 +318,7 @@ export default function CreditNoteDetailPage() {
               </div>
             )}
             <div className="flex justify-between text-muted-foreground">
-              <span>ITBIS (18%):</span>
+              <span>ITBIS ({ncfConfig?.itbisRate || 18}%):</span>
               <span>{formatCurrency(creditNote.tax)}</span>
             </div>
             <div className="flex justify-between text-xl font-bold border-t pt-2">

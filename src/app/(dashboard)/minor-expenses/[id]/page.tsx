@@ -10,6 +10,7 @@ import {
     paymentMethodLabels,
 } from '@/lib/types/minor-expense';
 import { MinorExpenseService } from '@/lib/services/minorExpenseService';
+import ncfService, { NcfConfiguration } from '@/lib/services/ncfService';
 import { usePermissions } from '@/lib/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,12 +47,23 @@ export default function MinorExpenseDetailPage() {
         approved: true,
         rejectionReason: '',
     });
+    const [ncfConfig, setNcfConfig] = useState<NcfConfiguration | null>(null);
 
     useEffect(() => {
         if (id) {
             loadExpense();
         }
+        loadNcfConfig();
     }, [id]);
+
+    const loadNcfConfig = async () => {
+        try {
+            const config = await ncfService.getConfiguration();
+            setNcfConfig(config);
+        } catch (error) {
+            console.error('Error loading NCF config:', error);
+        }
+    };
 
     const loadExpense = async () => {
         try {
@@ -291,7 +303,7 @@ export default function MinorExpenseDetailPage() {
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center pb-2 border-b">
-                                    <span className="text-gray-600">ITBIS (18%)</span>
+                                    <span className="text-gray-600">ITBIS ({ncfConfig?.itbisRate || 18}%)</span>
                                     <span className="font-medium">{formatCurrency(expense.tax)}</span>
                                 </div>
                                 <div className="flex justify-between items-center pt-2">

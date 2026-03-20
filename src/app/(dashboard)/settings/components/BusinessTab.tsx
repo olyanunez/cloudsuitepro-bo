@@ -18,15 +18,27 @@ import { FileText, ShoppingCart, ExternalLink, Save } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import TenantSettingsService, { TenantSettings } from '@/lib/services/tenantSettingsService';
+import ncfService, { NcfConfiguration } from '@/lib/services/ncfService';
 
 export default function BusinessTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<TenantSettings | null>(null);
+  const [ncfConfig, setNcfConfig] = useState<NcfConfiguration | null>(null);
 
   useEffect(() => {
     loadSettings();
+    loadNcfConfig();
   }, []);
+
+  const loadNcfConfig = async () => {
+    try {
+      const config = await ncfService.getConfiguration();
+      setNcfConfig(config);
+    } catch (error) {
+      console.error('Error loading NCF config:', error);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -123,7 +135,7 @@ export default function BusinessTab() {
                 <p className="font-medium">Tasa ITBIS</p>
                 <p className="text-sm text-muted-foreground">Impuesto aplicado a las ventas</p>
               </div>
-              <span className="text-2xl font-bold">18%</span>
+              <span className="text-2xl font-bold">{ncfConfig?.itbisRate || 18}%</span>
             </div>
             <div className="flex items-center justify-between">
               <div>

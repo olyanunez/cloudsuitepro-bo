@@ -94,6 +94,9 @@ export interface Invoice {
     unitPrice: string;
     unitCost?: string; // Costo unitario al momento de la venta (para COGS)
     discount: string;
+    discountType?: DiscountType | null;
+    discountValue?: number | null;
+    discountReason?: string | null;
     subtotal: string;
     tax: string;
     total: string;
