@@ -44,6 +44,7 @@ import { toast } from 'sonner';
 import ProtectedPage from '@/components/ProtectedPage';
 import { usePermissions } from '@/lib/hooks/usePermissions';
 import { useBranch } from '@/lib/contexts/BranchContext';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   CreditService,
   CustomerWithPendingBalance,
@@ -88,7 +89,7 @@ export default function CreditPage() {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<CreditPaymentMethod>(CreditPaymentMethod.CASH);
   const [paymentReference, setPaymentReference] = useState('');
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<number[]>([]);
   const [paymentNotes, setPaymentNotes] = useState('');
   const [submittingPayment, setSubmittingPayment] = useState(false);
 
@@ -191,8 +192,81 @@ export default function CreditPage() {
     setPaymentAmount('');
     setPaymentMethod(CreditPaymentMethod.CASH);
     setPaymentReference('');
-    setSelectedInvoiceId(null);
+    setSelectedInvoiceIds([]);
     setPaymentNotes('');
+  };
+
+  // Calcular el total de las facturas seleccionadas
+  const selectedInvoicesTotal = pendingInvoices
+    .filter(inv => selectedInvoiceIds.includes(inv.id))
+    .reduce((sum, inv) => sum + inv.pendingAmount, 0);
+
+  // Obtener facturas seleccionadas ordenadas por fecha (más antigua primero)
+  const selectedInvoicesSorted = pendingInvoices
+    .filter(inv => selectedInvoiceIds.includes(inv.id))
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+  // Calcular la distribución del pago por antigüedad
+  const calculatePaymentDistribution = (amount: number) => {
+    const distribution: { invoiceId: number; invoiceNumber: string; pendingAmount: number; paymentAmount: number; remainingAfterPayment: number }[] = [];
+    let remainingAmount = amount;
+
+    for (const invoice of selectedInvoicesSorted) {
+      if (remainingAmount <= 0) {
+        distribution.push({
+          invoiceId: invoice.id,
+          invoiceNumber: invoice.invoiceNumber,
+          pendingAmount: invoice.pendingAmount,
+          paymentAmount: 0,
+          remainingAfterPayment: invoice.pendingAmount,
+        });
+      } else if (remainingAmount >= invoice.pendingAmount) {
+        // Pagar completo esta factura
+        distribution.push({
+          invoiceId: invoice.id,
+          invoiceNumber: invoice.invoiceNumber,
+          pendingAmount: invoice.pendingAmount,
+          paymentAmount: invoice.pendingAmount,
+          remainingAfterPayment: 0,
+        });
+        remainingAmount -= invoice.pendingAmount;
+      } else {
+        // Pago parcial
+        distribution.push({
+          invoiceId: invoice.id,
+          invoiceNumber: invoice.invoiceNumber,
+          pendingAmount: invoice.pendingAmount,
+          paymentAmount: remainingAmount,
+          remainingAfterPayment: invoice.pendingAmount - remainingAmount,
+        });
+        remainingAmount = 0;
+      }
+    }
+
+    return distribution;
+  };
+
+  // Distribución actual basada en el monto ingresado
+  const currentDistribution = calculatePaymentDistribution(parseFloat(paymentAmount) || 0);
+
+  // Toggle selección de factura
+  const toggleInvoiceSelection = (invoiceId: number) => {
+    setSelectedInvoiceIds(prev => {
+      if (prev.includes(invoiceId)) {
+        return prev.filter(id => id !== invoiceId);
+      } else {
+        return [...prev, invoiceId];
+      }
+    });
+  };
+
+  // Seleccionar/deseleccionar todas las facturas
+  const toggleAllInvoices = () => {
+    if (selectedInvoiceIds.length === pendingInvoices.length) {
+      setSelectedInvoiceIds([]);
+    } else {
+      setSelectedInvoiceIds(pendingInvoices.map(inv => inv.id));
+    }
   };
 
   const handleSubmitPayment = async () => {
@@ -205,16 +279,25 @@ export default function CreditPage() {
       return;
     }
 
-    if (!selectedInvoiceId) {
-      toast.error('Seleccione una factura', {
-        description: 'Debe seleccionar una factura para aplicar el pago',
+    if (selectedInvoiceIds.length === 0) {
+      toast.error('Seleccione al menos una factura', {
+        description: 'Debe seleccionar una o más facturas para aplicar el pago',
       });
       return;
     }
 
     const amount = parseFloat(paymentAmount);
     if (isNaN(amount) || amount <= 0) {
-      toast.error('Ingrese un monto válido');
+      toast.error('Ingrese un monto válido', {
+        description: 'El monto debe ser mayor a 0',
+      });
+      return;
+    }
+
+    if (amount > selectedInvoicesTotal) {
+      toast.error('El monto excede el total de las facturas seleccionadas', {
+        description: `El máximo que puede pagar es ${formatCurrency(selectedInvoicesTotal)}`,
+      });
       return;
     }
 
@@ -233,17 +316,23 @@ export default function CreditPage() {
 
     setSubmittingPayment(true);
     try {
-      await CreditService.createPayment({
+      // Usar el endpoint de múltiples facturas con distribución por antigüedad
+      await CreditService.createMultipleInvoicesPayment({
         customerId: selectedCustomer.id,
-        invoiceId: selectedInvoiceId,
-        amount,
+        invoiceIds: selectedInvoiceIds,
+        totalAmount: amount,
         paymentMethod,
         paymentReference: paymentReference || undefined,
         branchId: activeBranchId,
         notes: paymentNotes || undefined,
       });
 
-      toast.success('Pago registrado exitosamente');
+      const invoicesAffected = currentDistribution.filter(d => d.paymentAmount > 0).length;
+      toast.success(
+        invoicesAffected === 1
+          ? 'Pago registrado exitosamente'
+          : `Pago distribuido en ${invoicesAffected} facturas`
+      );
       closePaymentDialog();
       fetchCustomers();
     } catch (error: any) {
@@ -992,10 +1081,21 @@ export default function CreditPage() {
                 {/* Pending Invoices */}
                 {pendingInvoices.length > 0 && (
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">
-                      Facturas Pendientes * <span className="text-muted-foreground font-normal">(seleccione una factura para aplicar el pago)</span>
-                    </Label>
-                    <div className="max-h-40 overflow-y-auto border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-medium">
+                        Facturas Pendientes * <span className="text-muted-foreground font-normal">(seleccione las facturas a pagar)</span>
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={toggleAllInvoices}
+                        className="text-xs"
+                      >
+                        {selectedInvoiceIds.length === pendingInvoices.length ? 'Deseleccionar todas' : 'Seleccionar todas'}
+                      </Button>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto border rounded-lg">
                       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
                           <tr>
@@ -1008,8 +1108,11 @@ export default function CreditPage() {
                             <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
                               Pendiente
                             </th>
-                            <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-                              Acción
+                            <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase w-10">
+                              <Checkbox
+                                checked={selectedInvoiceIds.length === pendingInvoices.length && pendingInvoices.length > 0}
+                                onCheckedChange={toggleAllInvoices}
+                              />
                             </th>
                           </tr>
                         </thead>
@@ -1017,10 +1120,11 @@ export default function CreditPage() {
                           {pendingInvoices.map((invoice) => (
                             <tr
                               key={invoice.id}
-                              className={`${selectedInvoiceId === invoice.id
-                                ? 'bg-primary/10'
+                              className={`cursor-pointer ${selectedInvoiceIds.includes(invoice.id)
+                                ? 'bg-green-50 dark:bg-green-900/20'
                                 : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                                 }`}
+                              onClick={() => toggleInvoiceSelection(invoice.id)}
                             >
                               <td className="px-3 py-2 text-sm">
                                 <div>{invoice.invoiceNumber}</div>
@@ -1035,49 +1139,104 @@ export default function CreditPage() {
                                 {formatCurrency(invoice.pendingAmount)}
                               </td>
                               <td className="px-3 py-2 text-center">
-                                <Button
-                                  size="sm"
-                                  variant={selectedInvoiceId === invoice.id ? 'default' : 'outline'}
-                                  onClick={() => {
-                                    if (selectedInvoiceId === invoice.id) {
-                                      setSelectedInvoiceId(null);
-                                    } else {
-                                      setSelectedInvoiceId(invoice.id);
-                                      setPaymentAmount(invoice.pendingAmount.toString());
-                                    }
-                                  }}
-                                >
-                                  {selectedInvoiceId === invoice.id ? 'Quitar' : 'Seleccionar'}
-                                </Button>
+                                <Checkbox
+                                  checked={selectedInvoiceIds.includes(invoice.id)}
+                                  onCheckedChange={() => toggleInvoiceSelection(invoice.id)}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
+                    {/* Total seleccionado y monto a pagar */}
+                    {selectedInvoiceIds.length > 0 && (
+                      <div className="mt-3 space-y-3">
+                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                              {selectedInvoiceIds.length === 1
+                                ? '1 factura seleccionada'
+                                : `${selectedInvoiceIds.length} facturas seleccionadas`}
+                            </span>
+                            <span className="text-sm text-blue-700 dark:text-blue-300">
+                              Total pendiente: {formatCurrency(selectedInvoicesTotal)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Label htmlFor="paymentAmount" className="text-sm text-blue-800 dark:text-blue-200 whitespace-nowrap">
+                              Monto a pagar:
+                            </Label>
+                            <div className="relative flex-1">
+                              <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="paymentAmount"
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                max={selectedInvoicesTotal}
+                                placeholder="0.00"
+                                className="pl-8"
+                                value={paymentAmount}
+                                onChange={(e) => setPaymentAmount(e.target.value)}
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setPaymentAmount(selectedInvoicesTotal.toFixed(2))}
+                              className="whitespace-nowrap"
+                            >
+                              Pagar todo
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Preview de distribución del pago */}
+                        {parseFloat(paymentAmount) > 0 && currentDistribution.some(d => d.paymentAmount > 0) && (
+                          <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                            <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
+                              Distribución del pago (por antigüedad):
+                            </p>
+                            <div className="space-y-1 text-sm">
+                              {currentDistribution.map((item) => (
+                                <div key={item.invoiceId} className="flex items-center justify-between">
+                                  <span className={item.paymentAmount > 0 ? 'text-green-700 dark:text-green-300' : 'text-gray-400'}>
+                                    {item.invoiceNumber}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    {item.paymentAmount > 0 ? (
+                                      <>
+                                        <span className="text-green-700 dark:text-green-300 font-medium">
+                                          {formatCurrency(item.paymentAmount)}
+                                        </span>
+                                        {item.remainingAfterPayment > 0 && (
+                                          <span className="text-xs text-orange-600 dark:text-orange-400">
+                                            (queda {formatCurrency(item.remainingAfterPayment)})
+                                          </span>
+                                        )}
+                                        {item.remainingAfterPayment === 0 && (
+                                          <Badge className="bg-green-600 text-white text-xs">Completo</Badge>
+                                        )}
+                                      </>
+                                    ) : (
+                                      <span className="text-gray-400 text-xs">Sin aplicar</span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Payment Form */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="amount">Monto del Pago *</Label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="amount"
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        max={selectedCustomer?.currentBalance}
-                        placeholder="0.00"
-                        className="pl-10"
-                        value={paymentAmount}
-                        onChange={(e) => setPaymentAmount(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
                   <div>
                     <Label htmlFor="paymentMethod">Método de Pago *</Label>
                     <Select
@@ -1111,16 +1270,6 @@ export default function CreditPage() {
                   </div>
 
                   <div>
-                    <Label>Sucursal</Label>
-                    <div className="flex items-center gap-2 h-9 px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800">
-                      <Building2 className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-700 dark:text-gray-300">
-                        {activeBranchName || 'Sin sucursal activa'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
                     <Label htmlFor="reference">
                       Referencia {(paymentMethod === CreditPaymentMethod.CARD || paymentMethod === CreditPaymentMethod.TRANSFER) ? '*' : '(opcional)'}
                     </Label>
@@ -1130,6 +1279,16 @@ export default function CreditPage() {
                       value={paymentReference}
                       onChange={(e) => setPaymentReference(e.target.value)}
                     />
+                  </div>
+
+                  <div className="col-span-2">
+                    <Label>Sucursal</Label>
+                    <div className="flex items-center gap-2 h-9 px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800">
+                      <Building2 className="h-4 w-4 text-gray-500" />
+                      <span className="text-gray-700 dark:text-gray-300">
+                        {activeBranchName || 'Sin sucursal activa'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -1154,14 +1313,22 @@ export default function CreditPage() {
                 onClick={handleSubmitPayment}
                 disabled={
                   submittingPayment ||
-                  !paymentAmount ||
+                  selectedInvoiceIds.length === 0 ||
                   !activeBranchId ||
-                  !selectedInvoiceId ||
+                  !paymentAmount ||
+                  parseFloat(paymentAmount) <= 0 ||
+                  parseFloat(paymentAmount) > selectedInvoicesTotal ||
                   ((paymentMethod === CreditPaymentMethod.CARD || paymentMethod === CreditPaymentMethod.TRANSFER) && !paymentReference.trim())
                 }
                 className="!bg-green-600 hover:!bg-green-700 !text-white"
               >
-                {submittingPayment ? 'Procesando...' : 'Registrar Pago'}
+                {submittingPayment
+                  ? 'Procesando...'
+                  : selectedInvoiceIds.length === 0
+                    ? 'Seleccione facturas'
+                    : !paymentAmount || parseFloat(paymentAmount) <= 0
+                      ? 'Ingrese monto'
+                      : `Registrar Pago (${formatCurrency(parseFloat(paymentAmount))})`}
               </Button>
             </DialogFooter>
           </DialogContent>
