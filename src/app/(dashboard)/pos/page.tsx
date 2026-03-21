@@ -1170,7 +1170,8 @@ export default function PosPage() {
         discount: parseFloat(invoice.discount),
         total: parseFloat(invoice.total),
         paymentMethod: paymentMethodMap[invoice.paymentMethod] || invoice.paymentMethod,
-        footer: tenantSettings?.invoiceFooter || undefined
+        footer: tenantSettings?.invoiceFooter || undefined,
+        itbisRate: ncfConfig?.itbisRate || 18
       };
 
       // Enviar a Printer Service

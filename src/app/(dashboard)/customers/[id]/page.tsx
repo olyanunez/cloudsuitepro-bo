@@ -201,7 +201,7 @@ export default function CustomerDetailPage() {
                 <div>
                   <p className="text-sm text-gray-600">Régimen Fiscal</p>
                   <p className="font-medium">
-                    {customer.taxRegime === 'RUI' && 'Régimen Simplificado (RUI) - Requiere NCF B12'}
+                    {customer.taxRegime === 'RUI' && 'Registro Único de Ingresos (RUI) - Requiere NCF B12'}
                     {customer.taxRegime === 'SPECIAL_REGIME' && 'Regímenes Especiales - Requiere NCF B14'}
                     {(!customer.taxRegime || customer.taxRegime === 'NORMAL') && 'Normal - NCF B01'}
                   </p>

@@ -50,6 +50,7 @@ export interface InvoicePrintData {
     total: number;
     paymentMethod?: string;
     footer?: string;
+    itbisRate?: number;
 }
 
 export interface TicketPrintData {
