@@ -741,9 +741,10 @@ export default function PosPage() {
       : Math.min(parseFloat(globalDiscountValue), subtotal)
     : 0;
 
-  // Descuento total (ítems + global)
+  // Descuento total (ítems + global) - solo para mostrar información
   const discount = itemDiscountsTotal + globalDiscountAmount;
-  const total = subtotalBeforeItemDiscounts + tax - discount;
+  // Total = subtotal (ya incluye descuentos de ítems) + tax - descuento global
+  const total = subtotal + tax - globalDiscountAmount;
 
   // Validar y mostrar confirmación de pago
   const handlePaymentClick = () => {
@@ -1145,6 +1146,9 @@ export default function PosPage() {
         'B04': 'Nota de Crédito'
       };
 
+      // Para el voucher, el subtotal debe ser sin descuentos (suma de precio × cantidad)
+      const subtotalWithoutDiscounts = items.reduce((sum, item) => sum + item.total, 0);
+
       // Preparar datos para el Printer Service
       const printData = {
         companyName: tenant?.name || 'CloudSuite Pro',
@@ -1161,7 +1165,7 @@ export default function PosPage() {
         customerRnc: invoice.customer?.taxId || undefined,
         cashierName: invoice.user?.name || undefined,
         items,
-        subtotal: parseFloat(invoice.subtotal),
+        subtotal: subtotalWithoutDiscounts,
         tax: parseFloat(invoice.tax),
         discount: parseFloat(invoice.discount),
         total: parseFloat(invoice.total),

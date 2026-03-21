@@ -349,10 +349,10 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
                     Precio Unitario
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Subtotal
+                    Descuento
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Descuento
+                    Subtotal
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Impuesto
@@ -390,9 +390,6 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
                         {InvoiceService.formatCurrency(item.unitPrice)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">
-                        {InvoiceService.formatCurrency(item.subtotal)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">
                         {item.discount > 0 ? (
                           <div>
                             <span className="text-red-600 dark:text-red-400">
@@ -412,6 +409,9 @@ export default function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
                         ) : (
                           <span>-</span>
                         )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">
+                        {InvoiceService.formatCurrency(item.subtotal)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white">
                         {InvoiceService.formatCurrency(item.tax)}

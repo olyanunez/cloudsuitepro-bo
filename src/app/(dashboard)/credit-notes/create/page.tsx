@@ -36,6 +36,11 @@ interface Invoice {
   subtotal: number;
   tax: number;
   discount: number;
+  // Campos de descuento detallado
+  globalDiscountType?: 'PERCENTAGE' | 'FIXED';
+  globalDiscountValue?: number;
+  globalDiscountAmount?: number;
+  itemDiscountsTotal?: number;
   total: number;
   items: InvoiceItem[];
 }
@@ -122,7 +127,7 @@ export default function CreateCreditNotePage() {
   const calculateTotals = () => {
     let subtotal = 0;
     let tax = 0;
-    let discount = 0;
+    let itemsDiscount = 0;
 
     returnItems.forEach(item => {
       if (item.quantityToReturn > 0) {
@@ -131,13 +136,29 @@ export default function CreateCreditNotePage() {
         const itemTax = item.tax * item.quantityToReturn;
 
         subtotal += itemSubtotal;
-        discount += itemDiscount;
+        itemsDiscount += itemDiscount;
         tax += itemTax;
       }
     });
 
-    const total = subtotal - discount + tax;
-    return { subtotal, tax, discount, total };
+    // Calcular el descuento global proporcional basado en el porcentaje del subtotal que se está devolviendo
+    let globalDiscount = 0;
+    if (invoice?.globalDiscountAmount && invoice.globalDiscountAmount > 0) {
+      // Calcular el subtotal original de la factura (sin descuentos de items)
+      const originalSubtotal = invoice.items.reduce((sum: number, item: any) => {
+        return sum + (parseFloat(item.unitPrice.toString()) * item.quantity);
+      }, 0);
+
+      if (originalSubtotal > 0) {
+        // Proporción del descuento global que corresponde a los items devueltos
+        const returnRatio = subtotal / originalSubtotal;
+        globalDiscount = invoice.globalDiscountAmount * returnRatio;
+      }
+    }
+
+    const totalDiscount = itemsDiscount + globalDiscount;
+    const total = subtotal - totalDiscount + tax;
+    return { subtotal, tax, itemsDiscount, globalDiscount, discount: totalDiscount, total };
   };
 
   const handleSubmit = async () => {
@@ -166,6 +187,8 @@ export default function CreateCreditNotePage() {
       subtotal: totals.subtotal,
       tax: totals.tax,
       discount: totals.discount,
+      itemDiscountsTotal: totals.itemsDiscount > 0 ? totals.itemsDiscount : undefined,
+      globalDiscountAmount: totals.globalDiscount > 0 ? totals.globalDiscount : undefined,
       total: totals.total,
       reason: reason || undefined,
       notes: notes || undefined,
@@ -362,10 +385,18 @@ export default function CreateCreditNotePage() {
                   <span>Subtotal:</span>
                   <span className="font-medium">{formatCurrency(totals.subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Descuento:</span>
-                  <span>-{formatCurrency(totals.discount)}</span>
-                </div>
+                {totals.itemsDiscount > 0 && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Desc. productos:</span>
+                    <span>-{formatCurrency(totals.itemsDiscount)}</span>
+                  </div>
+                )}
+                {totals.globalDiscount > 0 && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Desc. general{invoice?.globalDiscountType === 'PERCENTAGE' ? ` (${invoice?.globalDiscountValue}%)` : ''}:</span>
+                    <span>-{formatCurrency(totals.globalDiscount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-muted-foreground">
                   <span>ITBIS:</span>
                   <span>{formatCurrency(totals.tax)}</span>

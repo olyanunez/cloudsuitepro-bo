@@ -132,6 +132,8 @@ export interface CreateCreditNoteDto {
   subtotal: number;
   tax?: number;
   discount?: number;
+  itemDiscountsTotal?: number;
+  globalDiscountAmount?: number;
   total: number;
   reason?: string;
   notes?: string;

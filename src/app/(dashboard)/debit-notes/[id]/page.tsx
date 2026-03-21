@@ -8,6 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Printer, Download, XCircle } from 'lucide-react';
 import { debitNoteService, DebitNote } from '@/lib/services/debitNoteService';
 import ncfService, { NcfConfiguration } from '@/lib/services/ncfService';
+import { TenantService, Tenant } from '@/lib/services/tenantService';
+import TenantSettingsService, { TenantSettings } from '@/lib/services/tenantSettingsService';
+import { printDebitNote, downloadDebitNotePDF } from '@/lib/utils/debitNotePrint';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -33,10 +36,14 @@ export default function DebitNoteDetailPage() {
     const [cancellationReason, setCancellationReason] = useState('');
     const [cancelling, setCancelling] = useState(false);
     const [ncfConfig, setNcfConfig] = useState<NcfConfiguration | null>(null);
+    const [tenantInfo, setTenantInfo] = useState<Tenant | null>(null);
+    const [tenantSettings, setTenantSettings] = useState<TenantSettings | null>(null);
 
     useEffect(() => {
         loadDebitNote();
         loadNcfConfig();
+        loadTenantInfo();
+        loadTenantSettings();
     }, [params.id]);
 
     const loadNcfConfig = async () => {
@@ -45,6 +52,27 @@ export default function DebitNoteDetailPage() {
             setNcfConfig(config);
         } catch (error) {
             console.error('Error loading NCF config:', error);
+        }
+    };
+
+    const loadTenantInfo = async () => {
+        try {
+            const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenant_id') : null;
+            if (tenantId) {
+                const tenant = await TenantService.getTenantById(tenantId);
+                setTenantInfo(tenant);
+            }
+        } catch (error) {
+            console.error('Error loading tenant information:', error);
+        }
+    };
+
+    const loadTenantSettings = async () => {
+        try {
+            const settings = await TenantSettingsService.getSettings();
+            setTenantSettings(settings);
+        } catch (error) {
+            console.error('Error loading tenant settings:', error);
         }
     };
 
@@ -80,6 +108,38 @@ export default function DebitNoteDetailPage() {
         }
     };
 
+    const handlePrint = () => {
+        if (!debitNote) return;
+
+        try {
+            printDebitNote({
+                debitNote,
+                tenantInfo,
+                itbisRate: ncfConfig?.itbisRate || 18,
+                includeLogo: tenantSettings?.includeLogo ?? true,
+                invoiceFooter: tenantSettings?.invoiceFooter || undefined,
+            });
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message || 'Error al imprimir la nota de débito', variant: 'destructive' });
+        }
+    };
+
+    const handleDownloadPDF = () => {
+        if (!debitNote) return;
+
+        try {
+            downloadDebitNotePDF({
+                debitNote,
+                tenantInfo,
+                itbisRate: ncfConfig?.itbisRate || 18,
+                includeLogo: tenantSettings?.includeLogo ?? true,
+                invoiceFooter: tenantSettings?.invoiceFooter || undefined,
+            });
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message || 'Error al descargar el PDF', variant: 'destructive' });
+        }
+    };
+
     if (loading) {
         return <div className="flex items-center justify-center h-96">Cargando...</div>;
     }
@@ -104,11 +164,11 @@ export default function DebitNoteDetailPage() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={handlePrint}>
                         <Printer className="mr-2 h-4 w-4" />
                         Imprimir
                     </Button>
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={handleDownloadPDF}>
                         <Download className="mr-2 h-4 w-4" />
                         Descargar PDF
                     </Button>
