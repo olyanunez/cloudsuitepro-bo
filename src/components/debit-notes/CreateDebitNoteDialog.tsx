@@ -15,8 +15,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { debitNoteService, CreateDebitNoteDto } from '@/lib/services/debitNoteService';
 import { invoiceService, Invoice } from '@/lib/services/invoiceService';
+import ncfService from '@/lib/services/ncfService';
 import { toast } from 'sonner';
-import { Plus, Search, DollarSign, FileText } from 'lucide-react';
+import { Plus, Search, DollarSign, FileText, Info } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 interface CreateDebitNoteDialogProps {
@@ -35,6 +36,10 @@ export function CreateDebitNoteDialog({
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [invoiceSearch, setInvoiceSearch] = useState('');
 
+    // NCF Configuration
+    const [itbisRate, setItbisRate] = useState<number>(18); // Default 18%
+    const [isExemptFromTax, setIsExemptFromTax] = useState(false);
+
     // Form fields
     const [subtotal, setSubtotal] = useState('');
     const [tax, setTax] = useState('');
@@ -46,6 +51,35 @@ export function CreateDebitNoteDialog({
         parseFloat(subtotal || '0') +
         parseFloat(tax || '0') -
         parseFloat(discount || '0');
+
+    // Cargar configuración NCF al abrir el diálogo
+    useEffect(() => {
+        if (open) {
+            loadNcfConfiguration();
+        }
+    }, [open]);
+
+    const loadNcfConfiguration = async () => {
+        try {
+            const config = await ncfService.getConfiguration();
+            if (config?.itbisRate) {
+                setItbisRate(config.itbisRate);
+            }
+        } catch (error) {
+            console.warn('No se pudo cargar la configuración NCF, usando tasa por defecto (18%)');
+        }
+    };
+
+    // Calcular ITBIS automáticamente cuando cambia el subtotal
+    useEffect(() => {
+        if (subtotal && parseFloat(subtotal) > 0 && !isExemptFromTax) {
+            const subtotalValue = parseFloat(subtotal);
+            const calculatedTax = subtotalValue * (itbisRate / 100);
+            setTax(calculatedTax.toFixed(2));
+        } else if (isExemptFromTax) {
+            setTax('0');
+        }
+    }, [subtotal, itbisRate, isExemptFromTax]);
 
     useEffect(() => {
         if (!open) {
@@ -61,6 +95,20 @@ export function CreateDebitNoteDialog({
         setDiscount('0');
         setReason('');
         setNotes('');
+        setIsExemptFromTax(false);
+    };
+
+    // Determinar si el cliente está exento de ITBIS basado en el tipo de NCF de la factura original
+    const checkTaxExemption = (invoice: Invoice) => {
+        // Clientes exentos: B14 (Regímenes Especiales), B15 (Gubernamental), B16 (Exportaciones)
+        const exemptNcfTypes = ['B14', 'B15', 'B16'];
+        if (invoice.ncfType && exemptNcfTypes.includes(invoice.ncfType)) {
+            setIsExemptFromTax(true);
+            setTax('0');
+            return true;
+        }
+        setIsExemptFromTax(false);
+        return false;
     };
 
     const handleSearchInvoice = async () => {
@@ -90,6 +138,7 @@ export function CreateDebitNoteDialog({
             }
 
             setSelectedInvoice(invoice);
+            checkTaxExemption(invoice);
             toast.success('Factura encontrada');
         } catch (error: any) {
             console.error('Error searching invoice:', error);
@@ -238,6 +287,11 @@ export function CreateDebitNoteDialog({
                                         <span className="text-sm font-medium">{formatCurrency(selectedInvoice.balanceDue)}</span>
                                     </div>
                                 )}
+                                {isExemptFromTax && (
+                                    <div className="mt-2 p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded text-xs text-green-700 dark:text-green-300">
+                                        <strong>Cliente exento de ITBIS</strong> - Tipo NCF: {selectedInvoice.ncfType}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -263,7 +317,12 @@ export function CreateDebitNoteDialog({
                             </div>
 
                             <div className="grid gap-2">
-                                <Label htmlFor="tax">ITBIS</Label>
+                                <Label htmlFor="tax" className="flex items-center gap-1">
+                                    ITBIS {isExemptFromTax ? '(Exento)' : `(${itbisRate}%)`}
+                                    {isExemptFromTax && (
+                                        <Info className="h-3 w-3 text-muted-foreground" />
+                                    )}
+                                </Label>
                                 <div className="relative">
                                     <DollarSign className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
@@ -274,8 +333,9 @@ export function CreateDebitNoteDialog({
                                         placeholder="0.00"
                                         value={tax}
                                         onChange={(e) => setTax(e.target.value)}
-                                        className="pl-8"
+                                        className={`pl-8 ${isExemptFromTax ? 'bg-muted' : ''}`}
                                         disabled={!selectedInvoice}
+                                        readOnly={isExemptFromTax}
                                     />
                                 </div>
                             </div>
