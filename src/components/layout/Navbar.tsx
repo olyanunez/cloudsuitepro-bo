@@ -37,6 +37,7 @@ import { useSubscription } from '@/lib/hooks/useSubscription'
 // screenCode: código de la pantalla para validar permisos (null = sin permisos requeridos)
 // Los screenCodes deben coincidir exactamente con los definidos en el backend
 const menuItems = [
+  { name: 'Inicio', href: '/home', icon: 'home', screenCode: null },
   { name: 'Dashboard', href: '/dashboard', icon: 'layout-dashboard', screenCode: 'DASHBOARD' },
   { name: 'Usuarios', href: '/users', icon: 'user-cog', screenCode: 'USERS' },
   { name: 'Roles', href: '/roles', icon: 'shield', screenCode: 'ROLES' },

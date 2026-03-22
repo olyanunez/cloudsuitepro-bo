@@ -45,39 +45,45 @@ export default function LoginPage() {
           const profile = await ProfileService.getMyProfile();
 
           if (profile) {
-            // Determinar la ruta de redirección basada en la pantalla por defecto del rol
-            let redirectPath = '/dashboard'; // Ruta por defecto
-
-            if (profile.role?.defaultScreen?.code) {
-              // Mapear el código de la pantalla a la ruta correspondiente
-              const screenCodeToPath: Record<string, string> = {
-                'DASHBOARD': '/dashboard',
-                'INVENTORY': '/inventory/items',
-                'POS': '/pos',
-                'PRODUCTS': '/inventory/products',
-                'REPORTS': '/reports',
-                'USERS': '/users',
-                'ROLES': '/roles',
-                'SETTINGS': '/settings',
-                'CUSTOMERS': '/customers',
-                'INVOICES': '/invoices',
-                'BRANCH': '/inventory/branches',
-                'WAREHOUSE': '/inventory/warehouses',
-                'CASH_SESSIONS': '/cash-sessions',
-                'NCF': '/ncf',
-                'ACCOUNTING': '/accounting',
-                'PRODUCT_CATEGORY': '/inventory/categories',
-                'CREDIT_NOTE': '/credit-notes',
-                'MOVEMENTS': '/inventory/movements',
-                'INVENTORY_REPORT': '/inventory/reports',
-              };
-
-              redirectPath = screenCodeToPath[profile.role.defaultScreen.code] || '/dashboard';
-            }
-
-            // Usuario autenticado, redirigir a la pantalla correspondiente
-            router.push(redirectPath);
+            // Usuario autenticado, redirigir al Home
+            router.push('/home');
             return;
+
+            // --- CÓDIGO COMENTADO: Redirección basada en pantalla por defecto del rol ---
+            // Determinar la ruta de redirección basada en la pantalla por defecto del rol
+            // let redirectPath = '/home'; // Ruta por defecto - Home
+            //
+            // if (profile.role?.defaultScreen?.code) {
+            //   // Mapear el código de la pantalla a la ruta correspondiente
+            //   const screenCodeToPath: Record<string, string> = {
+            //     'HOME': '/home',
+            //     'DASHBOARD': '/dashboard',
+            //     'INVENTORY': '/inventory/items',
+            //     'POS': '/pos',
+            //     'PRODUCTS': '/inventory/products',
+            //     'REPORTS': '/reports',
+            //     'USERS': '/users',
+            //     'ROLES': '/roles',
+            //     'SETTINGS': '/settings',
+            //     'CUSTOMERS': '/customers',
+            //     'INVOICES': '/invoices',
+            //     'BRANCH': '/inventory/branches',
+            //     'WAREHOUSE': '/inventory/warehouses',
+            //     'CASH_SESSIONS': '/cash-sessions',
+            //     'NCF': '/ncf',
+            //     'ACCOUNTING': '/accounting',
+            //     'PRODUCT_CATEGORY': '/inventory/categories',
+            //     'CREDIT_NOTE': '/credit-notes',
+            //     'MOVEMENTS': '/inventory/movements',
+            //     'INVENTORY_REPORT': '/inventory/reports',
+            //   };
+            //
+            //   redirectPath = screenCodeToPath[profile.role.defaultScreen.code] || '/home';
+            // }
+            //
+            // router.push(redirectPath);
+            // return;
+            // --- FIN CÓDIGO COMENTADO ---
           }
         }
       } catch (error) {
@@ -133,38 +139,41 @@ export default function LoginPage() {
         await loadUserBranches(response.user.id);
       }
 
-      // Determinar la ruta de redirección basada en la pantalla por defecto del rol
-      let redirectPath = '/dashboard'; // Ruta por defecto
+      // Redirigir al Home
+      router.push('/home');
 
-      if (response.user?.role?.defaultScreen?.code) {
-        // Mapear el código de la pantalla a la ruta correspondiente
-        const screenCodeToPath: Record<string, string> = {
-          'DASHBOARD': '/dashboard',
-          'INVENTORY': '/inventory/items',
-          'POS': '/pos',
-          'PRODUCTS': '/inventory/products',
-          'REPORTS': '/reports',
-          'USERS': '/users',
-          'ROLES': '/roles',
-          'SETTINGS': '/settings',
-          'CUSTOMERS': '/customers',
-          'INVOICES': '/invoices',
-          'BRANCH': '/inventory/branches',
-          'WAREHOUSE': '/inventory/warehouses',
-          'CASH_SESSIONS': '/cash-sessions',
-          'NCF': '/ncf',
-          'ACCOUNTING': '/accounting',
-          'PRODUCT_CATEGORY': '/inventory/categories',
-          'CREDIT_NOTE': '/credit-notes',
-          'MOVEMENTS': '/inventory/movements',
-          'INVENTORY_REPORT': '/inventory/reports',
-        };
-
-        redirectPath = screenCodeToPath[response.user.role.defaultScreen.code] || '/dashboard';
-      }
-
-      // Redirigir a la pantalla correspondiente
-      router.push(redirectPath);
+      // --- COMMENTED CODE: Redirect based on role's default screen ---
+      // let redirectPath = '/home';
+      //
+      // if (response.user?.role?.defaultScreen?.code) {
+      //   const screenCodeToPath: Record<string, string> = {
+      //     'HOME': '/home',
+      //     'DASHBOARD': '/dashboard',
+      //     'INVENTORY': '/inventory/items',
+      //     'POS': '/pos',
+      //     'PRODUCTS': '/inventory/products',
+      //     'REPORTS': '/reports',
+      //     'USERS': '/users',
+      //     'ROLES': '/roles',
+      //     'SETTINGS': '/settings',
+      //     'CUSTOMERS': '/customers',
+      //     'INVOICES': '/invoices',
+      //     'BRANCH': '/inventory/branches',
+      //     'WAREHOUSE': '/inventory/warehouses',
+      //     'CASH_SESSIONS': '/cash-sessions',
+      //     'NCF': '/ncf',
+      //     'ACCOUNTING': '/accounting',
+      //     'PRODUCT_CATEGORY': '/inventory/categories',
+      //     'CREDIT_NOTE': '/credit-notes',
+      //     'MOVEMENTS': '/inventory/movements',
+      //     'INVENTORY_REPORT': '/inventory/reports',
+      //   };
+      //
+      //   redirectPath = screenCodeToPath[response.user.role.defaultScreen.code] || '/home';
+      // }
+      //
+      // router.push(redirectPath);
+      // --- END COMMENTED CODE ---
     } catch (error: unknown) {
       // Mostrar mensaje de error
       const errorMessage = error instanceof Error ? error.message : 'Error al iniciar sesión. Por favor intente nuevamente.';
