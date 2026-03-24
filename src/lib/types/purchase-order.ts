@@ -128,4 +128,5 @@ export interface ReceivePurchaseOrderInput {
   notes?: string;
   supplierNcf?: string;
   supplierNcfType?: string;
+  excludeFrom606?: boolean; // Si true, esta compra no aparecerá en el reporte 606 de la DGII
 }
