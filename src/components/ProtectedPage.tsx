@@ -90,10 +90,10 @@ export default function ProtectedPage({
                 Volver
               </button>
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push('/shortcuts')}
                 className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-600 transition-colors"
               >
-                Ir al Dashboard
+                Ir al Inicio
               </button>
             </div>
           </div>

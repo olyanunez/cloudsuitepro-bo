@@ -18,6 +18,23 @@ export interface CreateCreditPaymentDto {
   notes?: string;
 }
 
+export interface CreateMultipleInvoicesPaymentDto {
+  customerId: number;
+  invoiceIds: number[];
+  totalAmount: number;
+  paymentMethod: CreditPaymentMethod;
+  paymentReference?: string;
+  branchId: number;
+  notes?: string;
+}
+
+export interface MultiplePaymentResult {
+  success: boolean;
+  paymentsCreated: number;
+  totalAmount: number;
+  payments: CreditPayment[];
+}
+
 export interface CreditPayment {
   id: number;
   paymentNumber: string;
@@ -127,6 +144,13 @@ export const CreditService = {
    */
   async createPayment(data: CreateCreditPaymentDto): Promise<CreditPayment> {
     return apiPost<CreditPayment>('/credit/payments', data);
+  },
+
+  /**
+   * Crear pago para múltiples facturas (paga el total de todas las facturas seleccionadas)
+   */
+  async createMultipleInvoicesPayment(data: CreateMultipleInvoicesPaymentDto): Promise<MultiplePaymentResult> {
+    return apiPost<MultiplePaymentResult>('/credit/payments/multiple', data);
   },
 
   /**

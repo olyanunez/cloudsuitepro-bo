@@ -34,9 +34,10 @@ import {
 } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { ArrowLeftIcon, SaveIcon, Check, ChevronsUpDown } from 'lucide-react';
+import { ArrowLeftIcon, SaveIcon, Check, ChevronsUpDown, PackageIcon, Search, ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function CreateMovementPage() {
   const router = useRouter();
@@ -78,6 +79,8 @@ export default function CreateMovementPage() {
   const [saving, setSaving] = useState<boolean>(false);
   const [productPopoverOpen, setProductPopoverOpen] = useState<boolean>(false);
   const [productSearchQuery, setProductSearchQuery] = useState<string>('');
+  const [variantPopoverOpen, setVariantPopoverOpen] = useState<boolean>(false);
+  const [variantSearchQuery, setVariantSearchQuery] = useState<string>('');
   const [errors, setErrors] = useState<{
     type?: string;
     variantId?: string;
@@ -215,7 +218,7 @@ export default function CreateMovementPage() {
     }
 
     if (!variantId) {
-      newErrors.variantId = 'La variante es requerida';
+      newErrors.variantId = 'El producto es requerido';
     }
 
     if ((movementType === MovementType.SALIDA || movementType === MovementType.TRANSFERENCIA || movementType === MovementType.AJUSTE) && !sourceWarehouseId) {
@@ -450,55 +453,203 @@ export default function CreateMovementPage() {
 
               <div className="space-y-2">
                 <label htmlFor="variant" className="text-sm font-medium">
-                  Variante <span className="text-red-500">*</span>
+                  Producto <span className="text-red-500">*</span>
                 </label>
-                <Select value={variantId} onValueChange={(value) => {
-                  setVariantId(value);
-                  // Actualizar si el producto es gastable
-                  const selectedVariant = variants.find(v => v.id.toString() === value);
-                  if (selectedVariant && selectedVariant.product) {
-                    setIsProductStockable(selectedVariant.product.isStockable);
-                    // Si el producto no es gastable, limpiar la cantidad
-                    if (!selectedVariant.product.isStockable) {
-                      setQuantity('');
-                    }
-                  }
-                }}>
-                  <SelectTrigger id="variant" className={errors.variantId ? 'border-red-500' : ''}>
-                    <SelectValue placeholder="Seleccionar variante" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredVariants.length === 0 ? (
-                      <div className="p-2 text-sm text-muted-foreground text-center">
-                        No hay variantes disponibles
-                      </div>
-                    ) : (
-                      filteredVariants.map(variant => {
-                        // Build variant display name
-                        let displayName = variant.product?.name || 'Producto';
-                        if (variant.name) {
-                          displayName += ` - ${variant.name}`;
-                        }
-                        if (variant.attributeValues && variant.attributeValues.length > 0) {
-                          const attrs = variant.attributeValues
-                            .map(av => av.attributeValue?.displayName)
-                            .filter(Boolean)
-                            .join(', ');
-                          if (attrs) {
-                            displayName += ` (${attrs})`;
-                          }
-                        }
-                        displayName += ` [SKU: ${variant.sku}]`;
+                <Popover open={variantPopoverOpen} onOpenChange={setVariantPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={variantPopoverOpen}
+                      className={cn(
+                        "w-full justify-between",
+                        errors.variantId ? 'border-red-500' : ''
+                      )}
+                    >
+                      {variantId
+                        ? (() => {
+                            const selectedVariant = variants.find(v => v.id.toString() === variantId);
+                            if (!selectedVariant) return <span className="text-muted-foreground">Seleccionar producto</span>;
 
-                        return (
-                          <SelectItem key={variant.id} value={variant.id.toString()}>
-                            {displayName}
-                          </SelectItem>
-                        );
-                      })
-                    )}
-                  </SelectContent>
-                </Select>
+                            const imageUrl = selectedVariant.imageUrl ||
+                              (selectedVariant.product?.images && selectedVariant.product.images.length > 0
+                                ? selectedVariant.product.images[0].url
+                                : null);
+
+                            return (
+                              <div className="flex items-center gap-2 w-full">
+                                {imageUrl ? (
+                                  <div className="relative w-8 h-8 rounded overflow-hidden flex-shrink-0">
+                                    <Image
+                                      src={imageUrl}
+                                      alt={selectedVariant.product?.name || 'Producto'}
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
+                                    <ImageIcon className="h-4 w-4 text-gray-400" />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0 text-left">
+                                  <div className="font-medium truncate">{selectedVariant.product?.name || 'Producto'}</div>
+                                  <div className="text-xs text-muted-foreground truncate">
+                                    {selectedVariant.name && <>{selectedVariant.name} • </>}
+                                    SKU: {selectedVariant.sku}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()
+                        : <span className="text-muted-foreground">Seleccionar producto</span>}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[450px] p-0 bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700" align="start">
+                    <div className="flex flex-col bg-white dark:bg-gray-800 rounded-md overflow-hidden">
+                      {/* Search Bar */}
+                      <div className="flex items-center border-b border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-800/50">
+                        <Search className="mr-2 h-4 w-4 shrink-0 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Buscar por nombre, SKU o código..."
+                          className="flex h-8 w-full bg-transparent text-sm outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                          value={variantSearchQuery}
+                          onChange={(e) => setVariantSearchQuery(e.target.value)}
+                        />
+                      </div>
+
+                      {/* Products List */}
+                      <div className="max-h-[350px] overflow-y-auto bg-white dark:bg-gray-800">
+                        <div className="p-2 space-y-1">
+                          {filteredVariants
+                            .filter(variant => {
+                              if (!variantSearchQuery) return true;
+                              const searchLower = variantSearchQuery.toLowerCase();
+                              const productName = variant.product?.name?.toLowerCase() || '';
+                              const variantName = variant.name?.toLowerCase() || '';
+                              const sku = variant.sku?.toLowerCase() || '';
+                              const barcode = variant.barcode?.toLowerCase() || '';
+                              return productName.includes(searchLower) ||
+                                     variantName.includes(searchLower) ||
+                                     sku.includes(searchLower) ||
+                                     barcode.includes(searchLower);
+                            })
+                            .map(variant => {
+                              const imageUrl = variant.imageUrl ||
+                                (variant.product?.images && variant.product.images.length > 0
+                                  ? variant.product.images[0].url
+                                  : null);
+                              const isSelected = variantId === variant.id.toString();
+
+                              return (
+                                <div
+                                  key={variant.id}
+                                  onClick={() => {
+                                    setVariantId(variant.id.toString());
+                                    if (variant.product) {
+                                      setIsProductStockable(variant.product.isStockable);
+                                      if (!variant.product.isStockable) {
+                                        setQuantity('');
+                                      }
+                                    }
+                                    setVariantSearchQuery('');
+                                    setVariantPopoverOpen(false);
+                                  }}
+                                  className={cn(
+                                    "group relative flex cursor-pointer select-none items-center rounded-md px-3 py-3 text-sm transition-colors",
+                                    "hover:bg-blue-50 dark:hover:bg-blue-900/20",
+                                    isSelected
+                                      ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
+                                      : "border border-transparent hover:border-blue-100 dark:hover:border-blue-900/50"
+                                  )}
+                                >
+                                  {/* Check Icon */}
+                                  <div className="mr-3 flex-shrink-0">
+                                    <Check
+                                      className={cn(
+                                        "h-4 w-4 transition-all",
+                                        isSelected
+                                          ? "opacity-100 text-blue-600 dark:text-blue-400"
+                                          : "opacity-0 group-hover:opacity-30"
+                                      )}
+                                    />
+                                  </div>
+
+                                  {/* Product Image */}
+                                  {imageUrl ? (
+                                    <Image
+                                      src={imageUrl}
+                                      alt={variant.product?.name || 'Producto'}
+                                      width={48}
+                                      height={48}
+                                      className="rounded-md object-cover flex-shrink-0 border border-gray-200 dark:border-gray-700"
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center flex-shrink-0 border border-gray-200 dark:border-gray-600">
+                                      <ImageIcon className="h-6 w-6 text-gray-400" />
+                                    </div>
+                                  )}
+
+                                  {/* Product Info */}
+                                  <div className="flex-1 min-w-0 ml-3">
+                                    <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                      {variant.product?.name || 'Producto'}
+                                    </div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                      {variant.name && <span className="font-medium">{variant.name} • </span>}
+                                      <span className="text-gray-600 dark:text-gray-400">SKU: {variant.sku}</span>
+                                    </div>
+
+                                    {/* Attributes */}
+                                    {variant.attributeValues && variant.attributeValues.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-2">
+                                        {variant.attributeValues.map((av) => (
+                                          <span
+                                            key={av.id}
+                                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                          >
+                                            {av.attributeValue?.displayName}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+
+                          {/* Empty State */}
+                          {filteredVariants.filter(variant => {
+                            if (!variantSearchQuery) return true;
+                            const searchLower = variantSearchQuery.toLowerCase();
+                            const productName = variant.product?.name?.toLowerCase() || '';
+                            const variantName = variant.name?.toLowerCase() || '';
+                            const sku = variant.sku?.toLowerCase() || '';
+                            const barcode = variant.barcode?.toLowerCase() || '';
+                            return productName.includes(searchLower) ||
+                                   variantName.includes(searchLower) ||
+                                   sku.includes(searchLower) ||
+                                   barcode.includes(searchLower);
+                          }).length === 0 && variantSearchQuery && (
+                            <div className="py-8 text-center">
+                              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 mb-3">
+                                <Search className="h-5 w-5 text-gray-400" />
+                              </div>
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                No se encontraron productos
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Intenta con otro término de búsqueda
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 {errors.variantId && <p className="text-red-500 text-xs mt-1">{errors.variantId}</p>}
               </div>
 

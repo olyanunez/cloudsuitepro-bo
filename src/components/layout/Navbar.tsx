@@ -37,6 +37,7 @@ import { useSubscription } from '@/lib/hooks/useSubscription'
 // screenCode: código de la pantalla para validar permisos (null = sin permisos requeridos)
 // Los screenCodes deben coincidir exactamente con los definidos en el backend
 const menuItems = [
+  { name: 'Inicio', href: '/home', icon: 'home', screenCode: null },
   { name: 'Dashboard', href: '/dashboard', icon: 'layout-dashboard', screenCode: 'DASHBOARD' },
   { name: 'Usuarios', href: '/users', icon: 'user-cog', screenCode: 'USERS' },
   { name: 'Roles', href: '/roles', icon: 'shield', screenCode: 'ROLES' },
@@ -411,7 +412,7 @@ export default function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b bg-white dark:bg-gray-950 dark:border-gray-800">
-        <div className="container flex h-16 items-center justify-between py-4">
+        <div className="flex h-16 items-center w-full px-4">
           <div className="flex items-center gap-2">
             <SheetTrigger onClick={() => setOpen(true)} className="inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
               <MenuIcon className="h-5 w-5" />
@@ -466,16 +467,17 @@ export default function Navbar() {
             ))}
           </nav> */}
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 ml-auto">
             {tenantId && (
-              <div className="flex items-center gap-3">
+              <>
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <BuildingIcon className="h-4 w-4" />
                   <span>{tenantName || `Empresa ${tenantId}`}</span>
                 </div>
                 <div className="h-6 w-px bg-gray-300 dark:bg-gray-700" />
                 <BranchSwitcher />
-              </div>
+                <div className="h-6 w-px bg-gray-300 dark:bg-gray-700" />
+              </>
             )}
             {/* Dropdown de Alertas de Stock Bajo */}
             <DropdownMenu open={lowStockDropdownOpen} onOpenChange={setLowStockDropdownOpen}>

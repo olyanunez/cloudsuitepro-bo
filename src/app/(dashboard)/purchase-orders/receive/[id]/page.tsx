@@ -30,6 +30,7 @@ export default function ReceivePurchaseOrderPage() {
     notes: '',
     supplierNcf: '',
     supplierNcfType: 'B01',
+    excludeFrom606: false, // Por defecto, incluir en el 606
   });
 
   const [receivedItems, setReceivedItems] = useState<ReceivePurchaseOrderItem[]>([]);
@@ -121,13 +122,8 @@ export default function ReceivePurchaseOrderPage() {
       toast.error('Debe recibir al menos un producto');
     }
 
-    // Validar NCF del proveedor si es formal
-    if (purchaseOrder?.supplier?.supplierType === 'FORMAL') {
-      if (!formData.supplierNcf || formData.supplierNcf.trim() === '') {
-        newErrors.supplierNcf = 'El NCF del proveedor es requerido';
-        toast.error('Debe ingresar el NCF del proveedor formal');
-      }
-    }
+    // NCF es opcional - si no se proporciona, se excluye del 606 automáticamente
+    // No validamos como requerido
 
     // Validar cada item que tiene cantidad recibida
     receivedItems.forEach((receivedItem, index) => {
@@ -158,12 +154,17 @@ export default function ReceivePurchaseOrderPage() {
     // Filtrar solo los items con cantidad recibida > 0
     const itemsToReceive = receivedItems.filter(item => item.receivedQuantity > 0);
 
+    // Si no hay NCF, automáticamente excluir del 606
+    const hasNcf = formData.supplierNcf && formData.supplierNcf.trim() !== '';
+    const shouldExcludeFrom606 = formData.excludeFrom606 || !hasNcf;
+
     const receiveData: ReceivePurchaseOrderInput = {
       items: itemsToReceive,
       receivedDate: formData.receivedDate || undefined,
       notes: formData.notes || undefined,
-      supplierNcf: formData.supplierNcf || undefined,
-      supplierNcfType: formData.supplierNcfType || undefined,
+      supplierNcf: hasNcf ? formData.supplierNcf : undefined,
+      supplierNcfType: hasNcf ? formData.supplierNcfType : undefined,
+      excludeFrom606: shouldExcludeFrom606,
     };
 
     try {
@@ -357,50 +358,68 @@ export default function ReceivePurchaseOrderPage() {
                     />
                   </div>
 
-                  {/* NCF del Proveedor (solo para proveedores formales) */}
-                  {purchaseOrder.supplier?.supplierType === 'FORMAL' && (
-                    <>
-                      <div>
-                        <label htmlFor="supplierNcfType" className="block text-sm font-medium mb-1">
-                          Tipo de NCF *
-                        </label>
-                        <select
-                          id="supplierNcfType"
-                          name="supplierNcfType"
-                          value={formData.supplierNcfType}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-                        >
-                          <option value="B01">B01 - Crédito Fiscal</option>
-                          <option value="B02">B02 - Consumidor Final</option>
-                          <option value="B14">B14 - Regímenes Especiales</option>
-                          <option value="B15">B15 - Gubernamental</option>
-                          <option value="B16">B16 - Exportaciones</option>
-                        </select>
-                      </div>
+                  {/* Comprobante Fiscal del Proveedor (opcional) */}
+                  <div className="p-3 border rounded-md bg-gray-50 dark:bg-gray-700/50">
+                    <div className="flex items-center mb-3">
+                      <input
+                        type="checkbox"
+                        id="excludeFrom606"
+                        checked={formData.excludeFrom606}
+                        onChange={(e) => setFormData(prev => ({ ...prev, excludeFrom606: e.target.checked }))}
+                        className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      />
+                      <label htmlFor="excludeFrom606" className="ml-2 text-sm font-medium">
+                        Sin comprobante fiscal
+                      </label>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      {formData.excludeFrom606
+                        ? 'Esta compra no aparecerá en el reporte 606 de la DGII'
+                        : 'Complete los datos del NCF para incluir en el reporte 606'}
+                    </p>
 
-                      <div>
-                        <label htmlFor="supplierNcf" className="block text-sm font-medium mb-1">
-                          NCF del Proveedor *
-                        </label>
-                        <Input
-                          type="text"
-                          id="supplierNcf"
-                          name="supplierNcf"
-                          value={formData.supplierNcf}
-                          onChange={handleInputChange}
-                          placeholder="Ej: B0100000001"
-                          className={`w-full ${errors.supplierNcf ? 'border-red-500' : ''}`}
-                        />
-                        {errors.supplierNcf && (
-                          <p className="mt-1 text-xs text-red-500">{errors.supplierNcf}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          NCF de la factura del proveedor
-                        </p>
-                      </div>
-                    </>
-                  )}
+                    {!formData.excludeFrom606 && (
+                      <>
+                        <div className="mb-3">
+                          <label htmlFor="supplierNcfType" className="block text-sm font-medium mb-1">
+                            Tipo de NCF
+                          </label>
+                          <select
+                            id="supplierNcfType"
+                            name="supplierNcfType"
+                            value={formData.supplierNcfType}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                          >
+                            <option value="B01">B01 - Crédito Fiscal</option>
+                            <option value="B02">B02 - Consumidor Final</option>
+                            <option value="B11">B11 - Proveedores Informales</option>
+                            <option value="B14">B14 - Regímenes Especiales</option>
+                            <option value="B15">B15 - Gubernamental</option>
+                            <option value="B16">B16 - Exportaciones</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label htmlFor="supplierNcf" className="block text-sm font-medium mb-1">
+                            NCF del Proveedor
+                          </label>
+                          <Input
+                            type="text"
+                            id="supplierNcf"
+                            name="supplierNcf"
+                            value={formData.supplierNcf}
+                            onChange={handleInputChange}
+                            placeholder="Ej: B0100000001"
+                            className="w-full"
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            NCF de la factura del proveedor
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
 
                   <div>
                     <label htmlFor="notes" className="block text-sm font-medium mb-1">
@@ -426,12 +445,8 @@ export default function ReceivePurchaseOrderPage() {
                     <li>• Puede recibir parcialmente los productos</li>
                     <li>• El número de lote es opcional</li>
                     <li>• La fecha de vencimiento es opcional</li>
-                    {purchaseOrder.supplier?.supplierType === 'FORMAL' && (
-                      <li>• El NCF del proveedor es requerido para reportes DGII</li>
-                    )}
-                    {purchaseOrder.supplier?.supplierType === 'INFORMAL' && (
-                      <li>• Se generará un NCF B11 automáticamente</li>
-                    )}
+                    <li>• El NCF es opcional - marque "Sin comprobante" si no tiene factura fiscal</li>
+                    <li>• Compras sin NCF no aparecerán en el reporte 606</li>
                     <li>• Se creará un movimiento de inventario automáticamente</li>
                   </ul>
                 </div>

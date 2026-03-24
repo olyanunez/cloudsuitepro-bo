@@ -136,8 +136,8 @@ input[type="radio"] {
 }
 
 /* Estilos para botones */
-button:not([class*="outline"]):not([class*="bg-transparent"]):not([class*="text-gray"]):not([class*="bg-yellow-100"]),
-.button:not([class*="outline"]):not([class*="bg-transparent"]):not([class*="text-gray"]):not([class*="bg-yellow-100"]),
+button:not([class*="outline"]):not([class*="bg-transparent"]):not([class*="text-gray"]):not([class*="bg-yellow-100"]):not(.shortcut-button),
+.button:not([class*="outline"]):not([class*="bg-transparent"]):not([class*="text-gray"]):not([class*="bg-yellow-100"]):not(.shortcut-button),
 input[type="button"]:not([class*="outline"]),
 input[type="submit"]:not([class*="outline"]),
 input[type="reset"]:not([class*="outline"]) {
@@ -145,6 +145,7 @@ input[type="reset"]:not([class*="outline"]) {
   /* amber-300 */
   color: #171717 !important;
 }
+
 
 /* Estilos específicos para botones outline */
 button.outline,
@@ -359,4 +360,129 @@ button[role="switch"][data-state="unchecked"] {
 
 button[role="switch"][data-state="checked"] {
   background-color: #fcd34d !important; /* amber-300 - primary */
+}
+
+/* ============================================ */
+/* SHORTCUTS - Colores personalizados (al final para mayor prioridad) */
+/* ============================================ */
+.shortcut-button {
+  color: #ffffff !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.shortcut-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.shortcut-button:hover::before {
+  left: 100%;
+}
+
+.shortcut-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  pointer-events: none;
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+/* Sombra brillante interior */
+.shortcut-button {
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.shortcut-button:hover {
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.15),
+    0 10px 10px -5px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+}
+
+.shortcut-button.shortcut-pos {
+  background-color: #10b981 !important;
+}
+.shortcut-button.shortcut-pos:hover {
+  background-color: #059669 !important;
+}
+
+.shortcut-button.shortcut-invoices {
+  background-color: #3b82f6 !important;
+}
+.shortcut-button.shortcut-invoices:hover {
+  background-color: #2563eb !important;
+}
+
+.shortcut-button.shortcut-dashboard {
+  background-color: #8b5cf6 !important;
+}
+.shortcut-button.shortcut-dashboard:hover {
+  background-color: #7c3aed !important;
+}
+
+.shortcut-button.shortcut-cash-sessions {
+  background-color: #f97316 !important;
+}
+.shortcut-button.shortcut-cash-sessions:hover {
+  background-color: #ea580c !important;
+}
+
+.shortcut-button.shortcut-top-products {
+  background-color: #ec4899 !important;
+}
+.shortcut-button.shortcut-top-products:hover {
+  background-color: #db2777 !important;
+}
+
+.shortcut-button.shortcut-credit {
+  background-color: #ef4444 !important;
+}
+.shortcut-button.shortcut-credit:hover {
+  background-color: #dc2626 !important;
+}
+
+.shortcut-button.shortcut-customers {
+  background-color: #06b6d4 !important;
+}
+.shortcut-button.shortcut-customers:hover {
+  background-color: #0891b2 !important;
+}
+
+.shortcut-button.shortcut-accounting {
+  background-color: #6366f1 !important;
+}
+.shortcut-button.shortcut-accounting:hover {
+  background-color: #4f46e5 !important;
+}
+
+.shortcut-button.shortcut-settings {
+  background-color: #64748b !important;
+}
+.shortcut-button.shortcut-settings:hover {
+  background-color: #475569 !important;
 }

@@ -217,7 +217,7 @@ export default function CreateCustomerPage() {
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
                   <Label htmlFor="taxRegime-rui" className="cursor-pointer font-normal">
-                    Régimen Simplificado - RUI (NCF B12)
+                    Registro Único de Ingresos- RUI (NCF B12)
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
