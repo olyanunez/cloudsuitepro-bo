@@ -87,6 +87,7 @@ const menuItems = [
       { name: 'Sucursales', href: '/inventory/branches', icon: 'building-2', screenCode: 'BRANCH', requiredFeature: 'hasMultiBranch' },
       { name: 'Almacenes', href: '/inventory/warehouses', icon: 'building', screenCode: 'WAREHOUSE', requiredFeature: 'hasMultiWarehouse' },
       { name: 'Movimientos', href: '/inventory/movements', icon: 'repeat', screenCode: 'MOVEMENTS', requiredFeature: 'hasInventory' },
+      { name: 'Stock Bajo', href: '/inventory/low-stock', icon: 'alert-triangle', screenCode: 'INVENTORY', requiredFeature: 'hasInventory' },
       { name: 'Reportes', href: '/inventory/reports', icon: 'bar-chart-2', screenCode: 'INVENTORY_REPORT' },
     ]
   },
