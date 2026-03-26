@@ -57,9 +57,9 @@ export default function BranchSwitcher() {
   // Si solo hay una sucursal, mostrar solo el nombre sin selector
   if (activeBranches.length === 1) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-        <Building2 className="h-4 w-4" />
-        <span>{activeBranchName || activeBranches[0].branch.name}</span>
+      <div className="flex items-center gap-1.5 sm:gap-2 text-sm text-gray-600 dark:text-gray-300">
+        <Building2 className="h-4 w-4 shrink-0" />
+        <span className="truncate max-w-[80px] sm:max-w-[150px]">{activeBranchName || activeBranches[0].branch.name}</span>
       </div>
     );
   }
@@ -72,16 +72,16 @@ export default function BranchSwitcher() {
           tabIndex={0}
           aria-expanded={open}
           aria-label="Seleccionar sucursal"
-          className="flex items-center justify-between gap-2 h-9 px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+          className="flex items-center justify-between gap-1.5 sm:gap-2 h-8 sm:h-9 px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               setOpen(!open);
             }
           }}
         >
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-            <span className="truncate max-w-[150px] text-gray-700 dark:text-gray-200">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Building2 className="h-4 w-4 text-gray-600 dark:text-gray-300 shrink-0" />
+            <span className="truncate max-w-[60px] sm:max-w-[120px] md:max-w-[150px] text-gray-700 dark:text-gray-200">
               {activeBranchName || 'Seleccionar sucursal'}
             </span>
           </div>

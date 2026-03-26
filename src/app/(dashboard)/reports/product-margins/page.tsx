@@ -110,23 +110,25 @@ export default function ProductMarginsReport() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/reports">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Volver
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Márgenes de Productos</h1>
-            <p className="text-muted-foreground mt-1">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-3">
+        <Link href="/reports">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            <span className="text-xs sm:text-sm">Volver</span>
+          </Button>
+        </Link>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Márgenes de Productos</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Análisis de rentabilidad y márgenes de ganancia por producto
             </p>
           </div>
+          <div className="flex-shrink-0">
+            <ExportButton screenCode="REPORTS" onExport={handleExport} requiresDateRange={false} />
+          </div>
         </div>
-        <ExportButton screenCode="REPORTS" onExport={handleExport} requiresDateRange={false} />
       </div>
 
       <ReportFilters
@@ -136,36 +138,36 @@ export default function ProductMarginsReport() {
         showLimitFilter={true}
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ingresos Totales</CardTitle>
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3">
+        <Card className="p-3 sm:p-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Ingresos Totales</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
             <p className="text-xs text-muted-foreground mt-1">Ventas totales</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ganancia Bruta</CardTitle>
+        <Card className="p-3 sm:p-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Ganancia Bruta</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalProfit)}</div>
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold">{formatCurrency(totalProfit)}</div>
             <p className="text-xs text-muted-foreground mt-1">Utilidad total</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Margen Promedio</CardTitle>
+        <Card className="p-3 sm:p-4 col-span-2 md:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Margen Promedio</CardTitle>
             <Percent className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${getMarginColor(avgMargin)}`}>
+          <CardContent className="p-0">
+            <div className={`text-lg sm:text-2xl font-bold ${getMarginColor(avgMargin)}`}>
               {avgMargin.toFixed(2)}%
             </div>
             <p className="text-xs text-muted-foreground mt-1">Margen general</p>
@@ -174,13 +176,13 @@ export default function ProductMarginsReport() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Detalle de Márgenes</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">Detalle de Márgenes</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
             Análisis de rentabilidad por producto
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 pt-0">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">Cargando datos...</div>
           ) : data.length === 0 ? (
@@ -188,46 +190,79 @@ export default function ProductMarginsReport() {
               No hay datos para el período seleccionado
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Producto</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead className="text-right">Cant.</TableHead>
-                  <TableHead className="text-right">Ingresos</TableHead>
-                  <TableHead className="text-right">Costo</TableHead>
-                  <TableHead className="text-right">Ganancia</TableHead>
-                  <TableHead className="text-right">Margen</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile Cards */}
+              <div className="sm:hidden space-y-3">
                 {data.map((item) => (
-                  <TableRow key={item.productId}>
-                    <TableCell className="font-medium">{item.productName}</TableCell>
-                    <TableCell className="text-muted-foreground">{item.sku}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{item.categoryName}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{item.quantitySold}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(parseFloat(item.totalRevenue as any))}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(parseFloat(item.totalCost as any))}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold text-green-600">
-                      {formatCurrency(parseFloat(item.grossProfit as any))}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className={`font-bold ${getMarginColor(parseFloat(item.profitMargin as any))}`}>
-                        {parseFloat(item.profitMargin as any).toFixed(2)}%
+                  <div key={item.productId} className="border rounded-lg p-3">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-medium text-sm truncate flex-1">{item.productName}</span>
+                      <span className={`font-bold text-sm ${getMarginColor(parseFloat(item.profitMargin as any))}`}>
+                        {parseFloat(item.profitMargin as any).toFixed(1)}%
                       </span>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground mb-2">
+                      <div>SKU: {item.sku}</div>
+                      <div><Badge variant="outline" className="text-xs">{item.categoryName}</Badge></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-muted-foreground">Ingresos:</span>
+                        <span className="font-medium ml-1">{formatCurrency(parseFloat(item.totalRevenue as any))}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Ganancia:</span>
+                        <span className="font-semibold text-green-600 ml-1">{formatCurrency(parseFloat(item.grossProfit as any))}</span>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden sm:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Producto</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead>Categoría</TableHead>
+                      <TableHead className="text-right">Cant.</TableHead>
+                      <TableHead className="text-right">Ingresos</TableHead>
+                      <TableHead className="text-right">Costo</TableHead>
+                      <TableHead className="text-right">Ganancia</TableHead>
+                      <TableHead className="text-right">Margen</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.map((item) => (
+                      <TableRow key={item.productId}>
+                        <TableCell className="font-medium">{item.productName}</TableCell>
+                        <TableCell className="text-muted-foreground">{item.sku}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{item.categoryName}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{item.quantitySold}</TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(parseFloat(item.totalRevenue as any))}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(parseFloat(item.totalCost as any))}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-green-600">
+                          {formatCurrency(parseFloat(item.grossProfit as any))}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className={`font-bold ${getMarginColor(parseFloat(item.profitMargin as any))}`}>
+                            {parseFloat(item.profitMargin as any).toFixed(2)}%
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

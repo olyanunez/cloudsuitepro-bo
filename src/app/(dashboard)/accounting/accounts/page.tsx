@@ -123,13 +123,71 @@ export default function AccountsPage() {
   const renderAccountRow = (account: Account, depth: number = 0) => {
     const hasChildren = account.children && account.children.length > 0;
     const isExpanded = expandedAccounts.has(account.id);
-    const indent = depth * 24;
+    const indent = depth * 16;
 
     return (
       <div key={account.id}>
+        {/* Mobile Card View */}
         <div
-          className={`flex items-center py-3 px-4 hover:bg-gray-50 border-b ${depth > 0 ? 'bg-gray-50/50' : ''
-            }`}
+          className={`sm:hidden p-3 border-b ${depth > 0 ? 'bg-gray-50/50' : ''}`}
+          style={{ marginLeft: `${indent}px` }}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start gap-2 min-w-0 flex-1">
+              {hasChildren && (
+                <button
+                  onClick={() => toggleExpand(account.id)}
+                  className="hover:bg-gray-200 rounded p-1 flex-shrink-0 mt-0.5"
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </button>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-xs font-medium text-gray-600">{account.code}</span>
+                  <span
+                    className={`px-1.5 py-0.5 text-[10px] font-medium rounded-full ${accountTypeColors[account.accountType]}`}
+                  >
+                    {accountTypeLabels[account.accountType]}
+                  </span>
+                </div>
+                <div className={`text-sm mt-1 ${account.isGroup ? 'font-bold' : 'font-medium'}`}>
+                  {account.name}
+                </div>
+                {!account.isGroup && (
+                  <div className={`text-sm font-medium mt-1 ${account.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    RD${Number(account.balance).toLocaleString('es-DO', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-1 flex-shrink-0">
+              <Link href={`/accounting/accounts/${account.id}`}>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </Link>
+              {!account.isSystem && (
+                <Link href={`/accounting/accounts/edit/${account.id}`}>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Table Row */}
+        <div
+          className={`hidden sm:flex items-center py-3 px-4 hover:bg-gray-50 border-b ${depth > 0 ? 'bg-gray-50/50' : ''}`}
           style={{ paddingLeft: `${16 + indent}px` }}
         >
           {/* Expand/Collapse Icon */}
@@ -168,8 +226,7 @@ export default function AccountsPage() {
           {/* Type */}
           <div className="w-28">
             <span
-              className={`px-2 py-1 text-xs font-medium rounded-full ${accountTypeColors[account.accountType]
-                }`}
+              className={`px-2 py-1 text-xs font-medium rounded-full ${accountTypeColors[account.accountType]}`}
             >
               {accountTypeLabels[account.accountType]}
             </span>
@@ -216,15 +273,15 @@ export default function AccountsPage() {
           </div>
 
           {/* Actions */}
-          <div className="w-24 flex justify-end space-x-2">
+          <div className="w-24 flex justify-end gap-1">
             <Link href={`/accounting/accounts/${account.id}`}>
-              <Button variant="ghost" size="sm">
+              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
                 <Eye className="h-4 w-4" />
               </Button>
             </Link>
             {!account.isSystem && (
               <Link href={`/accounting/accounts/edit/${account.id}`}>
-                <Button variant="ghost" size="sm">
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
                   <Edit className="h-4 w-4" />
                 </Button>
               </Link>
@@ -325,102 +382,102 @@ export default function AccountsPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Plan de Cuentas</h1>
-          <p className="text-gray-600 mt-1">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Plan de Cuentas</h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
             Catálogo de cuentas contables del sistema
           </p>
         </div>
-        <div className="flex gap-2">
-          <ExportButton screenCode="ACCOUNTING" onExport={handleExport} />
+        <div className="flex gap-2 flex-wrap justify-end self-end sm:self-auto">
+          <ExportButton screenCode="ACCOUNTING" onExport={handleExport} size="sm" />
           <Link href="/accounting/accounts/create">
-            <Button className="bg-primary hover:bg-primary-600">
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Cuenta
+            <Button className="bg-primary hover:bg-primary-600" size="sm">
+              <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm">Nueva Cuenta</span>
             </Button>
           </Link>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Cuentas</p>
-              <p className="text-2xl font-bold">{accounts.length}</p>
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 mb-4 sm:mb-6">
+        <Card className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">Total Cuentas</p>
+              <p className="text-lg sm:text-2xl font-bold">{accounts.length}</p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <DollarSign className="h-6 w-6 text-blue-600" />
+            <div className="bg-blue-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <DollarSign className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Activos</p>
-              <p className="text-xl font-bold">
+        <Card className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">Activos</p>
+              <p className="text-base sm:text-xl font-bold truncate">
                 RD${assetBalance.toLocaleString('es-DO', { maximumFractionDigits: 0 })}
               </p>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <TrendingUp className="h-6 w-6 text-green-600" />
+            <div className="bg-green-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Pasivos</p>
-              <p className="text-xl font-bold">
+        <Card className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">Pasivos</p>
+              <p className="text-base sm:text-xl font-bold truncate">
                 RD${liabilityBalance.toLocaleString('es-DO', { maximumFractionDigits: 0 })}
               </p>
             </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <TrendingDown className="h-6 w-6 text-red-600" />
+            <div className="bg-red-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <TrendingDown className="h-4 w-4 sm:h-6 sm:w-6 text-red-600" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Patrimonio</p>
-              <p className="text-xl font-bold">
+        <Card className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">Patrimonio</p>
+              <p className="text-base sm:text-xl font-bold truncate">
                 RD${equityBalance.toLocaleString('es-DO', { maximumFractionDigits: 0 })}
               </p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <Minus className="h-6 w-6 text-purple-600" />
+            <div className="bg-purple-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <Minus className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
             </div>
           </div>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="p-4 mb-6">
-        <div className="flex gap-4">
+      <Card className="p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 type="text"
-                placeholder="Buscar por código, nombre o descripción..."
+                placeholder="Buscar por código, nombre..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm"
               />
             </div>
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="border rounded-md px-3 py-2"
+            className="border rounded-md px-3 py-2 text-sm"
           >
             <option value="ALL">Todos los tipos</option>
             <option value="ASSET">Activos</option>
@@ -435,8 +492,8 @@ export default function AccountsPage() {
       {/* Table */}
       <Card>
         <div className="overflow-x-auto">
-          {/* Header */}
-          <div className="flex items-center py-3 px-4 bg-gray-50 border-b font-medium text-sm text-gray-700">
+          {/* Header - Hidden on mobile */}
+          <div className="hidden sm:flex items-center py-3 px-4 bg-gray-50 border-b font-medium text-sm text-gray-700">
             <div className="w-6 mr-2"></div>
             <div className="w-32">Código</div>
             <div className="flex-1">Nombre de Cuenta</div>
@@ -449,11 +506,11 @@ export default function AccountsPage() {
 
           {/* Body */}
           {loading ? (
-            <div className="py-12 text-center text-gray-500">
+            <div className="py-8 sm:py-12 text-center text-gray-500 text-sm">
               Cargando cuentas...
             </div>
           ) : hierarchicalAccounts.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">
+            <div className="py-8 sm:py-12 text-center text-gray-500 text-sm">
               No se encontraron cuentas
             </div>
           ) : (

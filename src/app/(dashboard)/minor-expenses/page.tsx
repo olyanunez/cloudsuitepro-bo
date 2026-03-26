@@ -209,87 +209,87 @@ export default function MinorExpensesPage() {
     });
 
     return (
-        <div className="container mx-auto p-6 space-y-6">
+        <div className="container mx-auto p-4 sm:p-6 space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold">Gastos Menores</h1>
-                    <p className="text-gray-500 mt-1">NCF B13 - Gestión de gastos menores</p>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div className="min-w-0">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Gastos Menores</h1>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1">NCF B13 - Gestión de gastos menores</p>
                 </div>
-                <Link href="/minor-expenses/create">
-                    <Button className="flex items-center gap-2">
+                <Link href="/minor-expenses/create" className="self-end sm:self-auto">
+                    <Button className="flex items-center gap-1 sm:gap-2" size="sm">
                         <Plus className="h-4 w-4" />
-                        Nuevo Gasto
+                        <span className="text-xs sm:text-sm">Nuevo Gasto</span>
                     </Button>
                 </Link>
             </div>
 
             {/* Statistics Cards */}
             {statistics && (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-gray-600">
+                        <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-6 pb-1 sm:pb-2">
+                            <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">
                                 Total Gastos
                             </CardTitle>
                             <DollarSign className="h-4 w-4 text-gray-500" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
+                        <CardContent className="p-3 sm:p-6 pt-0">
+                            <div className="text-lg sm:text-2xl font-bold truncate">
                                 {formatCurrency(statistics.total?.amount || 0)}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                                 {statistics.total?.count || 0} registros
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-yellow-600">
+                        <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-6 pb-1 sm:pb-2">
+                            <CardTitle className="text-xs sm:text-sm font-medium text-yellow-600">
                                 Pendientes
                             </CardTitle>
                             <Clock className="h-4 w-4 text-yellow-500" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
+                        <CardContent className="p-3 sm:p-6 pt-0">
+                            <div className="text-lg sm:text-2xl font-bold truncate">
                                 {formatCurrency(statistics.pending?.amount || 0)}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                                 {statistics.pending?.count || 0} gastos
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-green-600">
+                        <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-6 pb-1 sm:pb-2">
+                            <CardTitle className="text-xs sm:text-sm font-medium text-green-600">
                                 Aprobados
                             </CardTitle>
                             <CheckCircle className="h-4 w-4 text-green-500" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
+                        <CardContent className="p-3 sm:p-6 pt-0">
+                            <div className="text-lg sm:text-2xl font-bold truncate">
                                 {formatCurrency(statistics.approved?.amount || 0)}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                                 {statistics.approved?.count || 0} gastos
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-red-600">
+                        <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-6 pb-1 sm:pb-2">
+                            <CardTitle className="text-xs sm:text-sm font-medium text-red-600">
                                 Rechazados
                             </CardTitle>
                             <XCircle className="h-4 w-4 text-red-500" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
+                        <CardContent className="p-3 sm:p-6 pt-0">
+                            <div className="text-lg sm:text-2xl font-bold truncate">
                                 {formatCurrency(statistics.rejected?.amount || 0)}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                                 {statistics.rejected?.count || 0} gastos
                             </p>
                         </CardContent>
@@ -362,89 +362,150 @@ export default function MinorExpensesPage() {
 
             {/* Table */}
             <Card>
-                <CardContent className="pt-6">
+                <CardContent className="p-0 sm:pt-6 sm:px-6 sm:pb-6">
                     {loading ? (
                         <div className="flex justify-center items-center h-64">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
                         </div>
                     ) : (
                         <>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Número</TableHead>
-                                        <TableHead>Fecha</TableHead>
-                                        <TableHead>Categoría</TableHead>
-                                        <TableHead>Descripción</TableHead>
-                                        <TableHead>Beneficiario</TableHead>
-                                        <TableHead>Monto</TableHead>
-                                        <TableHead>Estado</TableHead>
-                                        <TableHead>NCF B13</TableHead>
-                                        <TableHead className="text-right">Acciones</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {filteredExpenses.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={9} className="text-center py-8 text-gray-500">
-                                                No se encontraron gastos menores
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        filteredExpenses.map((expense) => (
-                                            <TableRow key={expense.id}>
-                                                <TableCell className="font-medium">
-                                                    {expense.expenseNumber}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {new Date(expense.date).toLocaleDateString('es-DO')}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline">
-                                                        {expenseCategoryLabels[expense.category]}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="max-w-xs truncate">
-                                                    {expense.description}
-                                                </TableCell>
-                                                <TableCell>{expense.beneficiary || '-'}</TableCell>
-                                                <TableCell className="font-semibold">
-                                                    {formatCurrency(expense.amount)}
-                                                </TableCell>
-                                                <TableCell>{getStatusBadge(expense.status)}</TableCell>
-                                                <TableCell>
-                                                    {expense.ncfB13 ? (
-                                                        <span className="text-green-600 font-mono text-sm">
-                                                            {expense.ncfB13}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-gray-400">-</span>
+                            {/* Mobile Card View */}
+                            <div className="sm:hidden divide-y">
+                                {filteredExpenses.length === 0 ? (
+                                    <div className="text-center py-8 text-gray-500 text-sm">
+                                        No se encontraron gastos menores
+                                    </div>
+                                ) : (
+                                    filteredExpenses.map((expense) => (
+                                        <div key={expense.id} className="p-3 hover:bg-gray-50">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className="font-medium text-sm">{expense.expenseNumber}</span>
+                                                        {getStatusBadge(expense.status)}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        {new Date(expense.date).toLocaleDateString('es-DO')} • {expenseCategoryLabels[expense.category]}
+                                                    </div>
+                                                    <div className="text-sm mt-1 line-clamp-1">{expense.description}</div>
+                                                    {expense.beneficiary && (
+                                                        <div className="text-xs text-gray-500 mt-1">
+                                                            Beneficiario: {expense.beneficiary}
+                                                        </div>
                                                     )}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <Link href={`/minor-expenses/${expense.id}`}>
-                                                            <Button variant="ghost" size="sm">
-                                                                <Eye className="h-4 w-4" />
-                                                            </Button>
-                                                        </Link>
-                                                        {expense.status === 'PENDING' && hasPermission('APPROVE') && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => handleApprove(expense)}
-                                                                className="text-green-600 hover:text-green-700"
-                                                            >
-                                                                <CheckCircle className="h-4 w-4" />
-                                                            </Button>
+                                                    <div className="flex items-center gap-2 mt-2">
+                                                        <span className="text-sm font-semibold">
+                                                            {formatCurrency(expense.amount)}
+                                                        </span>
+                                                        {expense.ncfB13 && (
+                                                            <span className="text-[10px] text-green-600 font-mono">
+                                                                {expense.ncfB13}
+                                                            </span>
                                                         )}
                                                     </div>
+                                                </div>
+                                                <div className="flex gap-1 flex-shrink-0">
+                                                    <Link href={`/minor-expenses/${expense.id}`}>
+                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                    </Link>
+                                                    {expense.status === 'PENDING' && hasPermission('APPROVE') && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleApprove(expense)}
+                                                            className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                                                        >
+                                                            <CheckCircle className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            {/* Desktop Table View */}
+                            <div className="hidden sm:block">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Número</TableHead>
+                                            <TableHead>Fecha</TableHead>
+                                            <TableHead>Categoría</TableHead>
+                                            <TableHead>Descripción</TableHead>
+                                            <TableHead>Beneficiario</TableHead>
+                                            <TableHead>Monto</TableHead>
+                                            <TableHead>Estado</TableHead>
+                                            <TableHead>NCF B13</TableHead>
+                                            <TableHead className="text-right">Acciones</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredExpenses.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                                                    No se encontraron gastos menores
                                                 </TableCell>
                                             </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
+                                        ) : (
+                                            filteredExpenses.map((expense) => (
+                                                <TableRow key={expense.id}>
+                                                    <TableCell className="font-medium">
+                                                        {expense.expenseNumber}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {new Date(expense.date).toLocaleDateString('es-DO')}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="outline">
+                                                            {expenseCategoryLabels[expense.category]}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="max-w-xs truncate">
+                                                        {expense.description}
+                                                    </TableCell>
+                                                    <TableCell>{expense.beneficiary || '-'}</TableCell>
+                                                    <TableCell className="font-semibold">
+                                                        {formatCurrency(expense.amount)}
+                                                    </TableCell>
+                                                    <TableCell>{getStatusBadge(expense.status)}</TableCell>
+                                                    <TableCell>
+                                                        {expense.ncfB13 ? (
+                                                            <span className="text-green-600 font-mono text-sm">
+                                                                {expense.ncfB13}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-400">-</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex justify-end gap-1">
+                                                            <Link href={`/minor-expenses/${expense.id}`}>
+                                                                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                                                                    <Eye className="h-4 w-4" />
+                                                                </Button>
+                                                            </Link>
+                                                            {expense.status === 'PENDING' && hasPermission('APPROVE') && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                                                                    onClick={() => handleApprove(expense)}
+                                                                >
+                                                                    <CheckCircle className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
 
                             {/* Pagination */}
                             {pagination.totalPages > 1 && (

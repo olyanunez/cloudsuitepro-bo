@@ -99,30 +99,32 @@ export default function WarehouseDetailsPage({ params }: WarehouseDetailsPagePro
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center">
-          <Link href="/inventory/warehouses" className="mr-4">
-            <Button variant="outline" size="icon">
+    <div className="container mx-auto p-4 sm:p-6 lg:py-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <Link href="/inventory/warehouses">
+            <Button variant="outline" size="sm" className="self-start h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3">
               <ArrowLeftIcon className="h-4 w-4" />
+              <span className="hidden sm:inline sm:ml-2">Volver</span>
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold">Detalles del Almacén</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Detalles del Almacén</h1>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex gap-2 self-end sm:self-auto">
           <Link href={`/inventory/warehouses/edit/${warehouse.id}`}>
-            <Button variant="outline" className="flex items-center">
-              <PencilIcon className="h-4 w-4 mr-2" />
-              Editar
+            <Button variant="outline" size="sm" className="flex items-center">
+              <PencilIcon className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Editar</span>
             </Button>
           </Link>
           <Button
             variant="outline"
+            size="sm"
             className="flex items-center border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
             onClick={() => setIsDeleteDialogOpen(true)}
           >
-            <TrashIcon className="h-4 w-4 mr-2" />
-            Eliminar
+            <TrashIcon className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Eliminar</span>
           </Button>
         </div>
       </div>

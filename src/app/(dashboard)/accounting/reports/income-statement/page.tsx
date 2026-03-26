@@ -312,23 +312,23 @@ export default function IncomeStatementPage() {
   };
 
   const renderAccount = (account: IncomeStatementAccount, depth: number = 0) => {
-    const indent = depth * 24;
+    const indent = depth * 16;
     const isBold = account.isGroup || depth === 0;
 
     return (
       <div key={account.code}>
         <div
-          className={`flex justify-between items-center py-2 ${
+          className={`flex justify-between items-center py-1.5 sm:py-2 ${
             depth > 0 ? 'border-b border-gray-100' : 'border-b-2 border-gray-300'
           }`}
           style={{ paddingLeft: `${indent}px` }}
         >
-          <div className={isBold ? 'font-bold' : ''}>
-            <span className="text-sm text-gray-600 mr-2">{account.code}</span>
-            <span>{account.name}</span>
+          <div className={`min-w-0 flex-1 ${isBold ? 'font-bold' : ''}`}>
+            <span className="text-xs sm:text-sm text-gray-600 mr-1 sm:mr-2">{account.code}</span>
+            <span className="text-sm sm:text-base">{account.name}</span>
           </div>
           {!account.isGroup && (
-            <div className={`text-right ${isBold ? 'font-bold' : ''}`}>
+            <div className={`text-right text-sm sm:text-base flex-shrink-0 ml-2 ${isBold ? 'font-bold' : ''}`}>
               RD${Number(account.balance).toLocaleString('es-DO', {
                 minimumFractionDigits: 2,
               })}
@@ -342,7 +342,7 @@ export default function IncomeStatementPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="text-center py-12">
           <p className="text-gray-500">Cargando reporte...</p>
         </div>
@@ -351,14 +351,14 @@ export default function IncomeStatementPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Estado de Resultados</h1>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Estado de Resultados</h1>
             {data && (
-              <p className="text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 Del {new Date(data.startDate).toLocaleDateString('es-DO')} al{' '}
                 {new Date(data.endDate).toLocaleDateString('es-DO')}
               </p>
@@ -368,6 +368,7 @@ export default function IncomeStatementPage() {
             variant="outline"
             onClick={exportToPDF}
             disabled={!data || exportingPDF}
+            className="h-8 text-xs sm:h-9 sm:text-sm w-full sm:w-auto"
           >
             <Download className="h-4 w-4 mr-2" />
             {exportingPDF ? 'Generando...' : 'Exportar PDF'}
@@ -376,10 +377,10 @@ export default function IncomeStatementPage() {
       </div>
 
       {/* Filters */}
-      <Card className="p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      <Card className="p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 items-end">
           <div>
-            <Label>
+            <Label className="text-xs sm:text-sm">
               Fecha Inicio <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -387,10 +388,11 @@ export default function IncomeStatementPage() {
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               required
+              className="h-8 sm:h-9 text-xs sm:text-sm"
             />
           </div>
           <div>
-            <Label>
+            <Label className="text-xs sm:text-sm">
               Fecha Fin <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -398,10 +400,11 @@ export default function IncomeStatementPage() {
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               required
+              className="h-8 sm:h-9 text-xs sm:text-sm"
             />
           </div>
-          <div>
-            <Button onClick={fetchIncomeStatement} className="w-full" disabled={loading}>
+          <div className="col-span-2 sm:col-span-1">
+            <Button onClick={fetchIncomeStatement} className="w-full h-8 sm:h-9 text-xs sm:text-sm" disabled={loading}>
               <Calendar className="h-4 w-4 mr-2" />
               {loading ? 'Cargando...' : 'Generar Reporte'}
             </Button>
@@ -412,109 +415,109 @@ export default function IncomeStatementPage() {
       {data && (
         <div ref={reportRef} data-pdf-export>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card className="p-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+            <Card className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Total Ingresos</p>
-                  <p className="text-2xl font-bold text-green-600">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Ingresos</p>
+                  <p className="text-base sm:text-xl lg:text-2xl font-bold text-green-600 truncate">
                     RD${data.income.total.toLocaleString('es-DO', {
                       minimumFractionDigits: 2,
                     })}
                   </p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <TrendingUp className="h-6 w-6 text-green-600" />
+                <div className="bg-green-100 p-2 sm:p-3 rounded-full flex-shrink-0 ml-2">
+                  <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
                 </div>
               </div>
             </Card>
 
-            <Card className="p-6">
+            <Card className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Total Gastos</p>
-                  <p className="text-2xl font-bold text-red-600">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Gastos</p>
+                  <p className="text-base sm:text-xl lg:text-2xl font-bold text-red-600 truncate">
                     RD${data.expenses.total.toLocaleString('es-DO', {
                       minimumFractionDigits: 2,
                     })}
                   </p>
                 </div>
-                <div className="bg-red-100 p-3 rounded-full">
-                  <TrendingDown className="h-6 w-6 text-red-600" />
+                <div className="bg-red-100 p-2 sm:p-3 rounded-full flex-shrink-0 ml-2">
+                  <TrendingDown className="h-4 w-4 sm:h-6 sm:w-6 text-red-600" />
                 </div>
               </div>
             </Card>
 
-            <Card className="p-6">
+            <Card className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Resultado Operativo</p>
-                  <p className={`text-2xl font-bold ${data.operatingIncome >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">Resultado Operativo</p>
+                  <p className={`text-base sm:text-xl lg:text-2xl font-bold truncate ${data.operatingIncome >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                     RD${data.operatingIncome.toLocaleString('es-DO', {
                       minimumFractionDigits: 2,
                     })}
                   </p>
                 </div>
-                <div className={`${data.operatingIncome >= 0 ? 'bg-blue-100' : 'bg-red-100'} p-3 rounded-full`}>
-                  <DollarSign className={`h-6 w-6 ${data.operatingIncome >= 0 ? 'text-blue-600' : 'text-red-600'}`} />
+                <div className={`${data.operatingIncome >= 0 ? 'bg-blue-100' : 'bg-red-100'} p-2 sm:p-3 rounded-full flex-shrink-0 ml-2`}>
+                  <DollarSign className={`h-4 w-4 sm:h-6 sm:w-6 ${data.operatingIncome >= 0 ? 'text-blue-600' : 'text-red-600'}`} />
                 </div>
               </div>
             </Card>
 
-            <Card className="p-6">
+            <Card className="p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Utilidad Neta</p>
-                  <p className={`text-2xl font-bold ${data.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">Utilidad Neta</p>
+                  <p className={`text-base sm:text-xl lg:text-2xl font-bold truncate ${data.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     RD${data.netIncome.toLocaleString('es-DO', {
                       minimumFractionDigits: 2,
                     })}
                   </p>
                 </div>
-                <div className={`${data.netIncome >= 0 ? 'bg-green-100' : 'bg-red-100'} p-3 rounded-full`}>
-                  <DollarSign className={`h-6 w-6 ${data.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                <div className={`${data.netIncome >= 0 ? 'bg-green-100' : 'bg-red-100'} p-2 sm:p-3 rounded-full flex-shrink-0 ml-2`}>
+                  <DollarSign className={`h-4 w-4 sm:h-6 sm:w-6 ${data.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`} />
                 </div>
               </div>
             </Card>
           </div>
 
           {/* Income Statement Report */}
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             {/* Income Section */}
-            <div className="mb-8">
-              <div className="mb-4">
-                <h2 className="text-xl font-bold text-green-600">INGRESOS</h2>
+            <div className="mb-6 sm:mb-8">
+              <div className="mb-3 sm:mb-4">
+                <h2 className="text-lg sm:text-xl font-bold text-green-600">INGRESOS</h2>
               </div>
 
               {/* Operating Income */}
               {data.income.operating.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-bold text-lg mb-2">Ingresos Operacionales</h3>
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="font-bold text-base sm:text-lg mb-2">Ingresos Operacionales</h3>
                   {data.income.operating.map((account) => renderAccount(account))}
                 </div>
               )}
 
               {/* Non-Operating Income */}
               {data.income.nonOperating.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-bold text-lg mb-2">Ingresos No Operacionales</h3>
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="font-bold text-base sm:text-lg mb-2">Ingresos No Operacionales</h3>
                   {data.income.nonOperating.map((account) => renderAccount(account))}
                 </div>
               )}
 
               {/* Other Income */}
               {data.income.other.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-bold text-lg mb-2">Otros Ingresos</h3>
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="font-bold text-base sm:text-lg mb-2">Otros Ingresos</h3>
                   {data.income.other.map((account) => renderAccount(account))}
                 </div>
               )}
 
               {/* Total Income */}
-              <div className="pt-4 border-t-2 border-green-600">
+              <div className="pt-3 sm:pt-4 border-t-2 border-green-600">
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-lg">TOTAL INGRESOS</span>
-                  <span className="font-bold text-xl text-green-600">
+                  <span className="font-bold text-sm sm:text-lg">TOTAL INGRESOS</span>
+                  <span className="font-bold text-base sm:text-xl text-green-600">
                     RD${data.income.total.toLocaleString('es-DO', {
                       minimumFractionDigits: 2,
                     })}
@@ -524,40 +527,40 @@ export default function IncomeStatementPage() {
             </div>
 
             {/* Expenses Section */}
-            <div className="mb-8">
-              <div className="mb-4">
-                <h2 className="text-xl font-bold text-red-600">GASTOS</h2>
+            <div className="mb-6 sm:mb-8">
+              <div className="mb-3 sm:mb-4">
+                <h2 className="text-lg sm:text-xl font-bold text-red-600">GASTOS</h2>
               </div>
 
               {/* Operating Expenses */}
               {data.expenses.operating.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-bold text-lg mb-2">Gastos Operacionales</h3>
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="font-bold text-base sm:text-lg mb-2">Gastos Operacionales</h3>
                   {data.expenses.operating.map((account) => renderAccount(account))}
                 </div>
               )}
 
               {/* Non-Operating Expenses */}
               {data.expenses.nonOperating.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-bold text-lg mb-2">Gastos No Operacionales</h3>
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="font-bold text-base sm:text-lg mb-2">Gastos No Operacionales</h3>
                   {data.expenses.nonOperating.map((account) => renderAccount(account))}
                 </div>
               )}
 
               {/* Other Expenses */}
               {data.expenses.other.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-bold text-lg mb-2">Otros Gastos</h3>
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="font-bold text-base sm:text-lg mb-2">Otros Gastos</h3>
                   {data.expenses.other.map((account) => renderAccount(account))}
                 </div>
               )}
 
               {/* Total Expenses */}
-              <div className="pt-4 border-t-2 border-red-600">
+              <div className="pt-3 sm:pt-4 border-t-2 border-red-600">
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-lg">TOTAL GASTOS</span>
-                  <span className="font-bold text-xl text-red-600">
+                  <span className="font-bold text-sm sm:text-lg">TOTAL GASTOS</span>
+                  <span className="font-bold text-base sm:text-xl text-red-600">
                     RD${data.expenses.total.toLocaleString('es-DO', {
                       minimumFractionDigits: 2,
                     })}
@@ -567,27 +570,27 @@ export default function IncomeStatementPage() {
             </div>
 
             {/* Net Income */}
-            <div className="pt-6 border-t-4 border-gray-800">
-              <div className="space-y-3">
+            <div className="pt-4 sm:pt-6 border-t-4 border-gray-800">
+              <div className="space-y-2 sm:space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-lg">Utilidad Bruta</span>
-                  <span className="font-bold text-xl">
+                  <span className="font-bold text-sm sm:text-lg">Utilidad Bruta</span>
+                  <span className="font-bold text-base sm:text-xl">
                     RD${data.grossProfit.toLocaleString('es-DO', {
                       minimumFractionDigits: 2,
                     })}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-lg">Resultado Operativo</span>
-                  <span className={`font-bold text-xl ${data.operatingIncome >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                  <span className="font-bold text-sm sm:text-lg">Resultado Operativo</span>
+                  <span className={`font-bold text-base sm:text-xl ${data.operatingIncome >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                     RD${data.operatingIncome.toLocaleString('es-DO', {
                       minimumFractionDigits: 2,
                     })}
                   </span>
                 </div>
-                <div className="flex justify-between items-center pt-3 border-t-2">
-                  <span className="font-bold text-2xl">UTILIDAD NETA</span>
-                  <span className={`font-bold text-2xl ${data.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className="flex justify-between items-center pt-2 sm:pt-3 border-t-2">
+                  <span className="font-bold text-lg sm:text-2xl">UTILIDAD NETA</span>
+                  <span className={`font-bold text-lg sm:text-2xl ${data.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     RD${data.netIncome.toLocaleString('es-DO', {
                       minimumFractionDigits: 2,
                     })}
@@ -597,12 +600,12 @@ export default function IncomeStatementPage() {
             </div>
 
             {/* Margin Analysis */}
-            <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-bold mb-2">Análisis de Márgenes</h3>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-bold text-sm sm:text-base mb-2">Análisis de Márgenes</h3>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Margen Bruto</p>
-                  <p className="font-bold">
+                  <p className="text-xs sm:text-sm text-gray-600">Margen Bruto</p>
+                  <p className="font-bold text-sm sm:text-base">
                     {data.income.total > 0
                       ? ((data.grossProfit / data.income.total) * 100).toFixed(2)
                       : 0}
@@ -610,8 +613,8 @@ export default function IncomeStatementPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Margen Neto</p>
-                  <p className="font-bold">
+                  <p className="text-xs sm:text-sm text-gray-600">Margen Neto</p>
+                  <p className="font-bold text-sm sm:text-base">
                     {data.income.total > 0
                       ? ((data.netIncome / data.income.total) * 100).toFixed(2)
                       : 0}
@@ -625,10 +628,10 @@ export default function IncomeStatementPage() {
       )}
 
       {!data && !loading && (
-        <Card className="p-12">
+        <Card className="p-8 sm:p-12">
           <div className="text-center text-gray-500">
-            <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            <p>Seleccione un rango de fechas y haga clic en "Generar Reporte"</p>
+            <Calendar className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-gray-400" />
+            <p className="text-sm sm:text-base">Seleccione un rango de fechas y haga clic en "Generar Reporte"</p>
           </div>
         </Card>
       )}

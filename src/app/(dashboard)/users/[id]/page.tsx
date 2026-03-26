@@ -192,29 +192,29 @@ export default function UserDetailPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Link href="/users">
-            <Button variant="outline" size="sm" className="mr-4">
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
-              Volver
+            <Button variant="outline" size="sm">
+              <ArrowLeftIcon className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Volver</span>
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold">Detalle de Usuario</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Detalle de Usuario</h1>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex gap-2 self-end sm:self-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={handleToggleStatus}
             className={user.isActive ? "text-yellow-600" : "text-green-600"}
           >
-            {user.isActive ? "Desactivar" : "Activar"}
+            <span className="text-xs sm:text-sm">{user.isActive ? "Desactivar" : "Activar"}</span>
           </Button>
           <Link href={`/users/edit/${userId}`}>
             <Button variant="outline" size="sm">
-              <PencilIcon className="h-4 w-4 mr-2" />
-              Editar
+              <PencilIcon className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Editar</span>
             </Button>
           </Link>
           <Button
@@ -223,8 +223,8 @@ export default function UserDetailPage() {
             className="text-red-500"
             onClick={() => setDeleteDialogOpen(true)}
           >
-            <TrashIcon className="h-4 w-4 mr-2" />
-            Eliminar
+            <TrashIcon className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Eliminar</span>
           </Button>
         </div>
       </div>

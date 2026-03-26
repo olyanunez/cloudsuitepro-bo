@@ -174,16 +174,16 @@ export default function CategoriesPage() {
 
   return (
     <ProtectedPage screenCode="PRODUCT_CATEGORY" requiredPermission="VIEW">
-      <div className="container mx-auto py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Gestión de Categorías</h1>
-          <div className="flex gap-2">
-            <ExportButton screenCode="PRODUCT_CATEGORY" onExport={handleExport} />
+      <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Gestión de Categorías</h1>
+          <div className="flex gap-2 self-end sm:self-auto">
+            <ExportButton screenCode="PRODUCT_CATEGORY" onExport={handleExport} size="sm" />
             {canCreate && (
               <Link href="/inventory/categories/create">
-                <Button className="bg-primary hover:bg-primary-600">
-                  <PlusIcon className="mr-2 h-4 w-4" />
-                  Nueva Categoría
+                <Button size="sm" className="bg-primary hover:bg-primary-600">
+                  <PlusIcon className="mr-1 sm:mr-2 h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Nueva Categoría</span>
                 </Button>
               </Link>
             )}
@@ -191,7 +191,7 @@ export default function CategoriesPage() {
         </div>
 
         {/* Search and filter controls */}
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
@@ -229,7 +229,56 @@ export default function CategoriesPage() {
         </div>
 
         <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+            {paginatedCategories.map((category) => (
+              <div key={category.id} className="p-3 hover:bg-muted/50">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-sm">{category.name}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${category.isActive ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'}`}>
+                        {category.isActive ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {category.description || 'Sin descripción'}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {category.createdAt ? new Date(category.createdAt).toLocaleDateString() : 'N/A'}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Link href={`/inventory/categories/${category.id}`}>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                        <EyeIcon className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    {canUpdate && (
+                      <Link href={`/inventory/categories/edit/${category.id}`}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
+                    {canDelete && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        onClick={() => confirmDelete(category.id)}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
@@ -331,48 +380,57 @@ export default function CategoriesPage() {
         </div>
 
         {/* Pagination controls */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
             Mostrando {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredCategories.length)} de {filteredCategories.length} categorías
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2">
             <Button
               variant="outline"
               size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
 
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              // Show pages around current page
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
+            {/* Mobile: Show current/total */}
+            <span className="sm:hidden text-sm px-2">
+              {currentPage} / {totalPages || 1}
+            </span>
 
-              return (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(pageNum)}
-                >
-                  {pageNum}
-                </Button>
-              );
-            })}
+            {/* Desktop: Show page buttons */}
+            <div className="hidden sm:flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
 
             <Button
               variant="outline"
               size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages || totalPages === 0}
             >

@@ -134,21 +134,21 @@ export default function BatchDetailPage() {
   const stockPercentage = (batch.currentQuantity / batch.initialQuantity) * 100;
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <Link href="/inventory/batches">
-          <Button variant="ghost" className="mb-4">
+          <Button variant="ghost" size="sm" className="mb-3 sm:mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver a Lotes
           </Button>
         </Link>
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold">{batch.batchNumber}</h1>
-            <p className="text-muted-foreground mt-1">{batch.product?.name || 'Producto'}</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">{batch.batchNumber}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">{batch.product?.name || 'Producto'}</p>
           </div>
-          <div>
+          <div className="self-start">
             {getStatusBadge(batch.status)}
           </div>
         </div>

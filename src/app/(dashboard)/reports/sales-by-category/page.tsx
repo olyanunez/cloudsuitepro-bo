@@ -103,23 +103,25 @@ export default function SalesByCategoryReport() {
   }));
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/reports">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Volver
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Ventas por Categoría</h1>
-            <p className="text-muted-foreground mt-1">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-3">
+        <Link href="/reports">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            <span className="text-xs sm:text-sm">Volver</span>
+          </Button>
+        </Link>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Ventas por Categoría</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Distribución de ventas por categoría de productos
             </p>
           </div>
+          <div className="flex-shrink-0">
+            <ExportButton screenCode="REPORTS" onExport={handleExport} requiresDateRange={false} />
+          </div>
         </div>
-        <ExportButton screenCode="REPORTS" onExport={handleExport} requiresDateRange={false} />
       </div>
 
       <ReportFilters
@@ -129,27 +131,27 @@ export default function SalesByCategoryReport() {
         showLimitFilter={false}
       />
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ingresos Totales</CardTitle>
+      <div className="grid gap-3 sm:gap-4 grid-cols-2">
+        <Card className="p-3 sm:p-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Ingresos Totales</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
             <p className="text-xs text-muted-foreground mt-1">
               De {data.length} categorías
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unidades Vendidas</CardTitle>
+        <Card className="p-3 sm:p-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Unidades Vendidas</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalSales.toLocaleString()}</div>
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold">{totalSales.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Total de unidades
             </p>
@@ -157,13 +159,13 @@ export default function SalesByCategoryReport() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Distribución de Ventas</CardTitle>
-            <CardDescription>Porcentaje de ingresos por categoría</CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Distribución de Ventas</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Porcentaje de ingresos por categoría</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Cargando datos...</div>
             ) : data.length === 0 ? (
@@ -171,15 +173,14 @@ export default function SalesByCategoryReport() {
                 No hay datos para el período seleccionado
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie
                     data={chartData}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percentage }) => `${name} (${percentage.toFixed(1)}%)`}
-                    outerRadius={80}
+                    outerRadius={70}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -190,6 +191,7 @@ export default function SalesByCategoryReport() {
                   <Tooltip
                     formatter={(value: any) => formatCurrency(parseFloat(value))}
                   />
+                  <Legend />
                 </PieChart>
               </ResponsiveContainer>
             )}
@@ -197,13 +199,13 @@ export default function SalesByCategoryReport() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Detalle por Categoría</CardTitle>
-            <CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Detalle por Categoría</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Métricas de ventas por categoría
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Cargando datos...</div>
             ) : data.length === 0 ? (
@@ -211,40 +213,74 @@ export default function SalesByCategoryReport() {
                 No hay datos para el período seleccionado
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead className="text-right">Unidades</TableHead>
-                    <TableHead className="text-right">Ingresos</TableHead>
-                    <TableHead className="text-right">%</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile Cards */}
+                <div className="sm:hidden space-y-3">
                   {data.map((item, index) => (
-                    <TableRow key={item.categoryId}>
-                      <TableCell>
+                    <div key={item.categoryId} className="border rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div
-                            className="w-3 h-3 rounded-full"
+                            className="w-3 h-3 rounded-full flex-shrink-0"
                             style={{ backgroundColor: COLORS[index % COLORS.length] }}
                           />
-                          <span className="font-medium">{item.categoryName}</span>
+                          <span className="font-medium text-sm truncate">{item.categoryName}</span>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right">{item.totalSales}</TableCell>
-                      <TableCell className="text-right font-semibold">
-                        {formatCurrency(parseFloat(item.totalRevenue as any))}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="text-xs">
                           {parseFloat(item.percentage as any).toFixed(1)}%
                         </Badge>
-                      </TableCell>
-                    </TableRow>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">Unidades:</span>
+                          <span className="font-medium ml-1">{item.totalSales}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-semibold">{formatCurrency(parseFloat(item.totalRevenue as any))}</span>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+
+                {/* Desktop Table */}
+                <div className="hidden sm:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Categoría</TableHead>
+                        <TableHead className="text-right">Unidades</TableHead>
+                        <TableHead className="text-right">Ingresos</TableHead>
+                        <TableHead className="text-right">%</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {data.map((item, index) => (
+                        <TableRow key={item.categoryId}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                              />
+                              <span className="font-medium">{item.categoryName}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">{item.totalSales}</TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {formatCurrency(parseFloat(item.totalRevenue as any))}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant="outline">
+                              {parseFloat(item.percentage as any).toFixed(1)}%
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

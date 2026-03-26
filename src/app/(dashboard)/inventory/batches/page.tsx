@@ -158,28 +158,28 @@ export default function BatchesPage() {
 
   return (
     <ProtectedPage screenCode="INVENTORY" requiredPermission="VIEW">
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Gestión de Lotes</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Gestión de Lotes</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
               Control de trazabilidad y vencimientos
             </p>
           </div>
-          <div className="flex gap-2">
-            <ExportButton screenCode="BATCHES" onExport={handleExport} />
+          <div className="flex gap-2 self-end sm:self-auto">
+            <ExportButton screenCode="BATCHES" onExport={handleExport} size="sm" />
             <Link href="/inventory/batches/create">
-              <Button className="bg-primary hover:bg-primary-600">
-                <PlusIcon className="h-4 w-4 mr-2" />
-                Nuevo Lote
+              <Button size="sm" className="bg-primary hover:bg-primary-600">
+                <PlusIcon className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm">Nuevo Lote</span>
               </Button>
             </Link>
           </div>
         </div>
 
         {/* Search and filter controls */}
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
@@ -250,51 +250,51 @@ export default function BatchesPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card className="p-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+          <Card className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Lotes</p>
-                <p className="text-2xl font-bold">{total}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Lotes</p>
+                <p className="text-lg sm:text-2xl font-bold">{total}</p>
               </div>
-              <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-full">
-                <Package className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="bg-blue-100 dark:bg-blue-900/20 p-2 sm:p-3 rounded-full">
+                <Package className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-4">
+          <Card className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Lotes Activos</p>
-                <p className="text-2xl font-bold">{activeBatches}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Lotes Activos</p>
+                <p className="text-lg sm:text-2xl font-bold">{activeBatches}</p>
               </div>
-              <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full">
-                <Package className="h-6 w-6 text-green-600 dark:text-green-400" />
+              <div className="bg-green-100 dark:bg-green-900/20 p-2 sm:p-3 rounded-full">
+                <Package className="h-4 w-4 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-4">
+          <Card className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Por Vencer (30d)</p>
-                <p className="text-2xl font-bold text-orange-600">{expiringBatches}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Por Vencer (30d)</p>
+                <p className="text-lg sm:text-2xl font-bold text-orange-600">{expiringBatches}</p>
               </div>
-              <div className="bg-orange-100 dark:bg-orange-900/20 p-3 rounded-full">
-                <AlertTriangle className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+              <div className="bg-orange-100 dark:bg-orange-900/20 p-2 sm:p-3 rounded-full">
+                <AlertTriangle className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600 dark:text-orange-400" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-4">
+          <Card className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Valor Total</p>
-                <p className="text-2xl font-bold">{formatCurrency(totalValue)}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Valor Total</p>
+                <p className="text-lg sm:text-2xl font-bold">{formatCurrency(totalValue)}</p>
               </div>
-              <div className="bg-purple-100 dark:bg-purple-900/20 p-3 rounded-full">
-                <Archive className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <div className="bg-purple-100 dark:bg-purple-900/20 p-2 sm:p-3 rounded-full">
+                <Archive className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
           </Card>
@@ -302,7 +302,63 @@ export default function BatchesPage() {
 
         {/* Table */}
         <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+            {loading ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">Cargando...</div>
+            ) : batches.length === 0 ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">No se encontraron lotes</div>
+            ) : (
+              batches.map((batch) => {
+                const daysUntilExp = getDaysUntilExpiration(batch.expirationDate);
+                const isExpiringSoon = daysUntilExp !== null && daysUntilExp <= 30 && daysUntilExp > 0;
+                const isExpired = daysUntilExp !== null && daysUntilExp <= 0;
+
+                return (
+                  <div key={batch.id} className="p-3 hover:bg-muted/50">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-sm">{batch.batchNumber}</span>
+                          {getStatusBadge(batch.status)}
+                        </div>
+                        <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
+                          {batch.product?.name || '-'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {batch.warehouse?.name || '-'} • Stock: {batch.currentQuantity}/{batch.initialQuantity}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="text-xs text-muted-foreground">
+                            Vence: {formatDate(batch.expirationDate)}
+                          </span>
+                          {isExpiringSoon && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 text-orange-600 border-orange-600">
+                              {daysUntilExp}d
+                            </Badge>
+                          )}
+                          {isExpired && (
+                            <Badge variant="destructive" className="text-[10px] px-1.5">Vencido</Badge>
+                          )}
+                        </div>
+                        <div className="text-xs font-medium mt-1">
+                          {formatCurrency(batch.unitCost)}
+                        </div>
+                      </div>
+                      <Link href={`/inventory/batches/${batch.id}`}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
+                          <EyeIcon className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
@@ -433,52 +489,60 @@ export default function BatchesPage() {
               </tbody>
             </table>
           </div>
-
         </div>
 
         {/* Pagination controls */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
             Mostrando {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total} lotes
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2">
             <Button
               variant="outline"
               size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => handlePageChange(Math.max(page - 1, 1))}
               disabled={page === 1}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
 
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              // Show pages around current page
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (page <= 3) {
-                pageNum = i + 1;
-              } else if (page >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = page - 2 + i;
-              }
+            {/* Mobile: Show current/total */}
+            <span className="sm:hidden text-sm px-2">
+              {page} / {totalPages || 1}
+            </span>
 
-              return (
-                <Button
-                  key={pageNum}
-                  variant={page === pageNum ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handlePageChange(pageNum)}
-                >
-                  {pageNum}
-                </Button>
-              );
-            })}
+            {/* Desktop: Show page buttons */}
+            <div className="hidden sm:flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (page <= 3) {
+                  pageNum = i + 1;
+                } else if (page >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = page - 2 + i;
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={page === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(pageNum)}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
 
             <Button
               variant="outline"
               size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => handlePageChange(Math.min(page + 1, totalPages))}
               disabled={page === totalPages || totalPages === 0}
             >

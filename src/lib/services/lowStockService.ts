@@ -2,9 +2,11 @@ import { apiGet } from './apiService';
 
 export interface LowStockItem {
   id: number;
-  productId: number;
+  variantId: number;
   productCode: string;
   productName: string;
+  variantSku: string;
+  variantName: string;
   warehouseId: number;
   warehouseName: string;
   quantity: number;

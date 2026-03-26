@@ -294,61 +294,133 @@ export default function PurchaseOrdersPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Órdenes</p>
-                <p className="text-2xl font-bold">{total}</p>
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4 mb-4 sm:mb-6">
+          <Card className="p-3 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Órdenes</p>
+                <p className="text-lg sm:text-2xl font-bold">{total}</p>
               </div>
-              <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-full">
-                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="bg-blue-100 dark:bg-blue-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                <FileText className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Borradores</p>
-                <p className="text-2xl font-bold">
+          <Card className="p-3 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Borradores</p>
+                <p className="text-lg sm:text-2xl font-bold">
                   {purchaseOrders.filter((po) => po.status === PurchaseOrderStatus.DRAFT).length}
                 </p>
               </div>
-              <div className="bg-gray-100 dark:bg-gray-900/20 p-3 rounded-full">
-                <FileText className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+              <div className="bg-gray-100 dark:bg-gray-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                <FileText className="h-4 w-4 sm:h-6 sm:w-6 text-gray-600 dark:text-gray-400" />
               </div>
             </div>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Enviadas</p>
-                <p className="text-2xl font-bold">
+          <Card className="p-3 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Enviadas</p>
+                <p className="text-lg sm:text-2xl font-bold">
                   {purchaseOrders.filter((po) => po.status === PurchaseOrderStatus.SENT).length}
                 </p>
               </div>
-              <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-full">
-                <Send className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="bg-blue-100 dark:bg-blue-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                <Send className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Recibidas</p>
-                <p className="text-2xl font-bold">
+          <Card className="p-3 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Recibidas</p>
+                <p className="text-lg sm:text-2xl font-bold">
                   {purchaseOrders.filter((po) => po.status === PurchaseOrderStatus.RECEIVED).length}
                 </p>
               </div>
-              <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full">
-                <FileText className="h-6 w-6 text-green-600 dark:text-green-400" />
+              <div className="bg-green-100 dark:bg-green-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                <FileText className="h-4 w-4 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Table */}
-        <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+        {/* Mobile Cards */}
+        <div className="sm:hidden space-y-3">
+          {loading ? (
+            <Card className="p-4 text-center text-muted-foreground">
+              Cargando...
+            </Card>
+          ) : purchaseOrders.length === 0 ? (
+            <Card className="p-4 text-center text-muted-foreground">
+              No se encontraron órdenes de compra
+            </Card>
+          ) : (
+            purchaseOrders.map((order) => (
+              <Card key={order.id} className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-sm">{order.orderNumber}</p>
+                    <p className="text-xs text-muted-foreground truncate">{order.supplier?.name}</p>
+                  </div>
+                  {getStatusBadge(order.status)}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground mb-3">
+                  <div>
+                    <span className="font-medium">Fecha:</span> {new Date(order.orderDate).toLocaleDateString()}
+                  </div>
+                  <div>
+                    <span className="font-medium">Items:</span> {order._count?.items || 0}
+                  </div>
+                  <div className="col-span-2">
+                    <span className="font-medium">Total:</span> <span className="text-foreground font-semibold">${Number(order.total).toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  {order.status === PurchaseOrderStatus.DRAFT && canUpdate && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => handleSendToSupplier(order.id)}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Link href={`/purchase-orders/${order.id}`}>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <EyeIcon className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  {canUpdate && order.status === PurchaseOrderStatus.DRAFT && (
+                    <Link href={`/purchase-orders/edit/${order.id}`}>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <PencilIcon className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
+                  {canDelete && (order.status === PurchaseOrderStatus.DRAFT || order.status === PurchaseOrderStatus.SENT) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-red-500"
+                      onClick={() => confirmDelete(order.id, order.orderNumber)}
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden sm:block bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
@@ -423,20 +495,20 @@ export default function PurchaseOrdersPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="px-2 py-1"
+                              className="h-8 w-8 p-0"
                               onClick={() => handleSendToSupplier(order.id)}
                             >
                               <Send className="h-4 w-4" />
                             </Button>
                           )}
                           <Link href={`/purchase-orders/${order.id}`}>
-                            <Button variant="outline" size="sm" className="px-2 py-1">
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
                               <EyeIcon className="h-4 w-4" />
                             </Button>
                           </Link>
                           {canUpdate && order.status === PurchaseOrderStatus.DRAFT && (
                             <Link href={`/purchase-orders/edit/${order.id}`}>
-                              <Button variant="outline" size="sm" className="px-2 py-1">
+                              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
                                 <PencilIcon className="h-4 w-4" />
                               </Button>
                             </Link>
@@ -445,7 +517,7 @@ export default function PurchaseOrdersPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
+                              className="h-8 w-8 p-0 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
                               onClick={() => confirmDelete(order.id, order.orderNumber)}
                             >
                               <TrashIcon className="h-4 w-4" />
@@ -462,14 +534,15 @@ export default function PurchaseOrdersPage() {
         </div>
 
         {/* Pagination controls */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
             Mostrando {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total} órdenes
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2 order-1 sm:order-2">
             <Button
               variant="outline"
               size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => setPage(prev => Math.max(prev - 1, 1))}
               disabled={page === 1}
             >
@@ -493,6 +566,7 @@ export default function PurchaseOrdersPage() {
                   key={pageNum}
                   variant={page === pageNum ? "default" : "outline"}
                   size="sm"
+                  className="h-8 w-8 p-0 text-xs sm:text-sm"
                   onClick={() => setPage(pageNum)}
                 >
                   {pageNum}
@@ -503,6 +577,7 @@ export default function PurchaseOrdersPage() {
             <Button
               variant="outline"
               size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
               disabled={page === totalPages || totalPages === 0}
             >

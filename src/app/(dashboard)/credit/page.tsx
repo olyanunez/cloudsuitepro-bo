@@ -472,27 +472,29 @@ export default function CreditPage() {
 
   return (
     <ProtectedPage screenCode="CREDIT" requiredPermission="VIEW">
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-4 sm:py-8 px-4 sm:px-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Gestión de Créditos</h1>
-            <p className="text-muted-foreground mt-1">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Gestión de Créditos</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Administra los créditos, cobros y límites de tus clientes
             </p>
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="collections" className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Cuentas por Cobrar
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full max-w-full sm:max-w-md grid-cols-2">
+            <TabsTrigger value="collections" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+              <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Cuentas por Cobrar</span>
+              <span className="sm:hidden">Cobros</span>
             </TabsTrigger>
             {canManageCreditLimit && (
-              <TabsTrigger value="management" className="flex items-center gap-2">
-                <Settings2 className="h-4 w-4" />
-                Límites de Crédito
+              <TabsTrigger value="management" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+                <Settings2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Límites de Crédito</span>
+                <span className="sm:hidden">Límites</span>
               </TabsTrigger>
             )}
           </TabsList>
@@ -500,84 +502,76 @@ export default function CreditPage() {
           {/* ============================================ */}
           {/* TAB: Cuentas por Cobrar */}
           {/* ============================================ */}
-          <TabsContent value="collections" className="space-y-6">
+          <TabsContent value="collections" className="space-y-4 sm:space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Saldo Total Pendiente</p>
-                      <p className="text-2xl font-bold text-red-600">
-                        {formatCurrency(totalPendingBalance)}
-                      </p>
-                    </div>
-                    <div className="bg-red-100 dark:bg-red-900/20 p-3 rounded-full">
-                      <DollarSign className="h-6 w-6 text-red-600 dark:text-red-400" />
-                    </div>
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
+              <Card className="p-3 sm:p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm text-muted-foreground">Saldo Pendiente</p>
+                    <p className="text-lg sm:text-2xl font-bold text-red-600 truncate">
+                      {formatCurrency(totalPendingBalance)}
+                    </p>
                   </div>
-                </CardContent>
+                  <div className="bg-red-100 dark:bg-red-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                    <DollarSign className="h-4 w-4 sm:h-6 sm:w-6 text-red-600 dark:text-red-400" />
+                  </div>
+                </div>
               </Card>
 
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Clientes con Saldo</p>
-                      <p className="text-2xl font-bold">{totalCustomersWithBalance}</p>
-                    </div>
-                    <div className="bg-yellow-100 dark:bg-yellow-900/20 p-3 rounded-full">
-                      <Users className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-                    </div>
+              <Card className="p-3 sm:p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm text-muted-foreground">Con Saldo</p>
+                    <p className="text-lg sm:text-2xl font-bold">{totalCustomersWithBalance}</p>
                   </div>
-                </CardContent>
+                  <div className="bg-yellow-100 dark:bg-yellow-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                    <Users className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                </div>
               </Card>
 
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Facturas Pendientes</p>
-                      <p className="text-2xl font-bold">
-                        {customers.reduce((sum, c) => sum + c.pendingInvoicesCount, 0)}
-                      </p>
-                    </div>
-                    <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-full">
-                      <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                    </div>
+              <Card className="p-3 sm:p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm text-muted-foreground">Facturas Pend.</p>
+                    <p className="text-lg sm:text-2xl font-bold">
+                      {customers.reduce((sum, c) => sum + c.pendingInvoicesCount, 0)}
+                    </p>
                   </div>
-                </CardContent>
+                  <div className="bg-blue-100 dark:bg-blue-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                    <FileText className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                </div>
               </Card>
 
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Promedio por Cliente</p>
-                      <p className="text-2xl font-bold">
-                        {formatCurrency(
-                          totalCustomersWithBalance > 0
-                            ? totalPendingBalance / totalCustomersWithBalance
-                            : 0
-                        )}
-                      </p>
-                    </div>
-                    <div className="bg-purple-100 dark:bg-purple-900/20 p-3 rounded-full">
-                      <CreditCard className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                    </div>
+              <Card className="p-3 sm:p-4 col-span-2 md:col-span-1">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm text-muted-foreground">Promedio</p>
+                    <p className="text-lg sm:text-2xl font-bold truncate">
+                      {formatCurrency(
+                        totalCustomersWithBalance > 0
+                          ? totalPendingBalance / totalCustomersWithBalance
+                          : 0
+                      )}
+                    </p>
                   </div>
-                </CardContent>
+                  <div className="bg-purple-100 dark:bg-purple-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                    <CreditCard className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                </div>
               </Card>
             </div>
 
             {/* Search and Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="relative md:col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="relative sm:col-span-2">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="Buscar por código, nombre, email o teléfono..."
-                  className="pl-10 w-full"
+                  placeholder="Buscar por código, nombre, email..."
+                  className="pl-10 w-full text-sm"
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
@@ -593,8 +587,8 @@ export default function CreditPage() {
                   setPage(1);
                 }}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Elementos por página" />
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder="Por página" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="5">5 por página</SelectItem>
@@ -605,8 +599,64 @@ export default function CreditPage() {
               </Select>
             </div>
 
-            {/* Customers Table */}
-            <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+            {/* Mobile Cards */}
+            <div className="sm:hidden space-y-3">
+              {loading ? (
+                <Card className="p-4 text-center text-muted-foreground">
+                  Cargando...
+                </Card>
+              ) : paginatedCustomers.length === 0 ? (
+                <Card className="p-4 text-center text-muted-foreground">
+                  No se encontraron clientes con saldo pendiente
+                </Card>
+              ) : (
+                paginatedCustomers.map((customer) => (
+                  <Card key={customer.id} className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm truncate">{customer.name} {customer.lastName || ''}</p>
+                        <p className="text-xs text-muted-foreground">{customer.code}</p>
+                      </div>
+                      <Badge variant="secondary" className="flex-shrink-0 ml-2">
+                        {customer.pendingInvoicesCount} fact.
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                      <div>
+                        <span className="text-muted-foreground">Saldo:</span>
+                        <span className="font-bold text-red-600 ml-1">{formatCurrency(customer.currentBalance)}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Límite:</span>
+                        <span className="font-medium ml-1">{formatCurrency(customer.creditLimit)}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-muted-foreground">Disponible:</span>
+                        <span className={`font-medium ml-1 ${customer.availableCredit > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(customer.availableCredit)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {canReceivePayment && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => openPaymentDialog(customer)}
+                        className="w-full !bg-green-600 hover:!bg-green-700 !text-white"
+                      >
+                        <ArrowDownToLine className="h-4 w-4 mr-1" />
+                        Recibir Pago
+                      </Button>
+                    )}
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden sm:block bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-700">
@@ -713,18 +763,19 @@ export default function CreditPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
                   Mostrando {(page - 1) * itemsPerPage + 1} -{' '}
                   {Math.min(page * itemsPerPage, filteredCustomers.length)} de{' '}
                   {filteredCustomers.length} clientes
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 sm:space-x-2 order-1 sm:order-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                     disabled={page === 1}
+                    className="h-8 w-8 p-0"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -747,6 +798,7 @@ export default function CreditPage() {
                         variant={page === pageNum ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setPage(pageNum)}
+                        className="h-8 w-8 p-0 text-xs sm:text-sm"
                       >
                         {pageNum}
                       </Button>
@@ -758,6 +810,7 @@ export default function CreditPage() {
                     size="sm"
                     onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={page === totalPages}
+                    className="h-8 w-8 p-0"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -770,60 +823,54 @@ export default function CreditPage() {
           {/* TAB: Gestión de Límites de Crédito */}
           {/* ============================================ */}
           {canManageCreditLimit && (
-            <TabsContent value="management" className="space-y-6">
+            <TabsContent value="management" className="space-y-4 sm:space-y-6">
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Total Clientes</p>
-                        <p className="text-2xl font-bold">{allCustomers.length}</p>
-                      </div>
-                      <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-full">
-                        <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                      </div>
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3">
+                <Card className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Total Clientes</p>
+                      <p className="text-lg sm:text-2xl font-bold">{allCustomers.length}</p>
                     </div>
-                  </CardContent>
+                    <div className="bg-blue-100 dark:bg-blue-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                      <Users className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                  </div>
                 </Card>
 
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Con Crédito Habilitado</p>
-                        <p className="text-2xl font-bold text-green-600">{customersWithCredit}</p>
-                      </div>
-                      <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full">
-                        <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
-                      </div>
+                <Card className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Con Crédito</p>
+                      <p className="text-lg sm:text-2xl font-bold text-green-600">{customersWithCredit}</p>
                     </div>
-                  </CardContent>
+                    <div className="bg-green-100 dark:bg-green-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                      <Check className="h-4 w-4 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
+                    </div>
+                  </div>
                 </Card>
 
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Crédito Total Otorgado</p>
-                        <p className="text-2xl font-bold">{formatCurrency(totalCreditLimit)}</p>
-                      </div>
-                      <div className="bg-purple-100 dark:bg-purple-900/20 p-3 rounded-full">
-                        <CreditCard className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                      </div>
+                <Card className="p-3 sm:p-4 col-span-2 md:col-span-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Crédito Otorgado</p>
+                      <p className="text-lg sm:text-2xl font-bold truncate">{formatCurrency(totalCreditLimit)}</p>
                     </div>
-                  </CardContent>
+                    <div className="bg-purple-100 dark:bg-purple-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                      <CreditCard className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600 dark:text-purple-400" />
+                    </div>
+                  </div>
                 </Card>
               </div>
 
               {/* Search */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="relative md:col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="relative sm:col-span-2">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     type="text"
-                    placeholder="Buscar cliente por código, nombre, email o teléfono..."
-                    className="pl-10 w-full"
+                    placeholder="Buscar por código, nombre, email..."
+                    className="pl-10 w-full text-sm"
                     value={managementSearch}
                     onChange={(e) => {
                       setManagementSearch(e.target.value);
@@ -832,13 +879,84 @@ export default function CreditPage() {
                   />
                 </div>
 
-                <Button variant="outline" onClick={fetchAllCustomers} disabled={loadingAllCustomers}>
-                  {loadingAllCustomers ? 'Actualizando...' : 'Actualizar Lista'}
+                <Button variant="outline" onClick={fetchAllCustomers} disabled={loadingAllCustomers} className="text-sm">
+                  {loadingAllCustomers ? 'Actualizando...' : 'Actualizar'}
                 </Button>
               </div>
 
-              {/* Management Table */}
-              <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+              {/* Mobile Cards */}
+              <div className="sm:hidden space-y-3">
+                {loadingAllCustomers ? (
+                  <Card className="p-4 text-center text-muted-foreground">
+                    Cargando...
+                  </Card>
+                ) : paginatedAllCustomers.length === 0 ? (
+                  <Card className="p-4 text-center text-muted-foreground">
+                    No se encontraron clientes
+                  </Card>
+                ) : (
+                  paginatedAllCustomers.map((customer) => (
+                    <Card key={customer.id} className="p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-sm truncate">{customer.name} {customer.lastName || ''}</p>
+                          <p className="text-xs text-muted-foreground">{customer.code}</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                          <Switch
+                            checked={customer.allowCredit}
+                            onCheckedChange={() => handleQuickToggleCredit(customer)}
+                            disabled={customer.allowCredit && customer.currentBalance > 0}
+                          />
+                          {customer.allowCredit ? (
+                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-xs">
+                              Sí
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 text-xs">
+                              No
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {customer.allowCredit && (
+                        <div className="grid grid-cols-3 gap-2 text-xs mb-3">
+                          <div>
+                            <span className="text-muted-foreground block">Límite</span>
+                            <span className="font-medium">{formatCurrency(customer.creditLimit)}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground block">Saldo</span>
+                            <span className={`font-medium ${customer.currentBalance > 0 ? 'text-red-600' : ''}`}>
+                              {formatCurrency(customer.currentBalance)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground block">Disponible</span>
+                            <span className={`font-medium ${customer.availableCredit > 0 ? 'text-green-600' : customer.availableCredit < 0 ? 'text-red-600' : ''}`}>
+                              {formatCurrency(customer.availableCredit)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openCreditDialog(customer)}
+                        className="w-full"
+                      >
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Editar Límite
+                      </Button>
+                    </Card>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden sm:block bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700">
@@ -973,18 +1091,19 @@ export default function CreditPage() {
 
               {/* Pagination */}
               {managementTotalPages > 1 && (
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                  <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
                     Mostrando {(managementPage - 1) * itemsPerPage + 1} -{' '}
                     {Math.min(managementPage * itemsPerPage, filteredAllCustomers.length)} de{' '}
                     {filteredAllCustomers.length} clientes
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1 sm:space-x-2 order-1 sm:order-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setManagementPage((prev) => Math.max(prev - 1, 1))}
                       disabled={managementPage === 1}
+                      className="h-8 w-8 p-0"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -1007,6 +1126,7 @@ export default function CreditPage() {
                           variant={managementPage === pageNum ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setManagementPage(pageNum)}
+                          className="h-8 w-8 p-0 text-xs sm:text-sm"
                         >
                           {pageNum}
                         </Button>
@@ -1020,6 +1140,7 @@ export default function CreditPage() {
                         setManagementPage((prev) => Math.min(prev + 1, managementTotalPages))
                       }
                       disabled={managementPage === managementTotalPages}
+                      className="h-8 w-8 p-0"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -1034,10 +1155,10 @@ export default function CreditPage() {
         {/* Payment Dialog */}
         {/* ============================================ */}
         <Dialog open={isPaymentDialogOpen} onOpenChange={closePaymentDialog}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Recibir Pago de Crédito</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-base sm:text-lg">Recibir Pago de Crédito</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm">
                 Registrar un pago para el cliente{' '}
                 <strong>
                   {selectedCustomer?.name} {selectedCustomer?.lastName || ''}
@@ -1050,26 +1171,26 @@ export default function CreditPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Customer Summary */}
                 {customerSummary && (
-                  <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4 p-3 sm:p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div>
-                      <p className="text-sm text-muted-foreground">Límite de Crédito</p>
-                      <p className="text-lg font-semibold">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Límite</p>
+                      <p className="text-sm sm:text-lg font-semibold truncate">
                         {formatCurrency(customerSummary.creditLimit)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Saldo Pendiente</p>
-                      <p className="text-lg font-semibold text-red-600">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Saldo</p>
+                      <p className="text-sm sm:text-lg font-semibold text-red-600 truncate">
                         {formatCurrency(customerSummary.currentBalance)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Crédito Disponible</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Disponible</p>
                       <p
-                        className={`text-lg font-semibold ${customerSummary.availableCredit > 0 ? 'text-green-600' : 'text-red-600'
+                        className={`text-sm sm:text-lg font-semibold truncate ${customerSummary.availableCredit > 0 ? 'text-green-600' : 'text-red-600'
                           }`}
                       >
                         {formatCurrency(customerSummary.availableCredit)}
@@ -1236,14 +1357,14 @@ export default function CreditPage() {
                 )}
 
                 {/* Payment Form */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <Label htmlFor="paymentMethod">Método de Pago *</Label>
+                    <Label htmlFor="paymentMethod" className="text-xs sm:text-sm">Método de Pago *</Label>
                     <Select
                       value={paymentMethod}
                       onValueChange={(value) => setPaymentMethod(value as CreditPaymentMethod)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1270,22 +1391,23 @@ export default function CreditPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="reference">
+                    <Label htmlFor="reference" className="text-xs sm:text-sm">
                       Referencia {(paymentMethod === CreditPaymentMethod.CARD || paymentMethod === CreditPaymentMethod.TRANSFER) ? '*' : '(opcional)'}
                     </Label>
                     <Input
                       id="reference"
-                      placeholder="No. voucher, transferencia, etc."
+                      placeholder="No. voucher, transferencia..."
+                      className="text-sm"
                       value={paymentReference}
                       onChange={(e) => setPaymentReference(e.target.value)}
                     />
                   </div>
 
-                  <div className="col-span-2">
-                    <Label>Sucursal</Label>
-                    <div className="flex items-center gap-2 h-9 px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800">
-                      <Building2 className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-700 dark:text-gray-300">
+                  <div className="sm:col-span-2">
+                    <Label className="text-xs sm:text-sm">Sucursal</Label>
+                    <div className="flex items-center gap-2 h-9 px-3 py-2 text-xs sm:text-sm border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800">
+                      <Building2 className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                      <span className="text-gray-700 dark:text-gray-300 truncate">
                         {activeBranchName || 'Sin sucursal activa'}
                       </span>
                     </div>
@@ -1293,10 +1415,11 @@ export default function CreditPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="notes">Notas (opcional)</Label>
+                  <Label htmlFor="notes" className="text-xs sm:text-sm">Notas (opcional)</Label>
                   <Textarea
                     id="notes"
                     placeholder="Observaciones sobre el pago..."
+                    className="text-sm"
                     value={paymentNotes}
                     onChange={(e) => setPaymentNotes(e.target.value)}
                     rows={2}
@@ -1305,8 +1428,8 @@ export default function CreditPage() {
               </div>
             )}
 
-            <DialogFooter>
-              <Button variant="outline" onClick={closePaymentDialog}>
+            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+              <Button variant="outline" onClick={closePaymentDialog} className="w-full sm:w-auto">
                 Cancelar
               </Button>
               <Button
@@ -1320,7 +1443,7 @@ export default function CreditPage() {
                   parseFloat(paymentAmount) > selectedInvoicesTotal ||
                   ((paymentMethod === CreditPaymentMethod.CARD || paymentMethod === CreditPaymentMethod.TRANSFER) && !paymentReference.trim())
                 }
-                className="!bg-green-600 hover:!bg-green-700 !text-white"
+                className="!bg-green-600 hover:!bg-green-700 !text-white w-full sm:w-auto text-xs sm:text-sm"
               >
                 {submittingPayment
                   ? 'Procesando...'
@@ -1328,7 +1451,7 @@ export default function CreditPage() {
                     ? 'Seleccione facturas'
                     : !paymentAmount || parseFloat(paymentAmount) <= 0
                       ? 'Ingrese monto'
-                      : `Registrar Pago (${formatCurrency(parseFloat(paymentAmount))})`}
+                      : `Registrar (${formatCurrency(parseFloat(paymentAmount))})`}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1340,8 +1463,8 @@ export default function CreditPage() {
         <Dialog open={isCreditDialogOpen} onOpenChange={closeCreditDialog}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Configurar Límite de Crédito</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-base sm:text-lg">Configurar Límite de Crédito</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm">
                 Configurar crédito para{' '}
                 <strong>
                   {editingCustomer?.name} {editingCustomer?.lastName || ''}
@@ -1349,11 +1472,11 @@ export default function CreditPage() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Current Status */}
               {editingCustomer && editingCustomer.currentBalance > 0 && (
                 <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <p className="text-xs sm:text-sm text-yellow-800 dark:text-yellow-200">
                     Este cliente tiene un saldo pendiente de{' '}
                     <strong>{formatCurrency(editingCustomer.currentBalance)}</strong>. El límite de
                     crédito no puede ser menor a este monto.
@@ -1362,13 +1485,13 @@ export default function CreditPage() {
               )}
 
               {/* Enable/Disable Credit */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="allowCredit" className="text-base font-medium">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <Label htmlFor="allowCredit" className="text-sm sm:text-base font-medium">
                     Habilitar Crédito
                   </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Permite al cliente realizar compras a crédito
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Permite compras a crédito
                   </p>
                 </div>
                 <Switch
@@ -1382,7 +1505,7 @@ export default function CreditPage() {
               {/* Credit Limit */}
               {editAllowCredit && (
                 <div>
-                  <Label htmlFor="creditLimit">Límite de Crédito *</Label>
+                  <Label htmlFor="creditLimit" className="text-xs sm:text-sm">Límite de Crédito *</Label>
                   <div className="relative mt-1">
                     <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
@@ -1391,25 +1514,26 @@ export default function CreditPage() {
                       step="0.01"
                       min={editingCustomer?.currentBalance || 0}
                       placeholder="0.00"
-                      className="pl-10"
+                      className="pl-10 text-sm"
                       value={editCreditLimit}
                       onChange={(e) => setEditCreditLimit(e.target.value)}
                     />
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                     Monto máximo que el cliente puede deber
                   </p>
                 </div>
               )}
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={closeCreditDialog}>
+            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+              <Button variant="outline" onClick={closeCreditDialog} className="w-full sm:w-auto">
                 Cancelar
               </Button>
               <Button
                 onClick={handleSaveCredit}
                 disabled={savingCredit || (editAllowCredit && !editCreditLimit)}
+                className="w-full sm:w-auto"
               >
                 {savingCredit ? 'Guardando...' : 'Guardar Cambios'}
               </Button>

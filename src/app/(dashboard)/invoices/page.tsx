@@ -156,14 +156,13 @@ export default function InvoicesPage() {
   return (
     <ProtectedPage screenCode="INVOICE" requiredPermission="VIEW">
       <div className="container mx-auto py-8">
-        <div className="flex justify-between items-start mb-6">
-          <PageHeader
-            title="Gestión de Facturas"
-            description="Visualiza y administra todas las facturas del sistema"
-            icon="file-text"
-          />
+        <PageHeader
+          title="Gestión de Facturas"
+          description="Visualiza y administra todas las facturas del sistema"
+          icon="file-text"
+        >
           <ExportButton screenCode="INVOICE" onExport={handleExport} />
-        </div>
+        </PageHeader>
 
         {/* Search and filter controls */}
         <div className="mb-6 space-y-4">
@@ -236,7 +235,50 @@ export default function InvoicesPage() {
         </div>
 
         <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+            {paginatedInvoices.length === 0 ? (
+              <div className="p-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                No se encontraron facturas
+              </div>
+            ) : (
+              paginatedInvoices.map((invoice) => (
+                <div key={invoice.id} className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          {invoice.invoiceNumber}
+                        </p>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${InvoiceService.getStatusColor(invoice.status)}`}>
+                          {InvoiceService.formatStatus(invoice.status)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
+                        {invoice.customer?.name || 'Sin cliente'}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                        <span>{new Date(invoice.createdAt).toLocaleDateString('es-MX', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>•</span>
+                        <span>{InvoiceService.formatPaymentMethod(invoice.paymentMethod)}</span>
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white mt-2">
+                        {InvoiceService.formatCurrency(invoice.total)}
+                      </p>
+                    </div>
+                    <Link href={`/invoices/${invoice.id}`}>
+                      <Button variant="outline" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
+                        <EyeIcon className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
@@ -360,47 +402,57 @@ export default function InvoicesPage() {
 
         {/* Pagination controls */}
         {filteredInvoices.length > 0 && (
-          <div className="mt-6 flex items-center justify-between">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               Mostrando {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredInvoices.length)} de {filteredInvoices.length} facturas
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               <Button
                 variant="outline"
                 size="sm"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
 
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
+              {/* Desktop: page number buttons */}
+              <div className="hidden sm:flex items-center space-x-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
 
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={currentPage === pageNum ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(pageNum)}
-                  >
-                    {pageNum}
-                  </Button>
-                );
-              })}
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              {/* Mobile: simple page indicator */}
+              <span className="sm:hidden text-sm text-gray-600 dark:text-gray-400 min-w-[60px] text-center">
+                {currentPage} / {totalPages || 1}
+              </span>
 
               <Button
                 variant="outline"
                 size="sm"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages || totalPages === 0}
               >

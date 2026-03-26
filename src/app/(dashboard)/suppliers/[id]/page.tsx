@@ -114,20 +114,20 @@ export default function SupplierDetailPage() {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <Link href="/suppliers">
-          <Button variant="ghost" className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver a Proveedores
+          <Button variant="ghost" size="sm" className="mb-2 sm:mb-4">
+            <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="text-xs sm:text-sm">Volver</span>
           </Button>
         </Link>
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold">{supplier.name}</h1>
-            <p className="text-gray-600 mt-1">Código: {supplier.code}</p>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">{supplier.name}</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">Código: {supplier.code}</p>
           </div>
-          <Link href={`/suppliers/edit/${supplier.id}`}>
-            <Button className="bg-blue-500 hover:bg-blue-600">
+          <Link href={`/suppliers/edit/${supplier.id}`} className="flex-shrink-0">
+            <Button className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto" size="sm">
               <Edit className="h-4 w-4 mr-2" />
               Editar
             </Button>

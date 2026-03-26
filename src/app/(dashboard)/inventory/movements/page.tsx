@@ -274,22 +274,22 @@ export default function MovementsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Movimientos de Inventario</h1>
-        <div className="flex gap-2">
-          <ExportButton screenCode="MOVEMENTS" onExport={handleExport} />
+    <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Movimientos de Inventario</h1>
+        <div className="flex gap-2 self-end sm:self-auto">
+          <ExportButton screenCode="MOVEMENTS" onExport={handleExport} size="sm" />
           <Link href="/inventory/movements/create">
-            <Button className="bg-primary hover:bg-primary-600">
-              <PlusIcon className="mr-2 h-4 w-4" />
-              Nuevo Movimiento
+            <Button size="sm" className="bg-primary hover:bg-primary-600">
+              <PlusIcon className="mr-1 sm:mr-2 h-4 w-4" />
+              <span className="text-xs sm:text-sm">Nuevo Movimiento</span>
             </Button>
           </Link>
         </div>
       </div>
 
       {/* Search and filter controls */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="relative">
           <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -342,65 +342,130 @@ export default function MovementsPage() {
       </div>
 
       {/* Date filters */}
-      <div className="mb-6 flex flex-wrap gap-4">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium">Desde:</span>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-[180px] justify-start text-left font-normal"
-              >
-                {startDate ? format(startDate, 'PP', { locale: es }) : 'Seleccionar fecha'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={startDate}
-                onSelect={setStartDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs sm:text-sm font-medium whitespace-nowrap">Desde:</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-[180px] justify-start text-left font-normal text-xs sm:text-sm"
+                >
+                  {startDate ? format(startDate, 'PP', { locale: es }) : 'Fecha'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={setStartDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs sm:text-sm font-medium whitespace-nowrap">Hasta:</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-[180px] justify-start text-left font-normal text-xs sm:text-sm"
+                >
+                  {endDate ? format(endDate, 'PP', { locale: es }) : 'Fecha'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={setEndDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium">Hasta:</span>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-[180px] justify-start text-left font-normal"
-              >
-                {endDate ? format(endDate, 'PP', { locale: es }) : 'Seleccionar fecha'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={endDate}
-                onSelect={setEndDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <div className="flex space-x-2 ml-auto">
-          <Button variant="outline" onClick={resetFilters}>
-            Limpiar Filtros
+        <div className="flex gap-2 sm:ml-auto">
+          <Button variant="outline" size="sm" onClick={resetFilters} className="flex-1 sm:flex-none">
+            <span className="text-xs sm:text-sm">Limpiar</span>
           </Button>
-          <Button onClick={applyFilters} className="bg-primary hover:bg-primary-600">
-            <FilterIcon className="mr-2 h-4 w-4" />
-            Aplicar Filtros
+          <Button size="sm" onClick={applyFilters} className="flex-1 sm:flex-none bg-primary hover:bg-primary-600">
+            <FilterIcon className="mr-1 sm:mr-2 h-4 w-4" />
+            <span className="text-xs sm:text-sm">Aplicar</span>
           </Button>
         </div>
       </div>
 
       {/* Movements table */}
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile Card View */}
+        <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+          {paginatedMovements.length > 0 ? (
+            paginatedMovements.map((movement) => (
+              <div key={movement.id} className="p-3 hover:bg-muted/50">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getMovementTypeColor(movement.type)}`}>
+                        {getMovementTypeText(movement.type)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(movement.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                      {isVariantMovement(movement) ? (
+                        <>
+                          {movement.variant?.product?.name || 'Producto'}
+                          {movement.variant?.name && ` - ${movement.variant.name}`}
+                        </>
+                      ) : (
+                        movement.product?.name || `Producto ID: ${movement.productId}`
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <span className="text-sm font-semibold">Cant: {movement.quantity}</span>
+                      {movement.type === MovementType.TRANSFERENCIA ? (
+                        <span className="text-xs text-muted-foreground">
+                          {getWarehouseName(movement.sourceWarehouseId, movement.sourceWarehouse)} → {getWarehouseName(movement.destinationWarehouseId, movement.destinationWarehouse)}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          {movement.type === MovementType.ENTRADA
+                            ? getWarehouseName(movement.destinationWarehouseId, movement.destinationWarehouse)
+                            : getWarehouseName(movement.sourceWarehouseId, movement.sourceWarehouse)}
+                        </span>
+                      )}
+                    </div>
+                    {movement.reference && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Ref: {movement.reference}
+                      </div>
+                    )}
+                  </div>
+                  <Link href={`/inventory/movements/${movement.id}`}>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
+                      <EyeIcon className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              No se encontraron movimientos
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
@@ -549,48 +614,57 @@ export default function MovementsPage() {
       </div>
 
       {/* Pagination controls */}
-      <div className="mt-6 flex items-center justify-between">
-        <div className="text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+        <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
           Mostrando {filteredMovements.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} - {Math.min(currentPage * itemsPerPage, filteredMovements.length)} de {filteredMovements.length} movimientos
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2">
           <Button
             variant="outline"
             size="sm"
+            className="h-8 w-8 p-0"
             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
 
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            // Show pages around current page
-            let pageNum;
-            if (totalPages <= 5) {
-              pageNum = i + 1;
-            } else if (currentPage <= 3) {
-              pageNum = i + 1;
-            } else if (currentPage >= totalPages - 2) {
-              pageNum = totalPages - 4 + i;
-            } else {
-              pageNum = currentPage - 2 + i;
-            }
+          {/* Mobile: Show current/total */}
+          <span className="sm:hidden text-sm px-2">
+            {currentPage} / {totalPages || 1}
+          </span>
 
-            return (
-              <Button
-                key={pageNum}
-                variant={currentPage === pageNum ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(pageNum)}
-              >
-                {pageNum}
-              </Button>
-            );
-          })}
+          {/* Desktop: Show page buttons */}
+          <div className="hidden sm:flex items-center gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(pageNum)}
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+          </div>
 
           <Button
             variant="outline"
             size="sm"
+            className="h-8 w-8 p-0"
             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages || totalPages === 0}
           >
