@@ -139,25 +139,25 @@ export function PricingSection() {
 
   if (loading) {
     return (
-      <section id="precios" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
+      <section id="precios" className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8 flex justify-center">
+          <div className="mb-4 sm:mb-6 lg:mb-8 flex justify-center">
             <Image
               src="/branding/transparente/icon/cloudsuitepro_short_logo1.png"
               alt="CloudSuite Pro"
               width={800}
               height={240}
               priority
-              className="h-30 w-auto"
+              className="h-16 sm:h-20 lg:h-30 w-auto"
             />
           </div>
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
               Planes y Precios
             </h2>
           </div>
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="h-12 w-12 animate-spin text-yellow-500" />
+          <div className="flex justify-center items-center py-12 sm:py-16 lg:py-20">
+            <Loader2 className="h-10 w-10 sm:h-12 sm:w-12 animate-spin text-yellow-500" />
           </div>
         </div>
       </section>
@@ -165,53 +165,53 @@ export function PricingSection() {
   }
 
   return (
-    <section id="precios" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
+    <section id="precios" className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="mb-4 flex justify-center">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="mb-3 sm:mb-4 flex justify-center">
             <Image
               src="/branding/transparente/icon/cloudsuitepro_short_logo1.png"
               alt="CloudSuite Pro"
               width={800}
               height={240}
               priority
-              className="h-20 w-auto"
+              className="h-16 sm:h-20 w-auto"
             />
           </div>
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
             Planes y Precios
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-2">
             Elige el plan perfecto para tu negocio. Todos los planes incluyen período de prueba gratis
           </p>
         </div>
 
         {/* Billing Cycle Toggle */}
-        <div className="flex justify-center mb-12">
-          <div className="inline-flex items-center bg-gray-100 rounded-lg p-1.5 gap-2">
+        <div className="flex justify-center mb-6 sm:mb-8 lg:mb-12 overflow-x-auto pb-2">
+          <div className="inline-flex items-center bg-gray-100 rounded-lg p-1 sm:p-1.5 gap-1 sm:gap-2">
             <button
               onClick={() => setSelectedBillingCycle(BillingCycle.MONTHLY)}
-              className={`px-8 py-3 rounded-md font-medium transition-all ${selectedBillingCycle === BillingCycle.MONTHLY
-                ? 'bg-yellow-500 text-white shadow-md scale-120 mr-2.5'
+              className={`px-3 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-md font-medium transition-all text-sm sm:text-base ${selectedBillingCycle === BillingCycle.MONTHLY
+                ? 'bg-yellow-500 text-white shadow-md scale-105 sm:scale-110'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
                 }`}
             >
-              <span className="flex flex-col items-center justify-center py-2">
+              <span className="flex flex-col items-center justify-center py-1 sm:py-2">
                 <span>Mensual</span>
               </span>
             </button>
             <button
               onClick={() => setSelectedBillingCycle(BillingCycle.QUARTERLY)}
-              className={`px-8 py-3 rounded-md font-medium transition-all ${selectedBillingCycle === BillingCycle.QUARTERLY
-                ? 'bg-yellow-500 text-white shadow-md scale-120 mx-2.5'
+              className={`px-3 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-md font-medium transition-all text-sm sm:text-base ${selectedBillingCycle === BillingCycle.QUARTERLY
+                ? 'bg-yellow-500 text-white shadow-md scale-105 sm:scale-110'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
                 }`}
             >
               <span className="flex flex-col items-center justify-center">
                 <span>Trimestral</span>
                 {plans.length > 0 && (
-                  <span className={`text-xs font-semibold mt-0.5 ${selectedBillingCycle === BillingCycle.QUARTERLY ? 'text-yellow-100' : 'text-green-600'}`}>
+                  <span className={`text-[10px] sm:text-xs font-semibold mt-0.5 ${selectedBillingCycle === BillingCycle.QUARTERLY ? 'text-yellow-100' : 'text-green-600'}`}>
                     Ahorra {SubscriptionService.calculateDiscount(plans[0], BillingCycle.QUARTERLY)}%
                   </span>
                 )}
@@ -219,15 +219,15 @@ export function PricingSection() {
             </button>
             <button
               onClick={() => setSelectedBillingCycle(BillingCycle.YEARLY)}
-              className={`px-8 py-3 rounded-md font-medium transition-all ${selectedBillingCycle === BillingCycle.YEARLY
-                ? 'bg-yellow-500 text-white shadow-md scale-120 ml0-2.5'
+              className={`px-3 sm:px-6 lg:px-8 py-2 sm:py-3 rounded-md font-medium transition-all text-sm sm:text-base ${selectedBillingCycle === BillingCycle.YEARLY
+                ? 'bg-yellow-500 text-white shadow-md scale-105 sm:scale-110'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
                 }`}
             >
               <span className="flex flex-col items-center justify-center">
                 <span>Anual</span>
                 {plans.length > 0 && (
-                  <span className={`text-xs font-semibold mt-0.5 ${selectedBillingCycle === BillingCycle.YEARLY ? 'text-yellow-100' : 'text-green-600'}`}>
+                  <span className={`text-[10px] sm:text-xs font-semibold mt-0.5 ${selectedBillingCycle === BillingCycle.YEARLY ? 'text-yellow-100' : 'text-green-600'}`}>
                     Ahorra {SubscriptionService.calculateDiscount(plans[0], BillingCycle.YEARLY)}%
                   </span>
                 )}
@@ -237,7 +237,7 @@ export function PricingSection() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16">
           {plans.map((plan) => {
             const highlighted = isHighlighted(plan);
             const features = getFeaturesList(plan);
@@ -246,21 +246,21 @@ export function PricingSection() {
             return (
               <Card
                 key={plan.id}
-                className={`relative p-8 ${highlighted
-                  ? 'border-2 border-yellow-400 shadow-xl scale-105'
+                className={`relative p-4 sm:p-6 lg:p-8 ${highlighted
+                  ? 'border-2 border-yellow-400 shadow-xl md:scale-105'
                   : 'hover:shadow-lg transition-shadow'
                   }`}
               >
                 {highlighted && (
-                  <div className="absolute top-0 right-0 bg-yellow-400 text-gray-900 px-4 py-1 rounded-bl-lg rounded-tr-lg font-semibold text-sm">
-                    <Star className="h-4 w-4 inline mr-1" />
+                  <div className="absolute top-0 right-0 bg-yellow-400 text-gray-900 px-2 sm:px-4 py-1 rounded-bl-lg rounded-tr-lg font-semibold text-xs sm:text-sm">
+                    <Star className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
                     Más Popular
                   </div>
                 )}
 
-                <div className="mb-6">
-                  <div className="flex items-center gap-4">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                <div className="mb-4 sm:mb-6">
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
                       {plan.name}
                     </h3>
                     <div className="flex justify-center">
@@ -270,40 +270,40 @@ export function PricingSection() {
                         width={800}
                         height={240}
                         priority
-                        className="h-5 w-auto"
+                        className="h-4 sm:h-5 w-auto"
                       />
                     </div>
                   </div>
                   {plan.description && (
-                    <p className="text-sm text-gray-600 mb-4">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
                       {plan.description}
                     </p>
                   )}
-                  <div className="flex items-baseline mb-4">
-                    <span className="text-5xl font-bold text-gray-900">
+                  <div className="flex items-baseline mb-3 sm:mb-4">
+                    <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">
                       {SubscriptionService.formatPrice(price).split(',')[0]}
                     </span>
-                    <span className="text-gray-600 ml-2">
+                    <span className="text-sm sm:text-base text-gray-600 ml-1 sm:ml-2">
                       / {SubscriptionService.getBillingCycleName(selectedBillingCycle).toLowerCase()}
                     </span>
                   </div>
                   {selectedBillingCycle !== BillingCycle.MONTHLY && (
-                    <p className="text-sm text-green-600 font-medium">
+                    <p className="text-xs sm:text-sm text-green-600 font-medium">
                       {SubscriptionService.formatPrice(price / (selectedBillingCycle === BillingCycle.QUARTERLY ? 3 : 12))} por mes
                     </p>
                   )}
                   {plan.setupFee && (typeof plan.setupFee === 'string' ? parseFloat(plan.setupFee) : plan.setupFee) > 0 && (
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-[10px] sm:text-xs text-gray-500 mt-1 sm:mt-2">
                       + {SubscriptionService.formatPrice(typeof plan.setupFee === 'string' ? parseFloat(plan.setupFee) : plan.setupFee)} cargo de instalación
                     </p>
                   )}
                 </div>
 
-                <ul className="space-y-3 mb-8 max-h-96 overflow-y-auto">
+                <ul className="space-y-2 sm:space-y-3 mb-4 sm:mb-6 lg:mb-8 max-h-64 sm:max-h-80 lg:max-h-96 overflow-y-auto">
                   {features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-start">
-                      <Check className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                      <span className="ml-3 text-gray-600 text-sm">
+                      <Check className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                      <span className="ml-2 sm:ml-3 text-gray-600 text-xs sm:text-sm">
                         {feature}
                       </span>
                     </li>
@@ -321,7 +321,7 @@ export function PricingSection() {
                       borderColor: '#eab308',
                       borderWidth: '1px'
                     }}
-                    className={`w-full font-semibold ${highlighted
+                    className={`w-full font-semibold text-sm sm:text-base ${highlighted
                       ? 'hover:opacity-90'
                       : 'hover:bg-yellow-50'
                       } transition-all`}
@@ -336,11 +336,11 @@ export function PricingSection() {
         </div>
 
         {/* Features Comparison */}
-        <div className="bg-white rounded-2xl p-8 shadow-sm">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+        <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-sm">
+          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">
             Todos los planes incluyen
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {[
               'Actualizaciones automáticas',
               'Encriptación de datos',
@@ -351,20 +351,20 @@ export function PricingSection() {
               'Migración de datos',
               'Documentación completa',
             ].map((feature, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <Check className="h-5 w-5 text-yellow-500 flex-shrink-0" />
-                <span className="text-gray-700 text-sm">{feature}</span>
+              <div key={index} className="flex items-center space-x-1.5 sm:space-x-2">
+                <Check className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 flex-shrink-0" />
+                <span className="text-gray-700 text-xs sm:text-sm">{feature}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Enterprise CTA */}
-        <div className="mt-12 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-8 text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
+        <div className="mt-6 sm:mt-8 lg:mt-12 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-center">
+          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
             ¿Necesitas una solución personalizada?
           </h3>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 max-w-2xl mx-auto px-2">
             Para empresas con necesidades específicas, ofrecemos planes personalizados con
             funcionalidades a medida, integraciones especiales y soporte dedicado.
           </p>
@@ -375,7 +375,7 @@ export function PricingSection() {
                 borderColor: '#eab308',
                 color: '#ca8a04',
               }}
-              className="hover:bg-yellow-100 font-semibold"
+              className="hover:bg-yellow-100 font-semibold text-sm sm:text-base"
               size="lg"
             >
               Contactar a Ventas
@@ -384,8 +384,8 @@ export function PricingSection() {
         </div>
 
         {/* Money Back Guarantee */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-600">
+        <div className="mt-4 sm:mt-6 lg:mt-8 text-center px-2">
+          <p className="text-sm sm:text-base text-gray-600">
             💯 <span className="font-semibold">Garantía de satisfacción:</span> Si no estás completamente satisfecho en los primeros 30 días, te devolvemos tu dinero.
           </p>
         </div>

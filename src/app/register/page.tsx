@@ -207,26 +207,26 @@ function RegisterContent() {
   return (
     <div className="flex min-h-screen flex-row-reverse">
       {/* Lado derecho - Formulario con fondo amarillo degradado */}
-      <div className="w-full lg:w-1/2 bg-gradient-to-br from-yellow-400 via-yellow-300 to-orange-400 flex items-center justify-center p-8">
+      <div className="w-full lg:w-1/2 bg-gradient-to-br from-yellow-400 via-yellow-300 to-orange-400 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8">
             {/* Título */}
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 text-center">Registro</h2>
-              <p className="text-sm text-gray-600 text-center mt-1">
+            <div className="mb-4 sm:mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 text-center">Registro</h2>
+              <p className="text-xs sm:text-sm text-gray-600 text-center mt-1">
                 Crea tu cuenta empresarial
               </p>
             </div>
 
             {/* Stepper */}
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <Stepper steps={steps} currentStep={currentStep} />
             </div>
 
             {/* Mostrar plan seleccionado */}
             {selectedPlan && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm font-medium text-blue-900">
+              <div className="mb-3 sm:mb-4 p-2.5 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs sm:text-sm font-medium text-blue-900">
                   Plan seleccionado: <span className="font-bold">{selectedPlan.name}</span>
                 </p>
                 <p className="text-xs text-blue-700 mt-1">
@@ -244,18 +244,18 @@ function RegisterContent() {
 
             {/* Mensajes de error */}
             {error && (
-              <div className="bg-red-50 text-red-800 p-3 rounded-lg text-sm mb-4 border border-red-200">
+              <div className="bg-red-50 text-red-800 p-2.5 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 border border-red-200">
                 {error}
               </div>
             )}
 
             {/* Formulario */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               {/* Paso 1: Información de la Empresa */}
               {currentStep === 0 && (
                 <>
                   <div>
-                    <Label htmlFor="companyName" className="text-sm font-medium">
+                    <Label htmlFor="companyName" className="text-xs sm:text-sm font-medium">
                       Nombre de la Empresa *
                     </Label>
                     <Input
@@ -263,12 +263,12 @@ function RegisterContent() {
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       placeholder="Nombre de la empresa"
-                      className="mt-1"
+                      className="mt-1 text-sm"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="companyTaxId" className="text-sm font-medium">
+                    <Label htmlFor="companyTaxId" className="text-xs sm:text-sm font-medium">
                       ID Fiscal / NIT *
                     </Label>
                     <Input
@@ -276,12 +276,12 @@ function RegisterContent() {
                       value={companyTaxId}
                       onChange={(e) => setCompanyTaxId(e.target.value)}
                       placeholder="ID fiscal o NIT"
-                      className="mt-1"
+                      className="mt-1 text-sm"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="companyEmail" className="text-sm font-medium">
+                    <Label htmlFor="companyEmail" className="text-xs sm:text-sm font-medium">
                       Correo Electrónico *
                     </Label>
                     <Input
@@ -290,12 +290,12 @@ function RegisterContent() {
                       value={companyEmail}
                       onChange={(e) => setCompanyEmail(e.target.value)}
                       placeholder="correo@empresa.com"
-                      className="mt-1"
+                      className="mt-1 text-sm"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="companyPhone" className="text-sm font-medium">
+                    <Label htmlFor="companyPhone" className="text-xs sm:text-sm font-medium">
                       Teléfono
                     </Label>
                     <Input
@@ -303,12 +303,12 @@ function RegisterContent() {
                       value={companyPhone}
                       onChange={(e) => setCompanyPhone(e.target.value)}
                       placeholder="Teléfono de contacto"
-                      className="mt-1"
+                      className="mt-1 text-sm"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="companyAddress" className="text-sm font-medium">
+                    <Label htmlFor="companyAddress" className="text-xs sm:text-sm font-medium">
                       Dirección
                     </Label>
                     <Input
@@ -316,12 +316,12 @@ function RegisterContent() {
                       value={companyAddress}
                       onChange={(e) => setCompanyAddress(e.target.value)}
                       placeholder="Dirección de la empresa"
-                      className="mt-1"
+                      className="mt-1 text-sm"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="companyDescription" className="text-sm font-medium">
+                    <Label htmlFor="companyDescription" className="text-xs sm:text-sm font-medium">
                       Descripción
                     </Label>
                     <Textarea
@@ -329,7 +329,7 @@ function RegisterContent() {
                       value={companyDescription}
                       onChange={(e) => setCompanyDescription(e.target.value)}
                       placeholder="Breve descripción de la empresa"
-                      className="mt-1"
+                      className="mt-1 text-sm"
                       rows={3}
                     />
                   </div>
@@ -340,7 +340,7 @@ function RegisterContent() {
               {currentStep === 1 && (
                 <>
                   <div>
-                    <Label htmlFor="adminName" className="text-sm font-medium">
+                    <Label htmlFor="adminName" className="text-xs sm:text-sm font-medium">
                       Nombre Completo *
                     </Label>
                     <Input
@@ -348,12 +348,12 @@ function RegisterContent() {
                       value={adminName}
                       onChange={(e) => setAdminName(e.target.value)}
                       placeholder="Nombre del administrador"
-                      className="mt-1"
+                      className="mt-1 text-sm"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="adminEmail" className="text-sm font-medium">
+                    <Label htmlFor="adminEmail" className="text-xs sm:text-sm font-medium">
                       Correo Electrónico *
                     </Label>
                     <Input
@@ -362,12 +362,12 @@ function RegisterContent() {
                       value={adminEmail}
                       onChange={(e) => setAdminEmail(e.target.value)}
                       placeholder="correo@ejemplo.com"
-                      className="mt-1"
+                      className="mt-1 text-sm"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="adminPassword" className="text-sm font-medium">
+                    <Label htmlFor="adminPassword" className="text-xs sm:text-sm font-medium">
                       Contraseña *
                     </Label>
                     <Input
@@ -376,12 +376,12 @@ function RegisterContent() {
                       value={adminPassword}
                       onChange={(e) => setAdminPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="mt-1"
+                      className="mt-1 text-sm"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                    <Label htmlFor="confirmPassword" className="text-xs sm:text-sm font-medium">
                       Confirmar Contraseña *
                     </Label>
                     <Input
@@ -390,20 +390,20 @@ function RegisterContent() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="mt-1"
+                      className="mt-1 text-sm"
                     />
                   </div>
                 </>
               )}
 
               {/* Botones de navegación */}
-              <div className="flex justify-between pt-6">
+              <div className="flex justify-between pt-4 sm:pt-6">
                 {currentStep > 0 && (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handlePrevStep}
-                    className="w-24"
+                    className="w-20 sm:w-24 text-xs sm:text-sm"
                   >
                     Anterior
                   </Button>
@@ -419,7 +419,7 @@ function RegisterContent() {
                         color: 'white',
                         borderColor: '#eab308'
                       }}
-                      className="px-8 font-semibold hover:opacity-90 transition-opacity"
+                      className="px-6 sm:px-8 font-semibold hover:opacity-90 transition-opacity text-xs sm:text-sm"
                     >
                       Siguiente
                     </Button>
@@ -432,7 +432,7 @@ function RegisterContent() {
                         color: 'white',
                         borderColor: '#eab308'
                       }}
-                      className="px-8 font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                      className="px-4 sm:px-8 font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 text-xs sm:text-sm"
                     >
                       {isSubmitting ? 'Registrando...' : 'Completar Registro'}
                     </Button>
@@ -442,8 +442,8 @@ function RegisterContent() {
             </form>
 
             {/* Link a login */}
-            <div className="text-center mt-6 pt-6 border-t">
-              <p className="text-sm text-gray-600">
+            <div className="text-center mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
+              <p className="text-xs sm:text-sm text-gray-600">
                 ¿Ya tienes una cuenta?{' '}
                 <Link href="/login" className="font-medium text-yellow-600 hover:text-yellow-700">
                   Iniciar Sesión

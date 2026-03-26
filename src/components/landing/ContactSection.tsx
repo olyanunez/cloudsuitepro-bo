@@ -79,68 +79,67 @@ export function ContactSection() {
   };
 
   return (
-    <section id="contacto" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-yellow-50">
+    <section id="contacto" className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-yellow-50">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
             Contáctanos
           </h2>
-          <p className="text-xl text-gray-600">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 px-2">
             ¿Tienes alguna pregunta? Estamos aquí para ayudarte
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Contact Information */}
-          <div className="space-y-6">
-            <Card className="p-6">
-              <div className="flex items-start space-x-4">
-                <div className="bg-yellow-100 p-3 rounded-lg">
-                  <Mail className="h-6 w-6 text-yellow-600" />
+          <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+            <Card className="p-4 sm:p-6">
+              <div className="flex items-start space-x-3 sm:space-x-4">
+                <div className="bg-yellow-100 p-2 sm:p-3 rounded-lg flex-shrink-0">
+                  <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                  <p className="text-gray-600">cloudsuitep@gmail.com</p>
-                  <p className="text-gray-600">cloudsuitep@gmail.com</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-start space-x-4">
-                <div className="bg-yellow-100 p-3 rounded-lg">
-                  <Phone className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Teléfono</h3>
-                  <p className="text-gray-600">+1 (829) 657-1774</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Email</h3>
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">cloudsuitep@gmail.com</p>
                 </div>
               </div>
             </Card>
 
-            <Card className="p-6">
-              <div className="flex items-start space-x-4">
-                <div className="bg-yellow-100 p-3 rounded-lg">
-                  <MapPin className="h-6 w-6 text-yellow-600" />
+            <Card className="p-4 sm:p-6">
+              <div className="flex items-start space-x-3 sm:space-x-4">
+                <div className="bg-yellow-100 p-2 sm:p-3 rounded-lg flex-shrink-0">
+                  <Phone className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Oficina</h3>
-                  <p className="text-gray-600">
+                  <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Teléfono</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">+1 (829) 657-1774</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-4 sm:p-6">
+              <div className="flex items-start space-x-3 sm:space-x-4">
+                <div className="bg-yellow-100 p-2 sm:p-3 rounded-lg flex-shrink-0">
+                  <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Oficina</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">
                     Av. Winston Churchill<br />
-                    Santo Domingo, República Dominicana
+                    Santo Domingo, RD
                   </p>
                 </div>
               </div>
             </Card>
 
-            <div className="bg-yellow-50 p-6 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-2">Horario de Atención</h3>
-              <p className="text-gray-600 text-sm">
+            <div className="bg-yellow-50 p-4 sm:p-6 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Horario de Atención</h3>
+              <p className="text-gray-600 text-xs sm:text-sm">
                 Lunes - Viernes: 8:00 AM - 6:00 PM<br />
                 Sábado: 9:00 AM - 2:00 PM<br />
                 Domingo: Cerrado
               </p>
-              <p className="text-yellow-600 font-medium text-sm mt-2">
+              <p className="text-yellow-600 font-medium text-xs sm:text-sm mt-2">
                 Soporte 24/7 disponible para clientes premium
               </p>
             </div>
@@ -148,11 +147,11 @@ export function ContactSection() {
 
           {/* Contact Form */}
           <div className="lg:col-span-2">
-            <Card className="p-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="p-4 sm:p-6 lg:p-8">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="name" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                       Nombre completo <span className="text-red-500">*</span>
                     </label>
                     <Input
@@ -163,12 +162,12 @@ export function ContactSection() {
                       onChange={handleChange}
                       placeholder="Tu nombre"
                       required
-                      className="w-full"
+                      className="w-full text-sm"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                       Email <span className="text-red-500">*</span>
                     </label>
                     <Input
@@ -179,14 +178,14 @@ export function ContactSection() {
                       onChange={handleChange}
                       placeholder="tu@email.com"
                       required
-                      className="w-full"
+                      className="w-full text-sm"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="phone" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                       Teléfono
                     </label>
                     <Input
@@ -196,12 +195,12 @@ export function ContactSection() {
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="(829) 657-1774"
-                      className="w-full"
+                      className="w-full text-sm"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="subject" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                       Asunto
                     </label>
                     <Input
@@ -211,13 +210,13 @@ export function ContactSection() {
                       value={formData.subject}
                       onChange={handleChange}
                       placeholder="¿En qué podemos ayudarte?"
-                      className="w-full"
+                      className="w-full text-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="message" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Mensaje <span className="text-red-500">*</span>
                   </label>
                   <Textarea
@@ -227,8 +226,8 @@ export function ContactSection() {
                     onChange={handleChange}
                     placeholder="Cuéntanos más sobre tu consulta..."
                     required
-                    rows={6}
-                    className="w-full"
+                    rows={5}
+                    className="w-full text-sm"
                   />
                 </div>
 
@@ -240,14 +239,14 @@ export function ContactSection() {
                     color: 'white',
                     borderColor: '#eab308'
                   }}
-                  className="w-full hover:opacity-90 transition-opacity font-semibold"
+                  className="w-full hover:opacity-90 transition-opacity font-semibold text-sm sm:text-base"
                   size="lg"
                 >
                   {isSubmitting ? (
                     'Enviando...'
                   ) : (
                     <>
-                      <Send className="h-5 w-5 mr-2" />
+                      <Send className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                       Enviar Mensaje
                     </>
                   )}

@@ -76,50 +76,50 @@ export function TestimonialsSection() {
   }, []);
 
   return (
-    <section id="testimonios" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-yellow-50">
+    <section id="testimonios" className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-yellow-50">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
             Lo que dicen nuestros clientes
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-2">
             {activeCompanies > 0 ? `Más de ${activeCompanies} empresas confían en CloudSuite Pro` : 'Empresas confían en CloudSuite Pro'} para gestionar sus operaciones diarias
           </p>
         </div>
 
         {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16">
           {testimonials.map((testimonial, index) => (
-            <Card key={index} className="p-6 hover:shadow-lg transition-shadow relative">
+            <Card key={index} className="p-4 sm:p-6 hover:shadow-lg transition-shadow relative">
               {/* Quote Icon */}
-              <div className="absolute top-4 right-4 text-yellow-200">
-                <Quote className="h-10 w-10" fill="currentColor" />
+              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 text-yellow-200">
+                <Quote className="h-8 w-8 sm:h-10 sm:w-10" fill="currentColor" />
               </div>
 
               {/* Rating */}
-              <div className="flex items-center mb-4">
+              <div className="flex items-center mb-3 sm:mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400" fill="currentColor" />
+                  <Star key={i} className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400" fill="currentColor" />
                 ))}
               </div>
 
               {/* Content */}
-              <p className="text-gray-600 mb-6 leading-relaxed italic">
-                "{testimonial.content}"
+              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 leading-relaxed italic">
+                &ldquo;{testimonial.content}&rdquo;
               </p>
 
               {/* Author */}
               <div className="flex items-center">
-                <div className="bg-yellow-100 w-12 h-12 rounded-full flex items-center justify-center mr-4">
-                  <span className="text-yellow-600 font-bold text-lg">
+                <div className="bg-yellow-100 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+                  <span className="text-yellow-600 font-bold text-base sm:text-lg">
                     {testimonial.name.charAt(0)}
                   </span>
                 </div>
-                <div>
-                  <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                  <p className="text-sm text-gray-600">{testimonial.role}</p>
-                  <p className="text-sm text-yellow-600 font-medium">{testimonial.company}</p>
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{testimonial.name}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">{testimonial.role}</p>
+                  <p className="text-xs sm:text-sm text-yellow-600 font-medium truncate">{testimonial.company}</p>
                 </div>
               </div>
             </Card>
@@ -127,33 +127,33 @@ export function TestimonialsSection() {
         </div>
 
         {/* Stats Section */}
-        <div className="bg-gradient-to-br from-yellow-400 to-orange-400 rounded-2xl p-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center text-white">
+        <div className="bg-gradient-to-br from-yellow-400 to-orange-400 rounded-xl sm:rounded-2xl p-6 sm:p-8 lg:p-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 text-center text-white">
             <div>
-              <p className="text-5xl font-bold mb-2">{(activeCompanies ? activeCompanies + "+" : false) || '...'}</p>
-              <p className="text-lg opacity-90">Empresas Activas</p>
+              <p className="text-2xl sm:text-3xl lg:text-5xl font-bold mb-1 sm:mb-2">{(activeCompanies ? activeCompanies + "+" : false) || '...'}</p>
+              <p className="text-xs sm:text-sm lg:text-lg opacity-90">Empresas Activas</p>
             </div>
             <div>
-              <p className="text-5xl font-bold mb-2">4.9/5</p>
-              <p className="text-lg opacity-90">Calificación Promedio</p>
+              <p className="text-2xl sm:text-3xl lg:text-5xl font-bold mb-1 sm:mb-2">4.9/5</p>
+              <p className="text-xs sm:text-sm lg:text-lg opacity-90">Calificación Promedio</p>
             </div>
             <div>
-              <p className="text-5xl font-bold mb-2">98%</p>
-              <p className="text-lg opacity-90">Tasa de Satisfacción</p>
+              <p className="text-2xl sm:text-3xl lg:text-5xl font-bold mb-1 sm:mb-2">98%</p>
+              <p className="text-xs sm:text-sm lg:text-lg opacity-90">Tasa de Satisfacción</p>
             </div>
             <div>
-              <p className="text-5xl font-bold mb-2">24/7</p>
-              <p className="text-lg opacity-90">Soporte Disponible</p>
+              <p className="text-2xl sm:text-3xl lg:text-5xl font-bold mb-1 sm:mb-2">24/7</p>
+              <p className="text-xs sm:text-sm lg:text-lg opacity-90">Soporte Disponible</p>
             </div>
           </div>
         </div>
 
         {/* Logos Section */}
-        <div className="mt-16">
-          <p className="text-center text-gray-600 mb-8 font-semibold">
+        <div className="mt-8 sm:mt-12 lg:mt-16">
+          <p className="text-center text-gray-600 mb-4 sm:mb-6 lg:mb-8 font-semibold text-sm sm:text-base">
             Empresas de diversos sectores confían en CloudSuite Pro
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
+          <div className="grid grid-cols-3 sm:flex sm:flex-wrap justify-center items-center gap-3 sm:gap-6 lg:gap-8 opacity-60">
             {/* Placeholder for company logos */}
             {[
               'Retail',
@@ -165,7 +165,7 @@ export function TestimonialsSection() {
             ].map((industry, index) => (
               <div
                 key={index}
-                className="bg-gray-200 px-8 py-4 rounded-lg text-gray-600 font-semibold"
+                className="bg-gray-200 px-3 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 rounded-lg text-gray-600 font-semibold text-xs sm:text-sm lg:text-base text-center"
               >
                 {industry}
               </div>

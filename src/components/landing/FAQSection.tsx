@@ -60,36 +60,36 @@ export function FAQSection() {
   };
 
   return (
-    <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+    <section id="faq" className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16">
-          <div className="flex justify-center mb-4">
-            <div className="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center">
-              <HelpCircle className="h-8 w-8 text-yellow-600" />
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+          <div className="flex justify-center mb-3 sm:mb-4">
+            <div className="bg-yellow-100 w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center">
+              <HelpCircle className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-yellow-600" />
             </div>
           </div>
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
             Preguntas Frecuentes
           </h2>
-          <p className="text-xl text-gray-600">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 px-2">
             Encuentra respuestas a las preguntas más comunes sobre CloudSuite Pro
           </p>
         </div>
 
         {/* FAQ Items */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {faqs.map((faq, index) => (
             <Card key={index} className="overflow-hidden">
               <button
                 onClick={() => toggleFAQ(index)}
-                className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                className="w-full px-4 sm:px-6 py-3 sm:py-4 lg:py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
-                <span className="font-semibold text-gray-900 pr-4">
+                <span className="font-semibold text-gray-900 pr-3 sm:pr-4 text-sm sm:text-base">
                   {faq.question}
                 </span>
                 <ChevronDown
-                  className={`h-5 w-5 text-yellow-500 flex-shrink-0 transition-transform duration-200 ${openIndex === index ? 'transform rotate-180' : ''
+                  className={`h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 flex-shrink-0 transition-transform duration-200 ${openIndex === index ? 'transform rotate-180' : ''
                     }`}
                 />
               </button>
@@ -97,7 +97,7 @@ export function FAQSection() {
                 className={`overflow-hidden transition-all duration-200 ${openIndex === index ? 'max-h-96' : 'max-h-0'
                   }`}
               >
-                <div className="px-6 pb-5 text-gray-600 leading-relaxed">
+                <div className="px-4 sm:px-6 pb-4 sm:pb-5 text-sm sm:text-base text-gray-600 leading-relaxed">
                   {faq.answer}
                 </div>
               </div>
@@ -106,16 +106,16 @@ export function FAQSection() {
         </div>
 
         {/* Contact CTA */}
-        <div className="mt-12 text-center bg-yellow-50 rounded-lg p-8">
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+        <div className="mt-6 sm:mt-8 lg:mt-12 text-center bg-yellow-50 rounded-lg p-4 sm:p-6 lg:p-8">
+          <h3 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 mb-2">
             ¿No encontraste lo que buscabas?
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
             Nuestro equipo está disponible para responder todas tus preguntas
           </p>
           <a
             href="#contacto"
-            className="text-yellow-600 hover:text-yellow-700 font-semibold inline-flex items-center"
+            className="text-yellow-600 hover:text-yellow-700 font-semibold inline-flex items-center text-sm sm:text-base"
           >
             Contáctanos
             <ChevronDown className="h-4 w-4 ml-1 transform rotate-[-90deg]" />

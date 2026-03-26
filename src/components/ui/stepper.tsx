@@ -23,7 +23,7 @@ export const Step = ({
       <div className="flex flex-col items-center">
         <div
           className={cn(
-            "flex h-8 w-8 items-center justify-center rounded-full border-2",
+            "flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full border-2",
             isActive
               ? "border-primary bg-primary text-primary-foreground"
               : isCompleted
@@ -34,26 +34,26 @@ export const Step = ({
           {isCompleted ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
+              width="14"
+              height="14"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="lucide lucide-check"
+              className="lucide lucide-check sm:w-4 sm:h-4"
             >
               <polyline points="20 6 9 17 4 12" />
             </svg>
           ) : (
-            <span className="text-sm font-medium">{isActive ? "✓" : "○"}</span>
+            <span className="text-xs sm:text-sm font-medium">{isActive ? "✓" : "○"}</span>
           )}
         </div>
         {!isLast && (
           <div
             className={cn(
-              "h-12 w-0.5 my-1",
+              "h-8 sm:h-12 w-0.5 my-1",
               isCompleted
                 ? "bg-primary"
                 : "bg-gray-300 dark:bg-gray-600"
@@ -61,10 +61,10 @@ export const Step = ({
           />
         )}
       </div>
-      <div className="ml-4 mt-0.5">
+      <div className="ml-3 sm:ml-4 mt-0.5">
         <h3
           className={cn(
-            "text-sm font-medium",
+            "text-xs sm:text-sm font-medium",
             isActive || isCompleted
               ? "text-gray-900 dark:text-white"
               : "text-gray-500 dark:text-gray-400"
@@ -73,7 +73,7 @@ export const Step = ({
           {title}
         </h3>
         {description && (
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
             {description}
           </p>
         )}
@@ -97,7 +97,7 @@ export const Stepper = ({
   className,
 }: StepperProps) => {
   return (
-    <div className={cn("flex flex-col space-y-4", className)}>
+    <div className={cn("flex flex-col space-y-2 sm:space-y-4", className)}>
       {steps.map((step, index) => (
         <Step
           key={index}
