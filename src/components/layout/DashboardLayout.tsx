@@ -41,14 +41,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       <BranchLoader />
       <Navbar />
-      <div className="md:ml-16 transition-[margin] duration-200">
-        <div className="container mx-auto px-4 pt-4">
+      <div className="md:ml-16 transition-[margin] duration-200 overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
           <TrialBanner />
         </div>
-        <main className="flex-1 container mx-auto px-4 py-8">
+        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-x-hidden">
           {children}
         </main>
       </div>

@@ -57,32 +57,32 @@ const reports = [
 
 export default function ReportsPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Reportes</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Reportes</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2">
           Análisis detallados de ventas, productos y desempeño
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {reports.map((report) => {
           const Icon = report.icon;
           return (
             <Link key={report.href} href={report.href}>
               <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-                <CardHeader>
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-lg ${report.bgColor}`}>
-                      <Icon className={`h-6 w-6 ${report.color}`} />
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className={`p-2 sm:p-3 rounded-lg ${report.bgColor} flex-shrink-0`}>
+                      <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${report.color}`} />
                     </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{report.title}</CardTitle>
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-base sm:text-lg truncate">{report.title}</CardTitle>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <CardDescription>{report.description}</CardDescription>
+                <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6 pt-0">
+                  <CardDescription className="text-xs sm:text-sm">{report.description}</CardDescription>
                 </CardContent>
               </Card>
             </Link>

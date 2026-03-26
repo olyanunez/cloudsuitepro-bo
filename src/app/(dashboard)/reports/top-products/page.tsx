@@ -103,23 +103,25 @@ export default function TopProductsReport() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/reports">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Volver
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Productos Más Vendidos</h1>
-            <p className="text-muted-foreground mt-1">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-3">
+        <Link href="/reports">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            <span className="text-xs sm:text-sm">Volver</span>
+          </Button>
+        </Link>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Productos Más Vendidos</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Top de productos por cantidad y valor de ventas
             </p>
           </div>
+          <div className="flex-shrink-0">
+            <ExportButton screenCode="REPORTS" onExport={handleExport} requiresDateRange={false} />
+          </div>
         </div>
-        <ExportButton screenCode="REPORTS" onExport={handleExport} requiresDateRange={false} />
       </div>
 
       <ReportFilters
@@ -129,27 +131,27 @@ export default function TopProductsReport() {
         showLimitFilter={true}
       />
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ingresos Totales</CardTitle>
+      <div className="grid gap-3 sm:gap-4 grid-cols-2">
+        <Card className="p-3 sm:p-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Ingresos Totales</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
             <p className="text-xs text-muted-foreground mt-1">
               De los {data.length} productos principales
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unidades Vendidas</CardTitle>
+        <Card className="p-3 sm:p-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Unidades Vendidas</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalQuantity.toLocaleString()}</div>
+          <CardContent className="p-0">
+            <div className="text-lg sm:text-2xl font-bold">{totalQuantity.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Total de unidades
             </p>
@@ -158,13 +160,13 @@ export default function TopProductsReport() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Detalle de Productos</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">Detalle de Productos</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
             Lista de productos ordenados por desempeño de ventas
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 pt-0">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">Cargando datos...</div>
           ) : data.length === 0 ? (
@@ -172,42 +174,80 @@ export default function TopProductsReport() {
               No hay datos para el período seleccionado
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">#</TableHead>
-                  <TableHead>Producto</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead className="text-right">Cantidad</TableHead>
-                  <TableHead className="text-right">Precio Prom.</TableHead>
-                  <TableHead className="text-right">Ingresos</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile Cards */}
+              <div className="sm:hidden space-y-3">
                 {data.map((item, index) => (
-                  <TableRow key={item.productId}>
-                    <TableCell className="font-medium">
-                      <Badge variant={index < 3 ? 'default' : 'secondary'}>
-                        {index + 1}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">{item.productName}</TableCell>
-                    <TableCell className="text-muted-foreground">{item.sku}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{item.categoryName}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{item.quantitySold}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(parseFloat(item.averagePrice as any))}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {formatCurrency(parseFloat(item.totalRevenue as any))}
-                    </TableCell>
-                  </TableRow>
+                  <div key={item.productId} className="border rounded-lg p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <Badge variant={index < 3 ? 'default' : 'secondary'} className="flex-shrink-0">
+                          {index + 1}
+                        </Badge>
+                        <span className="font-medium text-sm truncate">{item.productName}</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground mb-2">
+                      <div>SKU: {item.sku}</div>
+                      <div><Badge variant="outline" className="text-xs">{item.categoryName}</Badge></div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div>
+                        <span className="text-muted-foreground">Cant:</span>
+                        <span className="font-medium ml-1">{item.quantitySold}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Prom:</span>
+                        <span className="font-medium ml-1">{formatCurrency(parseFloat(item.averagePrice as any))}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-semibold text-sm">{formatCurrency(parseFloat(item.totalRevenue as any))}</span>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden sm:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">#</TableHead>
+                      <TableHead>Producto</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead>Categoría</TableHead>
+                      <TableHead className="text-right">Cantidad</TableHead>
+                      <TableHead className="text-right">Precio Prom.</TableHead>
+                      <TableHead className="text-right">Ingresos</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.map((item, index) => (
+                      <TableRow key={item.productId}>
+                        <TableCell className="font-medium">
+                          <Badge variant={index < 3 ? 'default' : 'secondary'}>
+                            {index + 1}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">{item.productName}</TableCell>
+                        <TableCell className="text-muted-foreground">{item.sku}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{item.categoryName}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{item.quantitySold}</TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(parseFloat(item.averagePrice as any))}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                          {formatCurrency(parseFloat(item.totalRevenue as any))}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

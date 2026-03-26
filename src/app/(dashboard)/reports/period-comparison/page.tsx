@@ -109,17 +109,17 @@ export default function PeriodComparisonReport() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-3">
           <Link href="/reports">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Volver
+              <span className="text-xs sm:text-sm">Volver</span>
             </Button>
           </Link>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Comparación de Períodos</h1>
-            <p className="text-muted-foreground mt-1">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Comparación de Períodos</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Comparar período actual vs período anterior
             </p>
           </div>
@@ -137,17 +137,17 @@ export default function PeriodComparisonReport() {
 
   if (!data) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-3">
           <Link href="/reports">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Volver
+              <span className="text-xs sm:text-sm">Volver</span>
             </Button>
           </Link>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Comparación de Períodos</h1>
-            <p className="text-muted-foreground mt-1">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Comparación de Períodos</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Comparar período actual vs período anterior
             </p>
           </div>
@@ -166,28 +166,30 @@ export default function PeriodComparisonReport() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/reports">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Volver
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Comparación de Períodos</h1>
-            <p className="text-muted-foreground mt-1">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-3">
+        <Link href="/reports">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            <span className="text-xs sm:text-sm">Volver</span>
+          </Button>
+        </Link>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Comparación de Períodos</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Comparar período actual vs período anterior
             </p>
           </div>
+          <div className="flex-shrink-0">
+            <ExportButton
+              screenCode="REPORTS"
+              onExport={handleExport}
+              requiresDateRange={false}
+              pdfOnly={true}
+            />
+          </div>
         </div>
-        <ExportButton
-          screenCode="REPORTS"
-          onExport={handleExport}
-          requiresDateRange={false}
-          pdfOnly={true}
-        />
       </div>
 
       <ReportFilters
@@ -197,28 +199,28 @@ export default function PeriodComparisonReport() {
         showLimitFilter={false}
       />
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {/* Ingresos */}
-        <Card>
-          <CardHeader>
+        <Card className="p-3 sm:p-4">
+          <CardHeader className="p-0 pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Ingresos Totales</CardTitle>
-              <DollarSign className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="text-sm sm:text-base">Ingresos Totales</CardTitle>
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-0 space-y-3 sm:space-y-4">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Período Actual</p>
-              <p className="text-2xl font-bold">{formatCurrency(parseFloat(data.current.totalRevenue as any))}</p>
+              <p className="text-lg sm:text-2xl font-bold">{formatCurrency(parseFloat(data.current.totalRevenue as any))}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Período Anterior</p>
-              <p className="text-lg text-muted-foreground">{formatCurrency(parseFloat(data.previous.totalRevenue as any))}</p>
+              <p className="text-base sm:text-lg text-muted-foreground">{formatCurrency(parseFloat(data.previous.totalRevenue as any))}</p>
             </div>
             <div className="pt-2 border-t">
               <p className="text-xs text-muted-foreground mb-2">Cambio</p>
               {getChangeIndicator(parseFloat(data.comparison.revenueChange as any))}
-              <Badge variant="outline" className="mt-2">
+              <Badge variant="outline" className="mt-2 text-xs">
                 {parseFloat(data.comparison.revenueChangePercent as any) > 0 ? '+' : ''}
                 {parseFloat(data.comparison.revenueChangePercent as any).toFixed(2)}%
               </Badge>
@@ -227,21 +229,21 @@ export default function PeriodComparisonReport() {
         </Card>
 
         {/* Facturas */}
-        <Card>
-          <CardHeader>
+        <Card className="p-3 sm:p-4">
+          <CardHeader className="p-0 pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Total Facturas</CardTitle>
-              <Receipt className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="text-sm sm:text-base">Total Facturas</CardTitle>
+              <Receipt className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-0 space-y-3 sm:space-y-4">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Período Actual</p>
-              <p className="text-2xl font-bold">{data.current.totalInvoices.toLocaleString()}</p>
+              <p className="text-lg sm:text-2xl font-bold">{data.current.totalInvoices.toLocaleString()}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Período Anterior</p>
-              <p className="text-lg text-muted-foreground">{data.previous.totalInvoices.toLocaleString()}</p>
+              <p className="text-base sm:text-lg text-muted-foreground">{data.previous.totalInvoices.toLocaleString()}</p>
             </div>
             <div className="pt-2 border-t">
               <p className="text-xs text-muted-foreground mb-2">Cambio</p>
@@ -249,11 +251,11 @@ export default function PeriodComparisonReport() {
                 <div className={`p-1 rounded ${data.comparison.invoicesChange > 0 ? 'bg-green-100' : 'bg-red-100'}`}>
                   {data.comparison.invoicesChange > 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                 </div>
-                <span className="font-semibold">
+                <span className="font-semibold text-sm">
                   {data.comparison.invoicesChange > 0 ? '+' : ''}{data.comparison.invoicesChange}
                 </span>
               </div>
-              <Badge variant="outline" className="mt-2">
+              <Badge variant="outline" className="mt-2 text-xs">
                 {parseFloat(data.comparison.invoicesChangePercent as any) > 0 ? '+' : ''}
                 {parseFloat(data.comparison.invoicesChangePercent as any).toFixed(2)}%
               </Badge>
@@ -262,26 +264,26 @@ export default function PeriodComparisonReport() {
         </Card>
 
         {/* Ticket Promedio */}
-        <Card>
-          <CardHeader>
+        <Card className="p-3 sm:p-4 sm:col-span-2 lg:col-span-1">
+          <CardHeader className="p-0 pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Ticket Promedio</CardTitle>
-              <Ticket className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="text-sm sm:text-base">Ticket Promedio</CardTitle>
+              <Ticket className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-0 space-y-3 sm:space-y-4">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Período Actual</p>
-              <p className="text-2xl font-bold">{formatCurrency(parseFloat(data.current.averageTicket as any))}</p>
+              <p className="text-lg sm:text-2xl font-bold">{formatCurrency(parseFloat(data.current.averageTicket as any))}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Período Anterior</p>
-              <p className="text-lg text-muted-foreground">{formatCurrency(parseFloat(data.previous.averageTicket as any))}</p>
+              <p className="text-base sm:text-lg text-muted-foreground">{formatCurrency(parseFloat(data.previous.averageTicket as any))}</p>
             </div>
             <div className="pt-2 border-t">
               <p className="text-xs text-muted-foreground mb-2">Cambio</p>
               {getChangeIndicator(parseFloat(data.comparison.averageTicketChange as any))}
-              <Badge variant="outline" className="mt-2">
+              <Badge variant="outline" className="mt-2 text-xs">
                 {parseFloat(data.comparison.averageTicketChangePercent as any) > 0 ? '+' : ''}
                 {parseFloat(data.comparison.averageTicketChangePercent as any).toFixed(2)}%
               </Badge>
@@ -291,24 +293,24 @@ export default function PeriodComparisonReport() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Resumen de Comparación</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">Resumen de Comparación</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
             Análisis detallado entre {data.current.period} y {data.previous.period}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="p-4 border rounded-lg">
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+              <div className="p-3 sm:p-4 border rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                  <h3 className="font-semibold">Período Actual</h3>
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                  <h3 className="font-semibold text-sm sm:text-base">Período Actual</h3>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Período:</span>
-                    <span className="font-medium">{data.current.period}</span>
+                    <span className="font-medium truncate ml-2">{data.current.period}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Ingresos:</span>
@@ -319,21 +321,21 @@ export default function PeriodComparisonReport() {
                     <span className="font-medium">{data.current.totalInvoices}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Ticket Promedio:</span>
+                    <span className="text-muted-foreground">Ticket Prom:</span>
                     <span className="font-medium">{formatCurrency(parseFloat(data.current.averageTicket as any))}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 border rounded-lg bg-muted/30">
+              <div className="p-3 sm:p-4 border rounded-lg bg-muted/30">
                 <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground" />
-                  <h3 className="font-semibold">Período Anterior</h3>
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                  <h3 className="font-semibold text-sm sm:text-base">Período Anterior</h3>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Período:</span>
-                    <span className="font-medium">{data.previous.period}</span>
+                    <span className="font-medium truncate ml-2">{data.previous.period}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Ingresos:</span>
@@ -344,7 +346,7 @@ export default function PeriodComparisonReport() {
                     <span className="font-medium">{data.previous.totalInvoices}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Ticket Promedio:</span>
+                    <span className="text-muted-foreground">Ticket Prom:</span>
                     <span className="font-medium">{formatCurrency(parseFloat(data.previous.averageTicket as any))}</span>
                   </div>
                 </div>

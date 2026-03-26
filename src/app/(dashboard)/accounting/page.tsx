@@ -111,89 +111,89 @@ export default function AccountingPage() {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Contabilidad</h1>
-        <p className="text-gray-600 mt-1">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Contabilidad</h1>
+        <p className="text-xs sm:text-sm text-gray-600 mt-1">
           Gestión contable y reportes financieros
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Cuentas</p>
-              <p className="text-2xl font-bold">{stats.totalAccounts}</p>
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 mb-4 sm:mb-6">
+        <Card className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">Total Cuentas</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats.totalAccounts}</p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <BookOpen className="h-6 w-6 text-blue-600" />
+            <div className="bg-blue-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Asientos</p>
-              <p className="text-2xl font-bold">{stats.totalJournalEntries}</p>
-              <p className="text-xs text-gray-500 mt-1">
+        <Card className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">Asientos</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats.totalJournalEntries}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
                 {stats.draftEntries} borradores
               </p>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <FileText className="h-6 w-6 text-green-600" />
+            <div className="bg-green-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <FileText className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Activos</p>
-              <p className="text-2xl font-bold">
+        <Card className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">Total Activos</p>
+              <p className="text-lg sm:text-2xl font-bold truncate">
                 RD${stats.totalAssets.toLocaleString()}
               </p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <DollarSign className="h-6 w-6 text-purple-600" />
+            <div className="bg-purple-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <DollarSign className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Resultado Neto</p>
-              <p className={`text-2xl font-bold ${stats.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+        <Card className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">Resultado Neto</p>
+              <p className={`text-lg sm:text-2xl font-bold truncate ${stats.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 RD${stats.netIncome.toLocaleString()}
               </p>
             </div>
-            <div className={`${stats.netIncome >= 0 ? 'bg-green-100' : 'bg-red-100'} p-3 rounded-full`}>
-              <Calculator className={`h-6 w-6 ${stats.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+            <div className={`${stats.netIncome >= 0 ? 'bg-green-100' : 'bg-red-100'} p-2 sm:p-3 rounded-full flex-shrink-0`}>
+              <Calculator className={`h-4 w-4 sm:h-6 sm:w-6 ${stats.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`} />
             </div>
           </div>
         </Card>
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-6">
-        <h2 className="text-xl font-bold mb-4">Accesos Rápidos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Accesos Rápidos</h2>
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
           {quickActions.map((action) => (
             <Link key={action.href} href={action.href}>
-              <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer h-full">
+              <Card className="p-3 sm:p-6 hover:shadow-lg transition-shadow cursor-pointer h-full">
                 <div className="flex flex-col h-full">
-                  <div className={`${action.color} w-12 h-12 rounded-lg flex items-center justify-center mb-4`}>
-                    <action.icon className="h-6 w-6 text-white" />
+                  <div className={`${action.color} w-8 h-8 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center mb-2 sm:mb-4`}>
+                    <action.icon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-lg mb-2">{action.title}</h3>
-                  <p className="text-sm text-gray-600 flex-grow">{action.description}</p>
-                  <div className="mt-4 flex items-center text-sm text-primary">
+                  <h3 className="font-semibold text-sm sm:text-lg mb-1 sm:mb-2">{action.title}</h3>
+                  <p className="text-xs sm:text-sm text-gray-600 flex-grow">{action.description}</p>
+                  <div className="mt-2 sm:mt-4 flex items-center text-xs sm:text-sm text-primary">
                     Ver más
-                    <ArrowRight className="h-4 w-4 ml-1" />
+                    <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
                   </div>
                 </div>
               </Card>
@@ -203,34 +203,34 @@ export default function AccountingPage() {
       </div>
 
       {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h3 className="text-lg font-bold mb-4">Asientos Recientes</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Asientos Recientes</h3>
           <div className="space-y-3">
-            <div className="text-center text-gray-500 py-8">
+            <div className="text-center text-gray-500 py-6 sm:py-8 text-sm">
               No hay asientos recientes
             </div>
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h3 className="text-lg font-bold mb-4">Resumen Financiero</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center pb-3 border-b">
-              <span className="text-gray-600">Ingresos del Mes</span>
-              <span className="font-semibold text-green-600">
+        <Card className="p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-bold mb-3 sm:mb-4">Resumen Financiero</h3>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex justify-between items-center pb-2 sm:pb-3 border-b">
+              <span className="text-xs sm:text-sm text-gray-600">Ingresos del Mes</span>
+              <span className="font-semibold text-green-600 text-sm sm:text-base">
                 RD${stats.monthlyRevenue.toLocaleString()}
               </span>
             </div>
-            <div className="flex justify-between items-center pb-3 border-b">
-              <span className="text-gray-600">Gastos del Mes</span>
-              <span className="font-semibold text-red-600">
+            <div className="flex justify-between items-center pb-2 sm:pb-3 border-b">
+              <span className="text-xs sm:text-sm text-gray-600">Gastos del Mes</span>
+              <span className="font-semibold text-red-600 text-sm sm:text-base">
                 RD${stats.monthlyExpenses.toLocaleString()}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 font-medium">Utilidad del Mes</span>
-              <span className={`font-bold text-lg ${stats.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <span className="text-xs sm:text-sm text-gray-600 font-medium">Utilidad del Mes</span>
+              <span className={`font-bold text-base sm:text-lg ${stats.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 RD${stats.netIncome.toLocaleString()}
               </span>
             </div>

@@ -100,36 +100,35 @@ export default function InventoryReportsPage() {
   const lowStockTotalPages = Math.ceil((lowStockReport?.items.length || 0) / lowStockItemsPerPage);
 
   return (
-    <div className="container mx-auto py-8">
-      <PageHeader
-        title="Reportes de Inventario"
-        description="Visualiza la valorización y el estado del inventario"
-        icon="bar-chart"
-      />
+    <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Reportes de Inventario</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+          Visualiza la valorización y el estado del inventario
+        </p>
+      </div>
 
-      <div className="mb-6">
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium">Filtrar por almacén:</label>
-          <Select value={selectedWarehouse} onValueChange={setSelectedWarehouse}>
-            <SelectTrigger className="w-[250px]">
-              <SelectValue placeholder="Seleccionar almacén" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los almacenes</SelectItem>
-              {warehouses.map((warehouse) => (
-                <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
-                  {warehouse.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+        <label className="text-xs sm:text-sm font-medium">Filtrar por almacén:</label>
+        <Select value={selectedWarehouse} onValueChange={setSelectedWarehouse}>
+          <SelectTrigger className="w-full sm:w-[250px] text-xs sm:text-sm h-9">
+            <SelectValue placeholder="Seleccionar almacén" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los almacenes</SelectItem>
+            {warehouses.map((warehouse) => (
+              <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
+                {warehouse.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="valuation">Valorización de Inventario</TabsTrigger>
-          <TabsTrigger value="lowStock">Stock Bajo</TabsTrigger>
+        <TabsList className="grid w-full max-w-md grid-cols-2 h-9">
+          <TabsTrigger value="valuation" className="text-xs sm:text-sm">Valorización</TabsTrigger>
+          <TabsTrigger value="lowStock" className="text-xs sm:text-sm">Stock Bajo</TabsTrigger>
         </TabsList>
 
         {/* Tab de Valorización */}
@@ -141,49 +140,69 @@ export default function InventoryReportsPage() {
           ) : valuationReport ? (
             <>
               {/* Tarjetas de resumen */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total de Productos</CardTitle>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+                <Card className="p-3 sm:p-0">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
+                    <CardTitle className="text-xs sm:text-sm font-medium">Total de Productos</CardTitle>
                     <Package className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{valuationReport.summary.totalItems}</div>
-                    <p className="text-xs text-muted-foreground">Productos únicos en inventario</p>
+                  <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+                    <div className="text-lg sm:text-2xl font-bold">{valuationReport.summary.totalItems}</div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Productos únicos</p>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Cantidad Total</CardTitle>
+                <Card className="p-3 sm:p-0">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
+                    <CardTitle className="text-xs sm:text-sm font-medium">Cantidad Total</CardTitle>
                     <TrendingDown className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{valuationReport.summary.totalQuantity}</div>
-                    <p className="text-xs text-muted-foreground">Unidades totales</p>
+                  <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+                    <div className="text-lg sm:text-2xl font-bold">{valuationReport.summary.totalQuantity}</div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Unidades totales</p>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
+                <Card className="p-3 sm:p-0">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
+                    <CardTitle className="text-xs sm:text-sm font-medium">Valor Total</CardTitle>
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(valuationReport.summary.totalValue)}</div>
-                    <p className="text-xs text-muted-foreground">Valor del inventario</p>
+                  <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+                    <div className="text-lg sm:text-2xl font-bold">{formatCurrency(valuationReport.summary.totalValue)}</div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Valor del inventario</p>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Tabla de valorización */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Detalle de Valorización</CardTitle>
-                  <CardDescription>Listado de productos con su valorización</CardDescription>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-base sm:text-lg">Detalle de Valorización</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Listado de productos con su valorización</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
+                <CardContent className="p-0 sm:p-6 sm:pt-0">
+                  {/* Mobile Card View */}
+                  <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+                    {paginatedValuationItems.map((item) => (
+                      <div key={item.id} className="p-3 hover:bg-muted/50">
+                        <div className="flex justify-between items-start">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-sm">{item.productName}</div>
+                            <div className="text-xs text-muted-foreground">{item.productCode} • {item.warehouseName}</div>
+                            <div className="flex items-center gap-2 mt-1 text-xs">
+                              <span>Cant: {item.quantity}</span>
+                              <span>C/U: {formatCurrency(item.unitCost)}</span>
+                            </div>
+                          </div>
+                          <div className="text-sm font-semibold">{formatCurrency(item.totalCost)}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <div className="hidden sm:block overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                       <thead className="bg-gray-50 dark:bg-gray-700">
                         <tr>
@@ -236,47 +255,55 @@ export default function InventoryReportsPage() {
 
                   {/* Paginación */}
                   {valuationTotalPages > 1 && (
-                    <div className="mt-6 flex items-center justify-between">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Mostrando {((valuationPage - 1) * valuationItemsPerPage) + 1} - {Math.min(valuationPage * valuationItemsPerPage, valuationReport.items.length)} de {valuationReport.items.length} productos
+                    <div className="p-3 sm:p-0 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                      <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
+                        Mostrando {((valuationPage - 1) * valuationItemsPerPage) + 1} - {Math.min(valuationPage * valuationItemsPerPage, valuationReport.items.length)} de {valuationReport.items.length}
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2">
                         <Button
                           variant="outline"
                           size="sm"
+                          className="h-8 w-8 p-0"
                           onClick={() => setValuationPage(prev => Math.max(prev - 1, 1))}
                           disabled={valuationPage === 1}
                         >
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
 
-                        {Array.from({ length: Math.min(5, valuationTotalPages) }, (_, i) => {
-                          let pageNum;
-                          if (valuationTotalPages <= 5) {
-                            pageNum = i + 1;
-                          } else if (valuationPage <= 3) {
-                            pageNum = i + 1;
-                          } else if (valuationPage >= valuationTotalPages - 2) {
-                            pageNum = valuationTotalPages - 4 + i;
-                          } else {
-                            pageNum = valuationPage - 2 + i;
-                          }
+                        <span className="sm:hidden text-sm px-2">
+                          {valuationPage} / {valuationTotalPages}
+                        </span>
 
-                          return (
-                            <Button
-                              key={pageNum}
-                              variant={valuationPage === pageNum ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => setValuationPage(pageNum)}
-                            >
-                              {pageNum}
-                            </Button>
-                          );
-                        })}
+                        <div className="hidden sm:flex items-center gap-1">
+                          {Array.from({ length: Math.min(5, valuationTotalPages) }, (_, i) => {
+                            let pageNum;
+                            if (valuationTotalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (valuationPage <= 3) {
+                              pageNum = i + 1;
+                            } else if (valuationPage >= valuationTotalPages - 2) {
+                              pageNum = valuationTotalPages - 4 + i;
+                            } else {
+                              pageNum = valuationPage - 2 + i;
+                            }
+
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={valuationPage === pageNum ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setValuationPage(pageNum)}
+                              >
+                                {pageNum}
+                              </Button>
+                            );
+                          })}
+                        </div>
 
                         <Button
                           variant="outline"
                           size="sm"
+                          className="h-8 w-8 p-0"
                           onClick={() => setValuationPage(prev => Math.min(prev + 1, valuationTotalPages))}
                           disabled={valuationPage === valuationTotalPages}
                         >
@@ -302,14 +329,14 @@ export default function InventoryReportsPage() {
               {lowStockReport.count > 0 ? (
                 <>
                   {/* Alerta de advertencia */}
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4">
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3 sm:p-4">
                     <div className="flex items-start">
-                      <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 mr-3" />
+                      <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 mr-2 sm:mr-3 flex-shrink-0" />
                       <div>
-                        <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
+                        <h3 className="font-semibold text-sm sm:text-base text-yellow-800 dark:text-yellow-200">
                           {lowStockReport.count} producto{lowStockReport.count > 1 ? 's' : ''} con stock bajo
                         </h3>
-                        <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                        <p className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300 mt-1">
                           Los siguientes productos están por debajo del nivel mínimo de stock establecido.
                         </p>
                       </div>
@@ -318,12 +345,34 @@ export default function InventoryReportsPage() {
 
                   {/* Tabla de stock bajo */}
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Productos con Stock Bajo</CardTitle>
-                      <CardDescription>Productos que requieren reabastecimiento</CardDescription>
+                    <CardHeader className="p-4 sm:p-6">
+                      <CardTitle className="text-base sm:text-lg">Productos con Stock Bajo</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">Productos que requieren reabastecimiento</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <div className="overflow-x-auto">
+                    <CardContent className="p-0 sm:p-6 sm:pt-0">
+                      {/* Mobile Card View */}
+                      <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+                        {paginatedLowStockItems.map((item) => (
+                          <div key={item.id} className="p-3 hover:bg-muted/50">
+                            <div className="flex justify-between items-start">
+                              <div className="min-w-0 flex-1">
+                                <div className="font-medium text-sm">{item.productName}</div>
+                                <div className="text-xs text-muted-foreground">{item.productCode} • {item.warehouseName}</div>
+                                <div className="flex items-center gap-3 mt-1.5 text-xs">
+                                  <span>Actual: <span className="font-medium">{item.quantity}</span></span>
+                                  <span>Mín: <span className="font-medium">{item.minStock}</span></span>
+                                </div>
+                              </div>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                -{item.deficit}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop Table View */}
+                      <div className="hidden sm:block overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                           <thead className="bg-gray-50 dark:bg-gray-700">
                             <tr>
@@ -376,47 +425,55 @@ export default function InventoryReportsPage() {
 
                       {/* Paginación */}
                       {lowStockTotalPages > 1 && (
-                        <div className="mt-6 flex items-center justify-between">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            Mostrando {((lowStockPage - 1) * lowStockItemsPerPage) + 1} - {Math.min(lowStockPage * lowStockItemsPerPage, lowStockReport.items.length)} de {lowStockReport.items.length} productos
+                        <div className="p-3 sm:p-0 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
+                            Mostrando {((lowStockPage - 1) * lowStockItemsPerPage) + 1} - {Math.min(lowStockPage * lowStockItemsPerPage, lowStockReport.items.length)} de {lowStockReport.items.length}
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2">
                             <Button
                               variant="outline"
                               size="sm"
+                              className="h-8 w-8 p-0"
                               onClick={() => setLowStockPage(prev => Math.max(prev - 1, 1))}
                               disabled={lowStockPage === 1}
                             >
                               <ChevronLeft className="h-4 w-4" />
                             </Button>
 
-                            {Array.from({ length: Math.min(5, lowStockTotalPages) }, (_, i) => {
-                              let pageNum;
-                              if (lowStockTotalPages <= 5) {
-                                pageNum = i + 1;
-                              } else if (lowStockPage <= 3) {
-                                pageNum = i + 1;
-                              } else if (lowStockPage >= lowStockTotalPages - 2) {
-                                pageNum = lowStockTotalPages - 4 + i;
-                              } else {
-                                pageNum = lowStockPage - 2 + i;
-                              }
+                            <span className="sm:hidden text-sm px-2">
+                              {lowStockPage} / {lowStockTotalPages}
+                            </span>
 
-                              return (
-                                <Button
-                                  key={pageNum}
-                                  variant={lowStockPage === pageNum ? "default" : "outline"}
-                                  size="sm"
-                                  onClick={() => setLowStockPage(pageNum)}
-                                >
-                                  {pageNum}
-                                </Button>
-                              );
-                            })}
+                            <div className="hidden sm:flex items-center gap-1">
+                              {Array.from({ length: Math.min(5, lowStockTotalPages) }, (_, i) => {
+                                let pageNum;
+                                if (lowStockTotalPages <= 5) {
+                                  pageNum = i + 1;
+                                } else if (lowStockPage <= 3) {
+                                  pageNum = i + 1;
+                                } else if (lowStockPage >= lowStockTotalPages - 2) {
+                                  pageNum = lowStockTotalPages - 4 + i;
+                                } else {
+                                  pageNum = lowStockPage - 2 + i;
+                                }
+
+                                return (
+                                  <Button
+                                    key={pageNum}
+                                    variant={lowStockPage === pageNum ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setLowStockPage(pageNum)}
+                                  >
+                                    {pageNum}
+                                  </Button>
+                                );
+                              })}
+                            </div>
 
                             <Button
                               variant="outline"
                               size="sm"
+                              className="h-8 w-8 p-0"
                               onClick={() => setLowStockPage(prev => Math.min(prev + 1, lowStockTotalPages))}
                               disabled={lowStockPage === lowStockTotalPages}
                             >
@@ -429,14 +486,14 @@ export default function InventoryReportsPage() {
                   </Card>
                 </>
               ) : (
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-4">
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-3 sm:p-4">
                   <div className="flex items-start">
-                    <Package className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 mr-3" />
+                    <Package className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400 mt-0.5 mr-2 sm:mr-3 flex-shrink-0" />
                     <div>
-                      <h3 className="font-semibold text-green-800 dark:text-green-200">
+                      <h3 className="font-semibold text-sm sm:text-base text-green-800 dark:text-green-200">
                         No hay productos con stock bajo
                       </h3>
-                      <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                      <p className="text-xs sm:text-sm text-green-700 dark:text-green-300 mt-1">
                         Todos los productos tienen niveles de stock adecuados.
                       </p>
                     </div>

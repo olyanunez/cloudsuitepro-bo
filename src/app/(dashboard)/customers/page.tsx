@@ -184,22 +184,22 @@ export default function CustomersPage() {
 
   return (
     <ProtectedPage screenCode="CUSTOMERS" requiredPermission="VIEW">
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-4 sm:py-8 px-4 sm:px-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Clientes</h1>
-            <p className="text-muted-foreground mt-1">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Clientes</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Gestiona la información de tus clientes
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <ExportButton screenCode="CUSTOMERS" onExport={handleExport} requiresDateRange={false} />
             {canCreate && (
               <Link href="/customers/create">
-                <Button className="bg-primary hover:bg-primary-600">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nuevo Cliente
+                <Button className="bg-primary hover:bg-primary-600" size="sm">
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Nuevo Cliente</span>
                 </Button>
               </Link>
             )}
@@ -207,13 +207,13 @@ export default function CustomersPage() {
         </div>
 
         {/* Search and filters */}
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative md:col-span-2">
+        <div className="mb-4 sm:mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="relative sm:col-span-2">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Buscar por código, nombre, email, teléfono o RNC/Cédula..."
-              className="pl-10 w-full"
+              placeholder="Buscar por código, nombre, email..."
+              className="pl-10 w-full text-sm"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -229,7 +229,7 @@ export default function CustomersPage() {
               setPage(1);
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger className="text-sm">
               <SelectValue placeholder="Elementos por página" />
             </SelectTrigger>
             <SelectContent>
@@ -242,48 +242,134 @@ export default function CustomersPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Clientes</p>
-                <p className="text-2xl font-bold">{total}</p>
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 mb-4 sm:mb-6">
+          <Card className="p-3 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Clientes</p>
+                <p className="text-lg sm:text-2xl font-bold">{total}</p>
               </div>
-              <div className="bg-yellow-100 dark:bg-yellow-900/20 p-3 rounded-full">
-                <UserCheck className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+              <div className="bg-yellow-100 dark:bg-yellow-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                <UserCheck className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-600 dark:text-yellow-400" />
               </div>
             </div>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Clientes Activos</p>
-                <p className="text-2xl font-bold">
+          <Card className="p-3 sm:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Activos</p>
+                <p className="text-lg sm:text-2xl font-bold">
                   {customers.filter((c) => c.isActive).length}
                 </p>
               </div>
-              <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-full">
-                <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
+              <div className="bg-green-100 dark:bg-green-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                <UserCheck className="h-4 w-4 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Clientes Inactivos</p>
-                <p className="text-2xl font-bold">
+          <Card className="p-3 sm:p-4 col-span-2 md:col-span-1">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Inactivos</p>
+                <p className="text-lg sm:text-2xl font-bold">
                   {customers.filter((c) => !c.isActive).length}
                 </p>
               </div>
-              <div className="bg-red-100 dark:bg-red-900/20 p-3 rounded-full">
-                <UserX className="h-6 w-6 text-red-600 dark:text-red-400" />
+              <div className="bg-red-100 dark:bg-red-900/20 p-2 sm:p-3 rounded-full flex-shrink-0">
+                <UserX className="h-4 w-4 sm:h-6 sm:w-6 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Table */}
-        <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+        {/* Mobile Cards */}
+        <div className="sm:hidden space-y-3">
+          {loading ? (
+            <Card className="p-4 text-center text-muted-foreground">
+              Cargando...
+            </Card>
+          ) : customers.length === 0 ? (
+            <Card className="p-4 text-center text-muted-foreground">
+              No se encontraron clientes
+            </Card>
+          ) : (
+            customers.map((customer) => (
+              <Card key={customer.id} className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-sm truncate">{customer.name} {customer.lastName || ''}</p>
+                    <p className="text-xs text-muted-foreground">{customer.code}</p>
+                  </div>
+                  <button
+                    onClick={() => handleToggleActive(customer.id, customer.isActive)}
+                    className={`px-2 py-1 text-xs font-semibold rounded-full flex-shrink-0 ${customer.isActive
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                      }`}
+                  >
+                    {customer.isActive ? 'Activo' : 'Inactivo'}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground mb-3">
+                  {customer.email && (
+                    <div className="flex items-center truncate">
+                      <Mail className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span className="truncate">{customer.email}</span>
+                    </div>
+                  )}
+                  {customer.phone && (
+                    <div className="flex items-center">
+                      <Phone className="h-3 w-3 mr-1 flex-shrink-0" />
+                      {customer.phone}
+                    </div>
+                  )}
+                  {customer.taxId && (
+                    <div>
+                      <span className="font-medium">RNC:</span> {customer.taxId}
+                    </div>
+                  )}
+                  <div>
+                    <span className="font-medium">Facturas:</span> {customer._count?.invoices || 0}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Link href={`/customers/${customer.id}`}>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  {canUpdate && (
+                    <Link href={`/customers/edit/${customer.id}`}>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
+                  {canDelete && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-red-500"
+                      onClick={() =>
+                        confirmDelete(
+                          customer.id,
+                          `${customer.name} ${customer.lastName || ''}`
+                        )
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden sm:block bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
@@ -379,13 +465,13 @@ export default function CustomersPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
                           <Link href={`/customers/${customer.id}`}>
-                            <Button variant="outline" size="sm" className="px-2 py-1">
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
                               <Eye className="h-4 w-4" />
                             </Button>
                           </Link>
                           {canUpdate && (
                             <Link href={`/customers/edit/${customer.id}`}>
-                              <Button variant="outline" size="sm" className="px-2 py-1">
+                              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
                                 <Edit className="h-4 w-4" />
                               </Button>
                             </Link>
@@ -394,7 +480,7 @@ export default function CustomersPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="px-2 py-1 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
+                              className="h-8 w-8 p-0 border-red-300 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
                               onClick={() =>
                                 confirmDelete(
                                   customer.id,
@@ -413,20 +499,20 @@ export default function CustomersPage() {
               </tbody>
             </table>
           </div>
-
         </div>
 
         {/* Pagination controls */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
             Mostrando {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total} clientes
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2 order-1 sm:order-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setPage(prev => Math.max(prev - 1, 1))}
               disabled={page === 1}
+              className="h-8 w-8 p-0"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -450,6 +536,7 @@ export default function CustomersPage() {
                   variant={page === pageNum ? "default" : "outline"}
                   size="sm"
                   onClick={() => setPage(pageNum)}
+                  className="h-8 w-8 p-0 text-xs sm:text-sm"
                 >
                   {pageNum}
                 </Button>
@@ -461,6 +548,7 @@ export default function CustomersPage() {
               size="sm"
               onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
               disabled={page === totalPages || totalPages === 0}
+              className="h-8 w-8 p-0"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

@@ -147,8 +147,8 @@ export function ExportButton({
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant={variant} size={size} className={className}>
-                        <Download className="h-4 w-4 mr-2" />
-                        {buttonText}
+                        <Download className="h-4 w-4 mr-1 sm:mr-2" />
+                        <span className="text-xs sm:text-sm">{buttonText}</span>
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">

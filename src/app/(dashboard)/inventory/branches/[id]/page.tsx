@@ -61,26 +61,26 @@ export default function BranchDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto p-4 sm:p-6 lg:py-8">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <Link href="/inventory/branches">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="self-start">
               <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Volver
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">{branch.name}</h1>
-            <p className="text-muted-foreground">Código: {branch.code}</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">{branch.name}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Código: {branch.code}</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 self-end sm:self-auto">
           <Link href={`/inventory/branches/edit/${branch.id}`}>
-            <Button>
-              <PencilIcon className="h-4 w-4 mr-2" />
-              Editar
+            <Button size="sm">
+              <PencilIcon className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Editar</span>
             </Button>
           </Link>
         </div>

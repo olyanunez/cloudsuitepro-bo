@@ -1284,9 +1284,9 @@ export default function PosPage() {
           icon="shopping-cart"
           description={`Sucursal: ${userBranches.find((ub) => ub.branch.id === activeBranchId)?.branch.name || 'No seleccionada'}`}
         >
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
             {currentSession && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-end">
                 <div className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded-md text-sm font-medium">
                   Sesión #{currentSession.sessionNumber} - Abierta
                 </div>
@@ -1295,7 +1295,7 @@ export default function PosPage() {
                 </span>
               </div>
             )}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap justify-end">
               {/* Botón de toggle de sonidos */}
               <Button
                 variant="outline"
@@ -1315,10 +1315,10 @@ export default function PosPage() {
                 <Button
                   onClick={handleOpenSession}
                   disabled={loadingSession}
-                // className="bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all"
+                  size="sm"
                 >
-                  <LogIn className="h-4 w-4 mr-2" />
-                  Abrir Caja
+                  <LogIn className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="text-xs sm:text-sm">Abrir Caja</span>
                 </Button>
               ) : (
                 <>
@@ -1326,27 +1326,30 @@ export default function PosPage() {
                     <Button
                       variant="outline"
                       onClick={() => setShowExpenseModal(true)}
+                      size="sm"
                     >
-                      <Receipt className="h-4 w-4 mr-2" />
-                      Gastos
+                      <Receipt className="h-4 w-4 mr-1 sm:mr-2" />
+                      <span className="text-xs sm:text-sm">Gastos</span>
                     </Button>
                   )}
                   <Button
                     onClick={handleCloseSession}
-                  // className="bg-orange-600 hover:bg-orange-700 text-white shadow-md hover:shadow-lg transition-all"
+                    size="sm"
                   >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Cerrar Caja
+                    <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="text-xs sm:text-sm">Cerrar Caja</span>
                   </Button>
                 </>
               )}
               <Button
                 variant="outline"
                 onClick={openCancelDialog}
+                size="sm"
                 className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground shadow-sm"
               >
-                <XCircle className="h-4 w-4 mr-2" />
-                Cancelar Factura
+                <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline text-xs sm:text-sm">Cancelar Factura</span>
+                <span className="sm:hidden text-xs">Cancelar</span>
               </Button>
             </div>
           </div>

@@ -157,68 +157,71 @@ export default function PurchaseOrderDetailPage() {
       <style>{printStyles}</style>
 
       {/* Header - No imprimible */}
-      <div className="container mx-auto py-8 no-print">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center">
-            <Link href="/purchase-orders">
-              <Button variant="outline" size="sm" className="mr-4">
-                <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                Volver
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold">Orden de Compra {purchaseOrder.orderNumber}</h1>
-              <p className="text-sm text-muted-foreground">
+      <div className="container mx-auto py-4 sm:py-8 px-4 sm:px-6 no-print">
+        <div className="mb-4 sm:mb-6">
+          <Link href="/purchase-orders">
+            <Button variant="outline" size="sm" className="mb-2 sm:mb-4">
+              <ArrowLeftIcon className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm">Volver</span>
+            </Button>
+          </Link>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold truncate">Orden {purchaseOrder.orderNumber}</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Creada el {new Date(purchaseOrder.createdAt).toLocaleDateString()}
               </p>
             </div>
-          </div>
-          <div className="flex gap-2">
-            {(purchaseOrder.status === PurchaseOrderStatus.DRAFT || purchaseOrder.status === PurchaseOrderStatus.SENT) && canUpdate && (
-              <Button
-                variant="outline"
-                onClick={handleSendToSupplier}
-                disabled={sending}
-              >
-                {sending ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-transparent mr-2"></div>
-                    Enviando...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    {purchaseOrder.status === PurchaseOrderStatus.SENT ? 'Reenviar a Proveedor' : 'Enviar a Proveedor'}
-                  </>
+            <div className="flex flex-wrap gap-2">
+              {(purchaseOrder.status === PurchaseOrderStatus.DRAFT || purchaseOrder.status === PurchaseOrderStatus.SENT) && canUpdate && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSendToSupplier}
+                  disabled={sending}
+                >
+                  {sending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-b-transparent mr-1 sm:mr-2"></div>
+                      <span className="text-xs sm:text-sm">Enviando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-1 sm:mr-2" />
+                      <span className="text-xs sm:text-sm hidden sm:inline">{purchaseOrder.status === PurchaseOrderStatus.SENT ? 'Reenviar' : 'Enviar'}</span>
+                      <span className="text-xs sm:hidden">Enviar</span>
+                    </>
+                  )}
+                </Button>
+              )}
+              {(purchaseOrder.status === PurchaseOrderStatus.SENT ||
+                purchaseOrder.status === PurchaseOrderStatus.CONFIRMED ||
+                purchaseOrder.status === PurchaseOrderStatus.PARTIAL) && canUpdate && (
+                  <Link href={`/purchase-orders/receive/${purchaseOrder.id}`}>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      style={{ backgroundColor: '#22c55e', color: 'white' }}
+                      className="hover:opacity-90"
+                    >
+                      <PackageIcon className="h-4 w-4 mr-1 sm:mr-2" />
+                      <span className="text-xs sm:text-sm">Recibir</span>
+                    </Button>
+                  </Link>
                 )}
-              </Button>
-            )}
-            {(purchaseOrder.status === PurchaseOrderStatus.SENT ||
-              purchaseOrder.status === PurchaseOrderStatus.CONFIRMED ||
-              purchaseOrder.status === PurchaseOrderStatus.PARTIAL) && canUpdate && (
-                <Link href={`/purchase-orders/receive/${purchaseOrder.id}`}>
-                  <Button
-                    variant="default"
-                    style={{ backgroundColor: '#22c55e', color: 'white' }}
-                    className="hover:opacity-90"
-                  >
-                    <PackageIcon className="h-4 w-4 mr-2" />
-                    Recibir Orden
+              {purchaseOrder.status === PurchaseOrderStatus.DRAFT && canUpdate && (
+                <Link href={`/purchase-orders/edit/${purchaseOrder.id}`}>
+                  <Button variant="outline" size="sm">
+                    <PencilIcon className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="text-xs sm:text-sm">Editar</span>
                   </Button>
                 </Link>
               )}
-            {purchaseOrder.status === PurchaseOrderStatus.DRAFT && canUpdate && (
-              <Link href={`/purchase-orders/edit/${purchaseOrder.id}`}>
-                <Button variant="outline">
-                  <PencilIcon className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
-              </Link>
-            )}
-            <Button variant="outline" onClick={() => window.print()}>
-              <Printer className="h-4 w-4 mr-2" />
-              Imprimir
-            </Button>
+              <Button variant="outline" size="sm" onClick={() => window.print()}>
+                <Printer className="h-4 w-4 sm:mr-2" />
+                <span className="text-xs sm:text-sm hidden sm:inline">Imprimir</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

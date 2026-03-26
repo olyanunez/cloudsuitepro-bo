@@ -66,28 +66,28 @@ export default function CreditNoteDetailPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => router.back()}>
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <Button variant="ghost" onClick={() => router.back()} size="sm" className="self-start">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Nota de Crédito {creditNote.creditNoteNumber}</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">NC {creditNote.creditNoteNumber}</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               {creditNote.fiscalType === 'FISCAL' ? 'Devolución Fiscal con NCF B04' : 'Devolución Interna sin NCF'}
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Printer className="mr-2 h-4 w-4" />
-            Imprimir
+        <div className="flex gap-2 self-end sm:self-auto">
+          <Button variant="outline" size="sm" className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3">
+            <Printer className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Imprimir</span>
           </Button>
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Descargar PDF
+          <Button variant="outline" size="sm" className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3">
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Descargar PDF</span>
           </Button>
         </div>
       </div>

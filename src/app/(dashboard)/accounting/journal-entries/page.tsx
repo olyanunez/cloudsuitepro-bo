@@ -231,113 +231,113 @@ export default function JournalEntriesPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Asientos Contables</h1>
-          <p className="text-gray-600 mt-1">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Asientos Contables</h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
             Registro y gestión de asientos contables
           </p>
         </div>
-        <div className="flex gap-2">
-          <ExportButton screenCode="ACCOUNTING" onExport={handleExport} />
+        <div className="flex gap-2 flex-wrap justify-end self-end sm:self-auto">
+          <ExportButton screenCode="ACCOUNTING" onExport={handleExport} size="sm" />
           <Link href="/accounting/journal-entries/create">
-            <Button className="bg-primary hover:bg-primary-600">
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Asiento
+            <Button className="bg-primary hover:bg-primary-600" size="sm">
+              <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm">Nuevo Asiento</span>
             </Button>
           </Link>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Asientos</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 mb-4 sm:mb-6">
+        <Card className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">Total Asientos</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats.total}</p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FileText className="h-6 w-6 text-blue-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Borradores</p>
-              <p className="text-2xl font-bold">{stats.draft}</p>
-            </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <Clock className="h-6 w-6 text-yellow-600" />
+            <div className="bg-blue-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <FileText className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Contabilizados</p>
-              <p className="text-2xl font-bold">{stats.posted}</p>
+        <Card className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">Borradores</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats.draft}</p>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <CheckCircle className="h-6 w-6 text-green-600" />
+            <div className="bg-yellow-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-yellow-600" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Monto Total</p>
-              <p className="text-xl font-bold">
+        <Card className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">Contabilizados</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats.posted}</p>
+            </div>
+            <div className="bg-green-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600">Monto Total</p>
+              <p className="text-base sm:text-xl font-bold truncate">
                 RD${stats.totalDebit.toLocaleString('es-DO', { maximumFractionDigits: 0 })}
               </p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <FileText className="h-6 w-6 text-purple-600" />
+            <div className="bg-purple-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <FileText className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
             </div>
           </div>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          <div className="md:col-span-4">
+      <Card className="p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-12 gap-2 sm:gap-4">
+          <div className="col-span-2 sm:col-span-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 type="text"
-                placeholder="Buscar por número, descripción o referencia..."
+                placeholder="Buscar..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                className="pl-10"
+                className="pl-10 text-sm"
               />
             </div>
           </div>
-          <div className="md:col-span-2">
+          <div className="col-span-1 sm:col-span-2">
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full border rounded-md px-3 py-2"
+              className="w-full border rounded-md px-2 sm:px-3 py-2 text-sm"
             >
-              <option value="ALL">Todos los estados</option>
+              <option value="ALL">Todos</option>
               <option value="DRAFT">Borradores</option>
               <option value="POSTED">Contabilizados</option>
               <option value="VOID">Anulados</option>
             </select>
           </div>
-          <div className="md:col-span-2">
+          <div className="col-span-1 sm:col-span-2">
             <Input
               type="date"
               value={startDate}
@@ -345,10 +345,10 @@ export default function JournalEntriesPage() {
                 setStartDate(e.target.value);
                 setPage(1);
               }}
-              placeholder="Fecha inicio"
+              className="text-sm"
             />
           </div>
-          <div className="md:col-span-2">
+          <div className="col-span-1 sm:col-span-2">
             <Input
               type="date"
               value={endDate}
@@ -356,22 +356,22 @@ export default function JournalEntriesPage() {
                 setEndDate(e.target.value);
                 setPage(1);
               }}
-              placeholder="Fecha fin"
+              className="text-sm"
             />
           </div>
-          <div className="md:col-span-2">
+          <div className="col-span-1 sm:col-span-2">
             <select
               value={itemsPerPage.toString()}
               onChange={(e) => {
                 setItemsPerPage(Number(e.target.value));
                 setPage(1);
               }}
-              className="w-full border rounded-md px-3 py-2"
+              className="w-full border rounded-md px-2 sm:px-3 py-2 text-sm"
             >
-              <option value="5">5 por página</option>
-              <option value="10">10 por página</option>
-              <option value="25">25 por página</option>
-              <option value="50">50 por página</option>
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
             </select>
           </div>
         </div>
@@ -379,7 +379,66 @@ export default function JournalEntriesPage() {
 
       {/* Table */}
       <Card>
-        <div className="overflow-x-auto">
+        {/* Mobile Card View */}
+        <div className="sm:hidden divide-y">
+          {loading ? (
+            <div className="p-6 text-center text-gray-500 text-sm">
+              Cargando asientos...
+            </div>
+          ) : filteredEntries.length === 0 ? (
+            <div className="p-6 text-center text-gray-500 text-sm">
+              No se encontraron asientos
+            </div>
+          ) : (
+            filteredEntries.map((entry) => {
+              const StatusIcon = statusIcons[entry.status];
+              return (
+                <div key={entry.id} className="p-3 hover:bg-gray-50">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm">{entry.entryNumber}</span>
+                        <span
+                          className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusColors[entry.status]}`}
+                        >
+                          <StatusIcon className="h-2.5 w-2.5 mr-0.5" />
+                          {statusLabels[entry.status]}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(entry.entryDate).toLocaleDateString('es-DO')} • {entryTypeLabels[entry.entryType]}
+                      </div>
+                      <div className="text-sm mt-1 line-clamp-1">{entry.description}</div>
+                      <div className="text-sm font-medium text-blue-600 mt-1">
+                        RD${Number(entry.totalDebit).toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <Link href={`/accounting/journal-entries/${entry.id}`}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      {entry.status === 'DRAFT' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openPostDialog(entry.id, entry.entryNumber)}
+                          className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -460,18 +519,18 @@ export default function JournalEntriesPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="flex justify-center space-x-2">
+                        <div className="flex justify-center gap-1">
                           <Link href={`/accounting/journal-entries/${entry.id}`}>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
                               <Eye className="h-4 w-4" />
                             </Button>
                           </Link>
                           {entry.status === 'DRAFT' && (
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
+                              className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
                               onClick={() => openPostDialog(entry.id, entry.entryNumber)}
-                              className="text-green-600 hover:text-green-700"
                             >
                               <CheckCircle className="h-4 w-4" />
                             </Button>
@@ -488,50 +547,57 @@ export default function JournalEntriesPage() {
       </Card>
 
       {/* Pagination controls */}
-      <div className="mt-6 flex items-center justify-between">
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          Mostrando {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total} asientos
+      <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+          {(page - 1) * limit + 1} - {Math.min(page * limit, total)} de {total}
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1 sm:space-x-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setPage(prev => Math.max(prev - 1, 1))}
             disabled={page === 1}
+            className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
 
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            // Show pages around current page
-            let pageNum;
-            if (totalPages <= 5) {
-              pageNum = i + 1;
-            } else if (page <= 3) {
-              pageNum = i + 1;
-            } else if (page >= totalPages - 2) {
-              pageNum = totalPages - 4 + i;
-            } else {
-              pageNum = page - 2 + i;
-            }
+          <div className="hidden sm:flex items-center space-x-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (page <= 3) {
+                pageNum = i + 1;
+              } else if (page >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = page - 2 + i;
+              }
 
-            return (
-              <Button
-                key={pageNum}
-                variant={page === pageNum ? "default" : "outline"}
-                size="sm"
-                onClick={() => setPage(pageNum)}
-              >
-                {pageNum}
-              </Button>
-            );
-          })}
+              return (
+                <Button
+                  key={pageNum}
+                  variant={page === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPage(pageNum)}
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+          </div>
+
+          <span className="sm:hidden text-sm text-gray-600">
+            {page} / {totalPages}
+          </span>
 
           <Button
             variant="outline"
             size="sm"
             onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
             disabled={page === totalPages || totalPages === 0}
+            className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

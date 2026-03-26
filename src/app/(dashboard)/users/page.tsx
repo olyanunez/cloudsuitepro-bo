@@ -195,12 +195,13 @@ export default function UsersPage() {
               screenCode="USERS"
               onExport={handleExport}
               requiresDateRange={true}
+              size="sm"
             />
             {canCreate && (
               <Link href="/users/create">
-                <Button className="bg-primary hover:bg-primary-600">
-                  <PlusIcon className="mr-2 h-4 w-4" />
-                  Nuevo Usuario
+                <Button className="bg-primary hover:bg-primary-600" size="sm">
+                  <PlusIcon className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="text-xs sm:text-sm">Nuevo Usuario</span>
                 </Button>
               </Link>
             )}
@@ -266,7 +267,79 @@ export default function UsersPage() {
         </div>
 
         <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+            {paginatedUsers.map(user => (
+              <div key={user.id} className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    {user.avatar ? (
+                      <Image
+                        src={user.avatar}
+                        alt={user.name}
+                        width={36}
+                        height={36}
+                        className="rounded-full flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="h-9 w-9 rounded-full bg-primary-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-primary-700 font-medium text-xs">
+                          {user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                        {user.name}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {user.email}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-xs text-gray-500">{getRoleName(user)}</span>
+                        <button
+                          onClick={() => handleToggleStatus(user.id)}
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${user.isActive
+                            ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                            : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                            }`}
+                        >
+                          {user.isActive ? 'Activo' : 'Inactivo'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <Link href={`/users/${user.id}`}>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <EyeIcon className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    {canUpdate && (
+                      <Link href={`/users/edit/${user.id}`}>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    )}
+                    {canDelete && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-500"
+                        onClick={() => confirmDelete(user.id)}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
@@ -393,50 +466,57 @@ export default function UsersPage() {
         </div>
 
         {/* Pagination controls */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Mostrando {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredUsers.length)} de {filteredUsers.length} usuarios
+        <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredUsers.length)} de {filteredUsers.length}
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
+              className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
 
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              // Show pages around current page
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
+            <div className="hidden sm:flex items-center space-x-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
 
-              return (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(pageNum)}
-                >
-                  {pageNum}
-                </Button>
-              );
-            })}
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+
+            <span className="sm:hidden text-sm text-gray-600 dark:text-gray-400">
+              {currentPage} / {totalPages}
+            </span>
 
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages || totalPages === 0}
+              className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

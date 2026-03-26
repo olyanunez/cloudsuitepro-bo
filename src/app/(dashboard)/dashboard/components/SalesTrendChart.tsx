@@ -29,13 +29,13 @@ export function SalesTrendChart({ data }: SalesTrendChartProps) {
 
   return (
     <Card className="col-span-full lg:col-span-2">
-      <CardHeader>
+      <CardHeader className="px-4 sm:px-6">
         <CardTitle>Tendencia de Ventas</CardTitle>
         <CardDescription>Evolución de ingresos y facturas por día</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-0 sm:px-4">
         <ResponsiveContainer width="100%" height={400}>
-          <AreaChart data={chartData}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorIngresos" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
@@ -51,9 +51,9 @@ export function SalesTrendChart({ data }: SalesTrendChartProps) {
               </linearGradient>
             </defs>
             <CartesianGrid stroke="#e5e7eb" vertical={false} />
-            <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-            <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
-            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+            <XAxis dataKey="date" tick={{ fontSize: 11 }} tickMargin={8} />
+            <YAxis yAxisId="left" tick={{ fontSize: 10 }} width={50} tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} width={40} />
             <Tooltip
               formatter={(value: any, name: string) => {
                 if (name === 'Ingresos' || name === 'Ticket Promedio') {

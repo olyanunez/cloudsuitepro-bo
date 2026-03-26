@@ -80,21 +80,21 @@ export default function InventoryItemDetailPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-6 flex justify-between items-center">
-        <div className="flex items-center">
+    <div className="container mx-auto p-4 sm:p-6 lg:py-8">
+      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <Link href="/inventory/items">
-            <Button variant="outline" size="sm" className="mr-4">
+            <Button variant="outline" size="sm" className="self-start">
               <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Volver
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold">Detalles del Item de Inventario</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Detalles del Item</h1>
         </div>
-        <Link href={`/inventory/items/edit/${item.id}`}>
-          <Button className="bg-primary hover:bg-primary-600">
-            <PencilIcon className="mr-2 h-4 w-4" />
-            Editar Item
+        <Link href={`/inventory/items/edit/${item.id}`} className="self-end sm:self-auto">
+          <Button className="bg-primary hover:bg-primary-600" size="sm">
+            <PencilIcon className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Editar Item</span>
           </Button>
         </Link>
       </div>

@@ -243,7 +243,72 @@ export default function CashSessionsPage() {
         </div>
 
         <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+            {paginatedSessions.length === 0 ? (
+              <div className="p-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                No se encontraron sesiones de caja
+              </div>
+            ) : (
+              paginatedSessions.map((session) => {
+                const totalVentas =
+                  parseFloat(session.totalCash || '0') +
+                  parseFloat(session.totalCard || '0') +
+                  parseFloat(session.totalTransfer || '0') +
+                  parseFloat(session.totalOther || '0');
+                const cuadreStatus = getCuadreStatus(session);
+
+                return (
+                  <div key={session.id} className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            {session.sessionNumber}
+                          </p>
+                          <Badge variant={session.status === 'OPEN' ? 'default' : 'secondary'} className="text-xs">
+                            {session.status === 'OPEN' ? 'Abierta' : 'Cerrada'}
+                          </Badge>
+                          {cuadreStatus && (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${cuadreStatus.color}`}>
+                              {cuadreStatus.status === 'exact' && <CheckCircle2 className="h-3 w-3" />}
+                              {cuadreStatus.status === 'shortage' && <AlertTriangle className="h-3 w-3" />}
+                              {cuadreStatus.label}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {session.user?.name || 'Sin cajero'} • {session.branch?.name || 'Sin sucursal'}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                          <span>Apertura: {new Date(session.openedAt).toLocaleDateString('es-DO', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                          {session.closedAt && (
+                            <span>• Cierre: {new Date(session.closedAt).toLocaleDateString('es-DO', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                          )}
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                            {formatCurrency(totalVentas)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            💵 {formatCurrency(parseFloat(session.totalCash || '0'))} | 💳 {formatCurrency(parseFloat(session.totalCard || '0'))}
+                          </p>
+                        </div>
+                      </div>
+                      <Link href={`/cash-sessions/${session.id}`}>
+                        <Button variant="outline" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
+                          <EyeIcon className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
@@ -396,47 +461,57 @@ export default function CashSessionsPage() {
 
         {/* Pagination controls */}
         {filteredSessions.length > 0 && (
-          <div className="mt-6 flex items-center justify-between">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               Mostrando {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredSessions.length)} de {filteredSessions.length} sesiones
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               <Button
                 variant="outline"
                 size="sm"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
 
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
+              {/* Desktop: page number buttons */}
+              <div className="hidden sm:flex items-center space-x-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
 
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={currentPage === pageNum ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(pageNum)}
-                  >
-                    {pageNum}
-                  </Button>
-                );
-              })}
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              {/* Mobile: simple page indicator */}
+              <span className="sm:hidden text-sm text-gray-600 dark:text-gray-400 min-w-[60px] text-center">
+                {currentPage} / {totalPages || 1}
+              </span>
 
               <Button
                 variant="outline"
                 size="sm"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-auto sm:px-3"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages || totalPages === 0}
               >

@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Search, Plus, FileText, TrendingUp, DollarSign, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Plus, FileText, TrendingUp, DollarSign, CheckCircle, XCircle, Eye } from 'lucide-react';
 import { debitNoteService, DebitNote, QueryDebitNotesDto, DebitNoteStats } from '@/lib/services/debitNoteService';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { ExportButton } from '@/components/ui/export-button';
@@ -165,72 +165,72 @@ export default function DebitNotesPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold">Notas de Débito</h1>
-                    <p className="text-muted-foreground">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div className="min-w-0">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Notas de Débito</h1>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                         Gestión de cargos adicionales a facturas existentes (NCF B03)
                     </p>
                 </div>
-                <div className="flex gap-2">
-                    <ExportButton screenCode="DEBIT_NOTE" onExport={handleExport} />
-                    <Button onClick={() => setShowCreateDialog(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Nueva Nota de Débito
+                <div className="flex gap-2 flex-wrap justify-end self-end sm:self-auto">
+                    <ExportButton screenCode="DEBIT_NOTE" onExport={handleExport} size="sm" />
+                    <Button onClick={() => setShowCreateDialog(true)} size="sm">
+                        <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                        <span className="text-xs sm:text-sm">Nueva Nota</span>
                     </Button>
                 </div>
             </div>
 
             {/* Stats Cards */}
             {stats && (
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Notas</CardTitle>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-6 pb-1 sm:pb-2">
+                            <CardTitle className="text-xs sm:text-sm font-medium">Total Notas</CardTitle>
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.totalDebitNotes}</div>
-                            <p className="text-xs text-muted-foreground">
+                        <CardContent className="p-3 sm:p-6 pt-0">
+                            <div className="text-lg sm:text-2xl font-bold">{stats.totalDebitNotes}</div>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">
                                 Notas de débito procesadas
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Monto Total</CardTitle>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-6 pb-1 sm:pb-2">
+                            <CardTitle className="text-xs sm:text-sm font-medium">Monto Total</CardTitle>
                             <DollarSign className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{formatCurrency(stats.totalAmount)}</div>
-                            <p className="text-xs text-muted-foreground">
+                        <CardContent className="p-3 sm:p-6 pt-0">
+                            <div className="text-lg sm:text-2xl font-bold truncate">{formatCurrency(stats.totalAmount)}</div>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">
                                 Total en cargos adicionales
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Activas</CardTitle>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-6 pb-1 sm:pb-2">
+                            <CardTitle className="text-xs sm:text-sm font-medium">Activas</CardTitle>
                             <CheckCircle className="h-4 w-4 text-green-600" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.activeDebitNotes}</div>
-                            <p className="text-xs text-muted-foreground">
+                        <CardContent className="p-3 sm:p-6 pt-0">
+                            <div className="text-lg sm:text-2xl font-bold">{stats.activeDebitNotes}</div>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">
                                 Notas vigentes
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Con NCF B03</CardTitle>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-6 pb-1 sm:pb-2">
+                            <CardTitle className="text-xs sm:text-sm font-medium">Con NCF B03</CardTitle>
                             <FileText className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.fiscalDebitNotes}</div>
-                            <p className="text-xs text-muted-foreground">
+                        <CardContent className="p-3 sm:p-6 pt-0">
+                            <div className="text-lg sm:text-2xl font-bold">{stats.fiscalDebitNotes}</div>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">
                                 Notas fiscales
                             </p>
                         </CardContent>
@@ -312,88 +312,139 @@ export default function DebitNotesPage() {
 
             {/* Table */}
             <Card>
-                <CardHeader>
-                    <CardTitle>Listado de Notas de Débito</CardTitle>
-                    <CardDescription>
+                <CardHeader className="p-4 sm:p-6">
+                    <CardTitle className="text-base sm:text-lg">Listado de Notas de Débito</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
                         {total} {total === 1 ? 'registro' : 'registros'} encontrados
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-0 sm:p-6 sm:pt-0">
                     {loading ? (
-                        <div className="text-center py-8">Cargando...</div>
+                        <div className="text-center py-8 text-sm">Cargando...</div>
                     ) : debitNotes.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
+                        <div className="text-center py-8 text-muted-foreground text-sm">
                             No se encontraron notas de débito
                         </div>
                     ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Número ND</TableHead>
-                                    <TableHead>NCF B03</TableHead>
-                                    <TableHead>Factura Original</TableHead>
-                                    <TableHead>Cliente</TableHead>
-                                    <TableHead>Tipo</TableHead>
-                                    <TableHead>Total</TableHead>
-                                    <TableHead>Fecha</TableHead>
-                                    <TableHead>Acciones</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                        <>
+                            {/* Mobile Card View */}
+                            <div className="sm:hidden divide-y">
                                 {debitNotes.map((dn) => (
-                                    <TableRow key={dn.id}>
-                                        <TableCell className="font-medium">{dn.debitNoteNumber}</TableCell>
-                                        <TableCell>
-                                            {dn.ncf ? (
-                                                <span className="text-sm font-mono">{dn.ncf}</span>
-                                            ) : (
-                                                <span className="text-muted-foreground text-sm">—</span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div>
-                                                <div className="font-medium">{dn.originalInvoiceNumber}</div>
-                                                {dn.originalNcf && (
-                                                    <div className="text-xs text-muted-foreground font-mono">
-                                                        {dn.originalNcf}
+                                    <div key={dn.id} className="p-3 hover:bg-gray-50">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className="font-medium text-sm">{dn.debitNoteNumber}</span>
+                                                    {getFiscalTypeBadge(dn.fiscalType)}
+                                                </div>
+                                                {dn.ncf && (
+                                                    <div className="text-xs text-muted-foreground font-mono mt-1">
+                                                        NCF: {dn.ncf}
                                                     </div>
                                                 )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {dn.customer ? (
-                                                <div>
-                                                    <div>{dn.customer.name} {dn.customer.lastName}</div>
-                                                    {dn.customer.taxId && (
-                                                        <div className="text-xs text-muted-foreground">
-                                                            RNC: {dn.customer.taxId}
-                                                        </div>
-                                                    )}
+                                                <div className="text-xs text-muted-foreground mt-1">
+                                                    Factura: {dn.originalInvoiceNumber}
                                                 </div>
-                                            ) : (
-                                                <span className="text-muted-foreground">—</span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>{getFiscalTypeBadge(dn.fiscalType)}</TableCell>
-                                        <TableCell className="font-medium">
-                                            {formatCurrency(dn.total)}
-                                        </TableCell>
-                                        <TableCell className="text-sm text-muted-foreground">
-                                            {formatDate(dn.createdAt)}
-                                        </TableCell>
-                                        <TableCell>
+                                                {dn.customer && (
+                                                    <div className="text-xs mt-1">
+                                                        {dn.customer.name} {dn.customer.lastName}
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    <span className="text-sm font-medium text-primary">
+                                                        {formatCurrency(dn.total)}
+                                                    </span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {formatDate(dn.createdAt)}
+                                                    </span>
+                                                </div>
+                                            </div>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
+                                                className="h-8 w-8 p-0 flex-shrink-0"
                                                 onClick={() => handleViewDetail(dn)}
                                             >
-                                                Ver Detalle
+                                                <Eye className="h-4 w-4" />
                                             </Button>
-                                        </TableCell>
-                                    </TableRow>
+                                        </div>
+                                    </div>
                                 ))}
-                            </TableBody>
-                        </Table>
+                            </div>
+
+                            {/* Desktop Table View */}
+                            <div className="hidden sm:block">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Número ND</TableHead>
+                                            <TableHead>NCF B03</TableHead>
+                                            <TableHead>Factura Original</TableHead>
+                                            <TableHead>Cliente</TableHead>
+                                            <TableHead>Tipo</TableHead>
+                                            <TableHead>Total</TableHead>
+                                            <TableHead>Fecha</TableHead>
+                                            <TableHead>Acciones</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {debitNotes.map((dn) => (
+                                            <TableRow key={dn.id}>
+                                                <TableCell className="font-medium">{dn.debitNoteNumber}</TableCell>
+                                                <TableCell>
+                                                    {dn.ncf ? (
+                                                        <span className="text-sm font-mono">{dn.ncf}</span>
+                                                    ) : (
+                                                        <span className="text-muted-foreground text-sm">—</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div>
+                                                        <div className="font-medium">{dn.originalInvoiceNumber}</div>
+                                                        {dn.originalNcf && (
+                                                            <div className="text-xs text-muted-foreground font-mono">
+                                                                {dn.originalNcf}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {dn.customer ? (
+                                                        <div>
+                                                            <div>{dn.customer.name} {dn.customer.lastName}</div>
+                                                            {dn.customer.taxId && (
+                                                                <div className="text-xs text-muted-foreground">
+                                                                    RNC: {dn.customer.taxId}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">—</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>{getFiscalTypeBadge(dn.fiscalType)}</TableCell>
+                                                <TableCell className="font-medium">
+                                                    {formatCurrency(dn.total)}
+                                                </TableCell>
+                                                <TableCell className="text-sm text-muted-foreground">
+                                                    {formatDate(dn.createdAt)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0"
+                                                        onClick={() => handleViewDetail(dn)}
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </>
                     )}
                 </CardContent>
             </Card>

@@ -352,23 +352,23 @@ export default function BalanceSheetPage() {
   };
 
   const renderAccount = (account: BalanceSheetAccount, depth: number = 0) => {
-    const indent = depth * 24;
+    const indent = depth * 16;
     const isBold = account.isGroup || depth === 0;
 
     return (
       <div key={account.code}>
         <div
-          className={`flex justify-between items-center py-2 ${
+          className={`flex justify-between items-center py-1.5 sm:py-2 ${
             depth > 0 ? 'border-b border-gray-100' : 'border-b-2 border-gray-300'
           }`}
           style={{ paddingLeft: `${indent}px` }}
         >
-          <div className={isBold ? 'font-bold' : ''}>
-            <span className="text-sm text-gray-600 mr-2">{account.code}</span>
-            <span>{account.name}</span>
+          <div className={`min-w-0 flex-1 ${isBold ? 'font-bold' : ''}`}>
+            <span className="text-xs sm:text-sm text-gray-600 mr-1 sm:mr-2">{account.code}</span>
+            <span className="text-sm sm:text-base">{account.name}</span>
           </div>
           {!account.isGroup && (
-            <div className={`text-right ${isBold ? 'font-bold' : ''}`}>
+            <div className={`text-right text-sm sm:text-base flex-shrink-0 ml-2 ${isBold ? 'font-bold' : ''}`}>
               RD${Number(account.balance).toLocaleString('es-DO', {
                 minimumFractionDigits: 2,
               })}
@@ -393,144 +393,148 @@ export default function BalanceSheetPage() {
   if (!data) return null;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Balance General</h1>
-            <p className="text-gray-600 mt-1">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Balance General</h1>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
               Estado de Situación Financiera al{' '}
               {new Date(data.reportDate).toLocaleDateString('es-DO')}
             </p>
           </div>
           <Button
             variant="outline"
+            size="sm"
             onClick={exportToPDF}
             disabled={!data || exportingPDF}
+            className="self-end sm:self-auto"
           >
-            <Download className="h-4 w-4 mr-2" />
-            {exportingPDF ? 'Generando...' : 'Exportar PDF'}
+            <Download className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="text-xs sm:text-sm">{exportingPDF ? 'Generando...' : 'Exportar PDF'}</span>
           </Button>
         </div>
       </div>
 
       {/* Filters */}
-      <Card className="p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      <Card className="p-3 sm:p-4 mb-4 sm:mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 items-end">
           <div>
-            <Label>Fecha Inicio</Label>
+            <Label className="text-xs sm:text-sm">Fecha Inicio</Label>
             <Input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
+              className="text-sm"
             />
           </div>
           <div>
-            <Label>Fecha Fin</Label>
+            <Label className="text-xs sm:text-sm">Fecha Fin</Label>
             <Input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
+              className="text-sm"
             />
           </div>
-          <div>
-            <Button onClick={fetchBalanceSheet} className="w-full">
-              <Calendar className="h-4 w-4 mr-2" />
-              Generar Reporte
+          <div className="col-span-2 sm:col-span-1">
+            <Button onClick={fetchBalanceSheet} className="w-full" size="sm">
+              <Calendar className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm">Generar Reporte</span>
             </Button>
           </div>
         </div>
       </Card>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Activos</p>
-              <p className="text-2xl font-bold text-blue-600">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
+        <Card className="p-3 sm:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Activos</p>
+              <p className="text-lg sm:text-2xl font-bold text-blue-600 truncate">
                 RD${data.assets.total.toLocaleString('es-DO', {
                   minimumFractionDigits: 2,
                 })}
               </p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <TrendingUp className="h-6 w-6 text-blue-600" />
+            <div className="bg-blue-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Total Pasivos</p>
-              <p className="text-2xl font-bold text-red-600">
+        <Card className="p-3 sm:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Pasivos</p>
+              <p className="text-lg sm:text-2xl font-bold text-red-600 truncate">
                 RD${data.liabilities.total.toLocaleString('es-DO', {
                   minimumFractionDigits: 2,
                 })}
               </p>
             </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <TrendingDown className="h-6 w-6 text-red-600" />
+            <div className="bg-red-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <TrendingDown className="h-4 w-4 sm:h-6 sm:w-6 text-red-600" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Patrimonio</p>
-              <p className="text-2xl font-bold text-purple-600">
+        <Card className="p-3 sm:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">Patrimonio</p>
+              <p className="text-lg sm:text-2xl font-bold text-purple-600 truncate">
                 RD${data.equity.total.toLocaleString('es-DO', {
                   minimumFractionDigits: 2,
                 })}
               </p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <DollarSign className="h-6 w-6 text-purple-600" />
+            <div className="bg-purple-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+              <DollarSign className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
             </div>
           </div>
         </Card>
       </div>
 
       {/* Balance Sheet Report */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Assets */}
-        <Card className="p-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-bold text-blue-600">ACTIVOS</h2>
+        <Card className="p-4 sm:p-6">
+          <div className="mb-3 sm:mb-4">
+            <h2 className="text-lg sm:text-xl font-bold text-blue-600">ACTIVOS</h2>
           </div>
 
           {/* Current Assets */}
           {data.assets.current.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-bold text-lg mb-2">Activos Corrientes</h3>
+            <div className="mb-4 sm:mb-6">
+              <h3 className="font-bold text-base sm:text-lg mb-2">Activos Corrientes</h3>
               {data.assets.current.map((account) => renderAccount(account))}
             </div>
           )}
 
           {/* Non-Current Assets */}
           {data.assets.nonCurrent.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-bold text-lg mb-2">Activos No Corrientes</h3>
+            <div className="mb-4 sm:mb-6">
+              <h3 className="font-bold text-base sm:text-lg mb-2">Activos No Corrientes</h3>
               {data.assets.nonCurrent.map((account) => renderAccount(account))}
             </div>
           )}
 
           {/* Other Assets */}
           {data.assets.other.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-bold text-lg mb-2">Otros Activos</h3>
+            <div className="mb-4 sm:mb-6">
+              <h3 className="font-bold text-base sm:text-lg mb-2">Otros Activos</h3>
               {data.assets.other.map((account) => renderAccount(account))}
             </div>
           )}
 
           {/* Total Assets */}
-          <div className="pt-4 border-t-2 border-blue-600">
+          <div className="pt-3 sm:pt-4 border-t-2 border-blue-600">
             <div className="flex justify-between items-center">
-              <span className="font-bold text-lg">TOTAL ACTIVOS</span>
-              <span className="font-bold text-xl text-blue-600">
+              <span className="font-bold text-sm sm:text-lg">TOTAL ACTIVOS</span>
+              <span className="font-bold text-base sm:text-xl text-blue-600">
                 RD${data.assets.total.toLocaleString('es-DO', {
                   minimumFractionDigits: 2,
                 })}
@@ -540,42 +544,42 @@ export default function BalanceSheetPage() {
         </Card>
 
         {/* Liabilities & Equity */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Liabilities */}
-          <Card className="p-6">
-            <div className="mb-4">
-              <h2 className="text-xl font-bold text-red-600">PASIVOS</h2>
+          <Card className="p-4 sm:p-6">
+            <div className="mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-bold text-red-600">PASIVOS</h2>
             </div>
 
             {/* Current Liabilities */}
             {data.liabilities.current.length > 0 && (
-              <div className="mb-6">
-                <h3 className="font-bold text-lg mb-2">Pasivos Corrientes</h3>
+              <div className="mb-4 sm:mb-6">
+                <h3 className="font-bold text-base sm:text-lg mb-2">Pasivos Corrientes</h3>
                 {data.liabilities.current.map((account) => renderAccount(account))}
               </div>
             )}
 
             {/* Non-Current Liabilities */}
             {data.liabilities.nonCurrent.length > 0 && (
-              <div className="mb-6">
-                <h3 className="font-bold text-lg mb-2">Pasivos No Corrientes</h3>
+              <div className="mb-4 sm:mb-6">
+                <h3 className="font-bold text-base sm:text-lg mb-2">Pasivos No Corrientes</h3>
                 {data.liabilities.nonCurrent.map((account) => renderAccount(account))}
               </div>
             )}
 
             {/* Other Liabilities */}
             {data.liabilities.other.length > 0 && (
-              <div className="mb-6">
-                <h3 className="font-bold text-lg mb-2">Otros Pasivos</h3>
+              <div className="mb-4 sm:mb-6">
+                <h3 className="font-bold text-base sm:text-lg mb-2">Otros Pasivos</h3>
                 {data.liabilities.other.map((account) => renderAccount(account))}
               </div>
             )}
 
             {/* Total Liabilities */}
-            <div className="pt-4 border-t-2 border-red-600">
+            <div className="pt-3 sm:pt-4 border-t-2 border-red-600">
               <div className="flex justify-between items-center">
-                <span className="font-bold text-lg">TOTAL PASIVOS</span>
-                <span className="font-bold text-xl text-red-600">
+                <span className="font-bold text-sm sm:text-lg">TOTAL PASIVOS</span>
+                <span className="font-bold text-base sm:text-xl text-red-600">
                   RD${data.liabilities.total.toLocaleString('es-DO', {
                     minimumFractionDigits: 2,
                   })}
@@ -585,18 +589,18 @@ export default function BalanceSheetPage() {
           </Card>
 
           {/* Equity */}
-          <Card className="p-6">
-            <div className="mb-4">
-              <h2 className="text-xl font-bold text-purple-600">PATRIMONIO</h2>
+          <Card className="p-4 sm:p-6">
+            <div className="mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-bold text-purple-600">PATRIMONIO</h2>
             </div>
 
             {data.equity.accounts.map((account) => renderAccount(account))}
 
             {/* Total Equity */}
-            <div className="pt-4 border-t-2 border-purple-600">
+            <div className="pt-3 sm:pt-4 border-t-2 border-purple-600">
               <div className="flex justify-between items-center">
-                <span className="font-bold text-lg">TOTAL PATRIMONIO</span>
-                <span className="font-bold text-xl text-purple-600">
+                <span className="font-bold text-sm sm:text-lg">TOTAL PATRIMONIO</span>
+                <span className="font-bold text-base sm:text-xl text-purple-600">
                   RD${data.equity.total.toLocaleString('es-DO', {
                     minimumFractionDigits: 2,
                   })}
@@ -605,10 +609,10 @@ export default function BalanceSheetPage() {
             </div>
 
             {/* Total Liabilities + Equity */}
-            <div className="pt-4 mt-4 border-t-2 border-gray-800">
+            <div className="pt-3 sm:pt-4 mt-3 sm:mt-4 border-t-2 border-gray-800">
               <div className="flex justify-between items-center">
-                <span className="font-bold text-lg">TOTAL PASIVOS + PATRIMONIO</span>
-                <span className="font-bold text-xl">
+                <span className="font-bold text-sm sm:text-lg">TOTAL PASIVOS + PATRIMONIO</span>
+                <span className="font-bold text-base sm:text-xl">
                   RD${(data.liabilities.total + data.equity.total).toLocaleString('es-DO', {
                     minimumFractionDigits: 2,
                   })}
@@ -620,27 +624,29 @@ export default function BalanceSheetPage() {
       </div>
 
       {/* Equation Verification */}
-      <Card className="p-6 mt-6">
+      <Card className="p-4 sm:p-6 mt-4 sm:mt-6">
         <div className="text-center">
-          <h3 className="font-bold text-lg mb-2">Ecuación Contable</h3>
-          <div className="text-xl">
+          <h3 className="font-bold text-base sm:text-lg mb-2">Ecuación Contable</h3>
+          <div className="text-sm sm:text-xl flex flex-col sm:flex-row sm:justify-center sm:items-center gap-1 sm:gap-0">
             <span className="font-bold text-blue-600">
               Activos (RD${data.assets.total.toLocaleString('es-DO')})
             </span>
-            {' = '}
+            <span className="hidden sm:inline">{' = '}</span>
+            <span className="sm:hidden text-gray-500">=</span>
             <span className="font-bold text-red-600">
               Pasivos (RD${data.liabilities.total.toLocaleString('es-DO')})
             </span>
-            {' + '}
+            <span className="hidden sm:inline">{' + '}</span>
+            <span className="sm:hidden text-gray-500">+</span>
             <span className="font-bold text-purple-600">
               Patrimonio (RD${data.equity.total.toLocaleString('es-DO')})
             </span>
           </div>
           <div className="mt-2">
             {Math.abs(data.assets.total - (data.liabilities.total + data.equity.total)) < 0.01 ? (
-              <span className="text-green-600 font-bold">✓ Balance Cuadrado</span>
+              <span className="text-green-600 font-bold text-sm sm:text-base">✓ Balance Cuadrado</span>
             ) : (
-              <span className="text-red-600 font-bold">
+              <span className="text-red-600 font-bold text-sm sm:text-base">
                 ⚠ Diferencia: RD$
                 {Math.abs(data.assets.total - (data.liabilities.total + data.equity.total)).toFixed(2)}
               </span>
