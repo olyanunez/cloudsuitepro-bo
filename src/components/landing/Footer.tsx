@@ -7,24 +7,24 @@ import { Mail, Phone, MapPin } from 'lucide-react';
 export function Footer() {
   return (
     <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-6 sm:mb-8">
           {/* Company Info */}
-          <div>
-            <div className="flex items-center mb-4">
+          <div className="col-span-2 md:col-span-1">
+            <div className="flex items-center mb-3 sm:mb-4">
               <Image
                 src="/branding/transparente/cloudsuitepro_logo3.png"
                 alt="CloudSuite Pro"
                 width={60}
                 height={60}
-                className="h-10 w-auto"
+                className="h-8 sm:h-10 w-auto"
               />
             </div>
-            <p className="text-gray-400 text-sm mb-4">
+            <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4">
               La plataforma todo-en-uno para gestionar tu negocio de manera profesional y eficiente.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-3 sm:gap-4">
               {/* <a
                 href="https://facebook.com"
                 target="_blank"
@@ -85,30 +85,30 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold text-white mb-4">Enlaces Rápidos</h3>
-            <ul className="space-y-2">
+            <h3 className="font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">Enlaces Rápidos</h3>
+            <ul className="space-y-1.5 sm:space-y-2">
               <li>
-                <Link href="/welcome" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <Link href="/welcome" className="text-gray-400 hover:text-yellow-400 transition-colors text-xs sm:text-sm">
                   Inicio
                 </Link>
               </li>
               <li>
-                <Link href="/como-funciona" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <Link href="/como-funciona" className="text-gray-400 hover:text-yellow-400 transition-colors text-xs sm:text-sm">
                   Cómo Funciona
                 </Link>
               </li>
               <li>
-                <Link href="/nosotros" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <Link href="/nosotros" className="text-gray-400 hover:text-yellow-400 transition-colors text-xs sm:text-sm">
                   Nosotros
                 </Link>
               </li>
               <li>
-                <Link href="/precios" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <Link href="/precios" className="text-gray-400 hover:text-yellow-400 transition-colors text-xs sm:text-sm">
                   Precios
                 </Link>
               </li>
               <li>
-                <Link href="/contacto" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <Link href="/contacto" className="text-gray-400 hover:text-yellow-400 transition-colors text-xs sm:text-sm">
                   Contacto
                 </Link>
               </li>
@@ -117,25 +117,25 @@ export function Footer() {
 
           {/* Resources */}
           <div>
-            <h3 className="font-semibold text-white mb-4">Recursos</h3>
-            <ul className="space-y-2">
+            <h3 className="font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">Recursos</h3>
+            <ul className="space-y-1.5 sm:space-y-2">
               <li>
-                <Link href="/login" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <Link href="/login" className="text-gray-400 hover:text-yellow-400 transition-colors text-xs sm:text-sm">
                   Iniciar Sesión
                 </Link>
               </li>
               <li>
-                <Link href="/precios" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <Link href="/precios" className="text-gray-400 hover:text-yellow-400 transition-colors text-xs sm:text-sm">
                   Registrarse
                 </Link>
               </li>
               <li>
-                <a href="https://docs.cloudsuitepro.online/" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <a href="https://docs.cloudsuitepro.online/" className="text-gray-400 hover:text-yellow-400 transition-colors text-xs sm:text-sm">
                   Documentación
                 </a>
               </li>
               <li>
-                <a href="/contacto" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+                <a href="/contacto" className="text-gray-400 hover:text-yellow-400 transition-colors text-xs sm:text-sm">
                   Centro de Ayuda
                 </a>
               </li>
@@ -143,24 +143,23 @@ export function Footer() {
           </div>
 
           {/* Contact Info */}
-          <div>
-            <h3 className="font-semibold text-white mb-4">Contacto</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start space-x-3 text-sm">
-                <Mail className="h-5 w-5 text-yellow-400 flex-shrink-0" />
+          <div className="col-span-2 md:col-span-1">
+            <h3 className="font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">Contacto</h3>
+            <ul className="space-y-2 sm:space-y-3">
+              <li className="flex items-start space-x-2 sm:space-x-3 text-xs sm:text-sm">
+                <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 flex-shrink-0" />
                 <div className="text-gray-400">
-                  <p>cloudsuitep@gmail.com</p>
                   <p>cloudsuitep@gmail.com</p>
                 </div>
               </li>
-              <li className="flex items-start space-x-3 text-sm">
-                <Phone className="h-5 w-5 text-yellow-400 flex-shrink-0" />
+              <li className="flex items-start space-x-2 sm:space-x-3 text-xs sm:text-sm">
+                <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 flex-shrink-0" />
                 <div className="text-gray-400">
                   <p>+1 (829) 657-1774</p>
                 </div>
               </li>
-              <li className="flex items-start space-x-3 text-sm">
-                <MapPin className="h-5 w-5 text-yellow-400 flex-shrink-0" />
+              <li className="flex items-start space-x-2 sm:space-x-3 text-xs sm:text-sm">
+                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 flex-shrink-0" />
                 <div className="text-gray-400">
                   <p>Av. Winston Churchill</p>
                   <p>Santo Domingo, RD</p>
@@ -171,19 +170,19 @@ export function Footer() {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-gray-800 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div className="border-t border-gray-800 pt-6 sm:pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
             {/* Copyright */}
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-xs sm:text-sm text-center md:text-left">
               &copy; {new Date().getFullYear()} CloudSuite Pro. Todos los derechos reservados.
             </p>
 
             {/* Legal Links */}
-            <div className="flex space-x-6">
-              <Link href="/terminos" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+            <div className="flex space-x-4 sm:space-x-6">
+              <Link href="/terminos" className="text-gray-400 hover:text-yellow-400 transition-colors text-xs sm:text-sm">
                 Términos de Servicio
               </Link>
-              <Link href="/privacidad" className="text-gray-400 hover:text-yellow-400 transition-colors text-sm">
+              <Link href="/privacidad" className="text-gray-400 hover:text-yellow-400 transition-colors text-xs sm:text-sm">
                 Política de Privacidad
               </Link>
             </div>
