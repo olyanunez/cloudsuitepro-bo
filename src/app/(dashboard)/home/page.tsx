@@ -191,11 +191,10 @@ function WeekComparisonChart({
 
       {/* Indicador de crecimiento */}
       <div className="flex items-center justify-center pt-1">
-        <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
-          isPositive
+        <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${isPositive
             ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
             : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-        }`}>
+          }`}>
           <TrendingUp className={`h-4 w-4 ${!isPositive ? 'rotate-180' : ''}`} />
           <span>{isPositive ? '+' : ''}{growthRate.toFixed(1)}%</span>
         </div>
@@ -410,17 +409,17 @@ export default function ShortcutsPage() {
   return (
     <div className="container mx-auto -mt-2 space-y-6">
       {/* Mensaje de Bienvenida */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl p-6 border border-primary/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary/20 rounded-full">
-              <Home className="h-8 w-8 text-primary" />
+      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl p-3 sm:p-6 border border-primary/20">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div className="p-2 sm:p-3 bg-primary/20 rounded-full shrink-0">
+              <Home className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate sm:whitespace-normal">
                 ¡Hola, {displayName}!
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                 {formatDate()}
               </p>
             </div>
@@ -428,10 +427,11 @@ export default function ShortcutsPage() {
           <Button
             variant="outline"
             size="sm"
+            className="self-start sm:self-auto h-8 px-3 text-xs sm:text-sm"
             onClick={() => loadData()}
             disabled={loading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
             Actualizar
           </Button>
         </div>

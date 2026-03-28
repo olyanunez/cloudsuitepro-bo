@@ -31,32 +31,32 @@ export function CashSessionsWidget({
   return (
     <div className="space-y-4">
       {/* KPI Cards de Caja */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sesiones Abiertas</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
+            <CardTitle className="text-sm font-medium min-w-0 truncate">Sesiones Abiertas</CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{openSessions}</div>
+            <div className="text-xl sm:text-2xl font-bold break-words">{openSessions}</div>
             <p className="text-xs text-muted-foreground">Cajas activas</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Recaudado</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
+            <CardTitle className="text-sm font-medium min-w-0 truncate">Total Recaudado</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalCollected)}</div>
+            <div className="text-xl sm:text-2xl font-bold text-green-600 break-words">{formatCurrency(totalCollected)}</div>
             <p className="text-xs text-muted-foreground">Hoy</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Descuadres</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
+            <CardTitle className="text-sm font-medium min-w-0 truncate">Descuadres</CardTitle>
             {totalDifference >= 0 ? (
               <TrendingUp className="h-4 w-4 text-blue-500" />
             ) : (
@@ -64,7 +64,7 @@ export function CashSessionsWidget({
             )}
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${totalDifference >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+            <div className={`text-xl sm:text-2xl font-bold break-words ${totalDifference >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
               {totalDifference >= 0 ? '+' : ''}{formatCurrency(Math.abs(totalDifference))}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -97,11 +97,11 @@ export function CashSessionsWidget({
                 return (
                   <div
                     key={session.id}
-                    className="flex items-center justify-between p-3 rounded-lg border"
+                    className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg border"
                   >
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm">Sesión #{session.sessionNumber}</p>
+                      <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                        <p className="font-medium text-sm truncate">Sesión #{session.sessionNumber}</p>
                         <Badge variant={session.status === 'OPEN' ? 'default' : 'secondary'}>
                           {session.status === 'OPEN' ? 'Abierta' : 'Cerrada'}
                         </Badge>
@@ -109,7 +109,7 @@ export function CashSessionsWidget({
                       <p className="text-xs text-muted-foreground mt-1">
                         {session.userName}
                       </p>
-                      <div className="flex items-center gap-3 mt-2 text-xs">
+                      <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2 text-xs">
                         <span className="text-muted-foreground">
                           💵 {formatCurrency(session.totalCash)}
                         </span>
@@ -121,13 +121,12 @@ export function CashSessionsWidget({
                         </span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-sm">{formatCurrency(totalSession)}</p>
+                    <div className="text-left sm:text-right">
+                      <p className="font-bold text-sm break-words">{formatCurrency(totalSession)}</p>
                       {session.status === 'CLOSED' && (
-                        <p className={`text-xs font-medium ${
-                          totalDiff === 0 ? 'text-green-600' :
-                          totalDiff > 0 ? 'text-blue-600' : 'text-red-600'
-                        }`}>
+                        <p className={`text-xs font-medium ${totalDiff === 0 ? 'text-green-600' :
+                            totalDiff > 0 ? 'text-blue-600' : 'text-red-600'
+                          }`}>
                           {totalDiff === 0 ? '✓ Exacto' : `${totalDiff >= 0 ? '+' : ''}${formatCurrency(Math.abs(totalDiff))}`}
                         </p>
                       )}
