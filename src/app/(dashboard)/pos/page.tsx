@@ -12,6 +12,7 @@ import ncfService, { NcfConfiguration, ncfTypeLabels, NcfType } from '@/lib/serv
 import { TenantService, Tenant } from '@/lib/services/tenantService';
 import TenantSettingsService, { TenantSettings } from '@/lib/services/tenantSettingsService';
 import UserPreferencesService, { UserPreferences } from '@/lib/services/userPreferencesService';
+import { PrinterService } from '@/lib/services/printerService';
 import { printInvoice } from '@/lib/utils/invoicePrint';
 import {
   playSuccessBeepIfEnabled,
@@ -82,6 +83,7 @@ import {
   AlertTriangle,
   Percent,
   Tag,
+  Archive,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
@@ -948,6 +950,17 @@ export default function PosPage() {
           try {
             console.log('🖨️ Printing thermal voucher (printThermalVoucher is enabled)');
             await printThermalVoucher(invoice, tenantInfo);
+
+            // Abrir cajón automáticamente solo si es pago en efectivo
+            if (paymentMethod === 'CASH') {
+              try {
+                console.log('💰 Opening cash drawer (payment method is CASH)');
+                await PrinterService.openCashDrawer();
+              } catch (drawerError) {
+                console.error('Error opening cash drawer:', drawerError);
+                // No mostramos error al usuario, solo log
+              }
+            }
           } catch (error) {
             console.error('Error printing thermal voucher:', error);
           }
@@ -1332,6 +1345,23 @@ export default function PosPage() {
                       <span className="text-xs sm:text-sm">Gastos</span>
                     </Button>
                   )}
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        await PrinterService.openCashDrawer();
+                        toast.success('Cajón abierto');
+                      } catch (error) {
+                        console.error('Error opening cash drawer:', error);
+                        toast.error('No se pudo abrir el cajón. Verifique que el servicio de impresión esté activo.');
+                      }
+                    }}
+                    size="sm"
+                    title="Abrir cajón de dinero"
+                  >
+                    <Archive className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="text-xs sm:text-sm">Abrir Cajón</span>
+                  </Button>
                   <Button
                     onClick={handleCloseSession}
                     size="sm"
