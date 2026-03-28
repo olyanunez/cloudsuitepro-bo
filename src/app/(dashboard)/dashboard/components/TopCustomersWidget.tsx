@@ -38,7 +38,7 @@ export function TopCustomersWidget() {
     }
   };
   return (
-    <Card>
+    <Card className="w-full max-w-full min-w-0 overflow-x-hidden">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="min-w-0">
@@ -48,7 +48,7 @@ export function TopCustomersWidget() {
           <Users className="h-5 w-5 text-muted-foreground shrink-0" />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="min-w-0 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <div className="text-sm text-muted-foreground">Cargando clientes...</div>
@@ -59,7 +59,7 @@ export function TopCustomersWidget() {
           </div>
         ) : (
           <>
-            <div className="space-y-3">
+            <div className="space-y-3 w-full max-w-full min-w-0 overflow-x-hidden">
               {customers.map((customer, index) => {
                 // Obtener colores diferentes para cada posición
                 const rankColors = [
@@ -73,9 +73,9 @@ export function TopCustomersWidget() {
                 return (
                   <div
                     key={customer.id}
-                    className="flex items-start sm:items-center justify-between gap-2 p-3 rounded-lg border bg-card hover:shadow-sm transition-all"
+                    className="grid grid-cols-[1fr_auto] items-start sm:items-center gap-2 p-3 rounded-lg border bg-card hover:shadow-sm transition-all min-w-0 max-w-full"
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div
                         className={`flex items-center justify-center h-8 w-8 rounded-full font-bold text-sm ${rankColors[index] || 'bg-muted text-muted-foreground'}`}
                       >
@@ -90,8 +90,8 @@ export function TopCustomersWidget() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right ml-2 shrink-0 max-w-[45%]">
-                      <p className="font-bold text-sm sm:text-base break-words">
+                    <div className="text-right shrink-0 min-w-0 max-w-[42vw] sm:max-w-[45%]">
+                      <p className="font-bold text-sm sm:text-base leading-tight [overflow-wrap:anywhere]">
                         {formatCurrency(customer.totalAmount)}
                       </p>
                     </div>
@@ -103,7 +103,7 @@ export function TopCustomersWidget() {
             <div className="mt-4 pt-4 border-t">
               <div className="flex items-center justify-between gap-2 text-sm">
                 <span className="text-muted-foreground">Total Top {customers.length}</span>
-                <span className="font-bold text-right break-words max-w-[55%]">
+                <span className="font-bold text-right [overflow-wrap:anywhere] max-w-[52%] min-w-0">
                   {formatCurrency(customers.reduce((sum, c) => sum + parseFloat(c.totalAmount), 0))}
                 </span>
               </div>
