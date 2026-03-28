@@ -101,6 +101,7 @@ export default function PosPage() {
   const canCashExpense = hasPermission('CAN_CASH_EXPENSE');
   const canSellCredit = hasPermission('CAN_SELL_CREDIT');
   const canDiscount = hasPermission('DISCOUNT');
+  const canOpenCashDrawer = hasPermission('OPEN_CASH_DRAWER');
 
   // Estados
   const [searchQuery, setSearchQuery] = useState('');
@@ -1345,23 +1346,25 @@ export default function PosPage() {
                       <span className="text-xs sm:text-sm">Gastos</span>
                     </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    onClick={async () => {
-                      try {
-                        await PrinterService.openCashDrawer();
-                        toast.success('Cajón abierto');
-                      } catch (error) {
-                        console.error('Error opening cash drawer:', error);
-                        toast.error('No se pudo abrir el cajón. Verifique que el servicio de impresión esté activo.');
-                      }
-                    }}
-                    size="sm"
-                    title="Abrir cajón de dinero"
-                  >
-                    <Archive className="h-4 w-4 mr-1 sm:mr-2" />
-                    <span className="text-xs sm:text-sm">Abrir Cajón</span>
-                  </Button>
+                  {canOpenCashDrawer && (
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          await PrinterService.openCashDrawer();
+                          toast.success('Cajón abierto');
+                        } catch (error) {
+                          console.error('Error opening cash drawer:', error);
+                          toast.error('No se pudo abrir el cajón. Verifique que el servicio de impresión esté activo.');
+                        }
+                      }}
+                      size="sm"
+                      title="Abrir cajón de dinero"
+                    >
+                      <Archive className="h-4 w-4 mr-1 sm:mr-2" />
+                      <span className="text-xs sm:text-sm">Abrir Cajón</span>
+                    </Button>
+                  )}
                   <Button
                     onClick={handleCloseSession}
                     size="sm"
