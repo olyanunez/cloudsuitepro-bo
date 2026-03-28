@@ -223,7 +223,7 @@ export default function DashboardPage() {
 
   if (loading || subscriptionLoading) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-8 w-full max-w-full overflow-x-hidden">
         <div className="flex items-center justify-center h-96">
           <div className="flex flex-col items-center gap-4">
             <RefreshCw className="h-8 w-8 animate-spin text-primary" />
@@ -236,7 +236,7 @@ export default function DashboardPage() {
 
   return (
     <ProtectedPage screenCode="DASHBOARD" requiredPermission="VIEW">
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="container mx-auto py-6 space-y-6 w-full max-w-full overflow-x-hidden">
         <PageHeader
           title="Dashboard"
           icon="layout-dashboard"
@@ -287,7 +287,7 @@ export default function DashboardPage() {
         )}
 
         {/* Sesiones de Caja y Top Clientes */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 grid-cols-1 xl:grid-cols-2 [&>*]:min-w-0">
           {/* Widget de Sesiones de Caja - Solo si tiene permiso */}
           {canViewCashSessions && (
             <CashSessionsWidget
