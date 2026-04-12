@@ -100,7 +100,7 @@ export function ContactSection() {
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Email</h3>
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">cloudsuitep@gmail.com</p>
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">{process.env.NEXT_PUBLIC_SUPPORT_EMAIL}</p>
                 </div>
               </div>
             </Card>
@@ -112,7 +112,7 @@ export function ContactSection() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Teléfono</h3>
-                  <p className="text-xs sm:text-sm text-gray-600">+1 (829) 657-1774</p>
+                  <p className="text-xs sm:text-sm text-gray-600">{process.env.NEXT_PUBLIC_SUPPORT_PHONE}</p>
                 </div>
               </div>
             </Card>

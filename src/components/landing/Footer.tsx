@@ -48,7 +48,7 @@ export function Footer() {
                 </svg>
               </a>
               <a
-                href="https://wa.me/18296571774"
+                href={`https://wa.me/${process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-yellow-400 transition-colors"
@@ -149,13 +149,13 @@ export function Footer() {
               <li className="flex items-start space-x-2 sm:space-x-3 text-xs sm:text-sm">
                 <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 flex-shrink-0" />
                 <div className="text-gray-400">
-                  <p>cloudsuitep@gmail.com</p>
+                  <p>{process.env.NEXT_PUBLIC_SUPPORT_EMAIL}</p>
                 </div>
               </li>
               <li className="flex items-start space-x-2 sm:space-x-3 text-xs sm:text-sm">
                 <Phone className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 flex-shrink-0" />
                 <div className="text-gray-400">
-                  <p>+1 (829) 657-1774</p>
+                  <p>{process.env.NEXT_PUBLIC_SUPPORT_PHONE}</p>
                 </div>
               </li>
               <li className="flex items-start space-x-2 sm:space-x-3 text-xs sm:text-sm">

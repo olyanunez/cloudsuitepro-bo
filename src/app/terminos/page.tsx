@@ -137,8 +137,8 @@ export default function TermsPage() {
                 Para cualquier pregunta sobre estos Términos de Servicio, puede contactarnos en:
               </p>
               <ul className="list-none mb-4 space-y-2">
-                <li><strong>Email:</strong> cloudsuitep@gmail.com</li>
-                <li><strong>Teléfono:</strong> +1 (829) 657-1774</li>
+                <li><strong>Email:</strong> {process.env.NEXT_PUBLIC_SUPPORT_EMAIL}</li>
+                <li><strong>Teléfono:</strong> {process.env.NEXT_PUBLIC_SUPPORT_PHONE}</li>
                 <li><strong>Dirección:</strong> Av. Winston Churchill, Santo Domingo, RD</li>
               </ul>
             </section>

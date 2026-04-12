@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Navbar from './Navbar'
 import { BranchLoader } from '../providers/BranchLoader'
-import { TrialBanner } from '@/components/subscription'
+import { TrialBanner, ExpiredScreen } from '@/components/subscription'
+import { useSubscription } from '@/lib/hooks/useSubscription'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -12,6 +13,8 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
+  const pathname = usePathname()
+  const { subscription, loading: subLoading, error: subError } = useSubscription()
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -40,18 +43,30 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     )
   }
 
+  const blockedStatuses = ['EXPIRED', 'SUSPENDED', 'CANCELLED']
+  const isSubscriptionBlocked = (!subLoading && subscription && blockedStatuses.includes(subscription.status)) ||
+    (!subLoading && !subscription && subError)
+  const allowedPaths = ['/settings/billing', '/settings/subscription']
+  const isOnAllowedPath = allowedPaths.some((p) => pathname.startsWith(p))
+  const hideChrome = isSubscriptionBlocked && isOnAllowedPath
+
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
-      <BranchLoader />
-      <Navbar />
-      <div className="md:ml-16 transition-[margin] duration-200 overflow-x-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <TrialBanner />
+    <>
+      <ExpiredScreen />
+      <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
+        <BranchLoader />
+        {!hideChrome && <Navbar />}
+        <div className={`${hideChrome ? '' : 'md:ml-16'} transition-[margin] duration-200 overflow-x-hidden`}>
+          {!hideChrome && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+              <TrialBanner />
+            </div>
+          )}
+          <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-x-hidden">
+            {children}
+          </main>
         </div>
-        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-x-hidden">
-          {children}
-        </main>
       </div>
-    </div>
+    </>
   )
 }

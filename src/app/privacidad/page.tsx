@@ -104,7 +104,7 @@ export default function PrivacyPage() {
                 <li><strong>Limitación:</strong> Solicitar la limitación del procesamiento</li>
               </ul>
               <p className="mb-4">
-                Para ejercer estos derechos, contacte a cloudsuitep@gmail.com
+                Para ejercer estos derechos, contacte a {process.env.NEXT_PUBLIC_SUPPORT_EMAIL}
               </p>
             </section>
 
@@ -149,8 +149,8 @@ export default function PrivacyPage() {
                 Para preguntas o inquietudes sobre esta Política de Privacidad:
               </p>
               <ul className="list-none mb-4 space-y-2">
-                <li><strong>Email:</strong> cloudsuitep@gmail.com</li>
-                <li><strong>Teléfono:</strong> +1 (829) 657-1774</li>
+                <li><strong>Email:</strong> {process.env.NEXT_PUBLIC_SUPPORT_EMAIL}</li>
+                <li><strong>Teléfono:</strong> {process.env.NEXT_PUBLIC_SUPPORT_PHONE}</li>
                 <li><strong>Dirección:</strong> Av. Winston Churchill, Santo Domingo, RD</li>
               </ul>
             </section>
