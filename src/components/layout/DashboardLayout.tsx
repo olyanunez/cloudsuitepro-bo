@@ -56,7 +56,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
         <BranchLoader />
         {!hideChrome && <Navbar />}
-        <div className={`${hideChrome ? '' : 'md:ml-16'} transition-[margin] duration-200 overflow-x-hidden`}>
+        <div className={`${hideChrome ? '' : 'md:ml-16 pt-16'} transition-[margin] duration-200 overflow-x-hidden`}>
           {!hideChrome && (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
               <TrialBanner />
