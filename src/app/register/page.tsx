@@ -147,12 +147,10 @@ function RegisterContent() {
   };
 
   // Función para manejar el envío del formulario
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError('');
 
-    // Validar el paso del administrador si estamos en ese paso
-    if (currentStep === 1 && !validateAdminStep()) {
+    if (!validateAdminStep()) {
       return;
     }
 
@@ -250,7 +248,7 @@ function RegisterContent() {
             )}
 
             {/* Formulario */}
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Paso 1: Información de la Empresa */}
               {currentStep === 0 && (
                 <>
@@ -425,7 +423,8 @@ function RegisterContent() {
                     </Button>
                   ) : (
                     <Button
-                      type="submit"
+                      type="button"
+                      onClick={handleSubmit}
                       disabled={isSubmitting}
                       style={{
                         backgroundColor: '#eab308',
@@ -439,7 +438,7 @@ function RegisterContent() {
                   )}
                 </div>
               </div>
-            </form>
+            </div>
 
             {/* Link a login */}
             <div className="text-center mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
