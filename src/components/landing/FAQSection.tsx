@@ -12,7 +12,7 @@ interface FAQItem {
 const faqs: FAQItem[] = [
   {
     question: '¿Necesito instalar algún software?',
-    answer: 'No, CloudSuite Pro es una plataforma 100% en la nube. Solo necesitas un navegador web y conexión a internet para acceder desde cualquier dispositivo.',
+    answer: 'CloudSuite Pro es una plataforma 100% en la nube. Solo necesitas un navegador web y conexión a internet para acceder desde cualquier dispositivo. Opcionalmente, si deseas imprimir recibos en impresoras térmicas, puedes descargar nuestra aplicación de impresión gratuita.',
   },
   {
     question: '¿Cuánto tiempo toma implementar el sistema?',
@@ -114,7 +114,7 @@ export function FAQSection() {
             Nuestro equipo está disponible para responder todas tus preguntas
           </p>
           <a
-            href="#contacto"
+            href="/contacto"
             className="text-yellow-600 hover:text-yellow-700 font-semibold inline-flex items-center text-sm sm:text-base"
           >
             Contáctanos

@@ -412,7 +412,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b bg-white dark:bg-gray-950 dark:border-gray-800 overflow-hidden">
+      <header className="fixed top-0 left-0 right-0 z-40 w-full border-b bg-white dark:bg-gray-950 dark:border-gray-800 overflow-hidden">
         <div className="flex h-16 items-center w-full px-2 sm:px-4">
           <div className="flex items-center gap-2">
             <SheetTrigger onClick={() => setOpen(true)} className="inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">

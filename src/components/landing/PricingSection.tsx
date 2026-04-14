@@ -368,7 +368,7 @@ export function PricingSection() {
             Para empresas con necesidades específicas, ofrecemos planes personalizados con
             funcionalidades a medida, integraciones especiales y soporte dedicado.
           </p>
-          <a href="#contacto">
+          <a href="/contacto">
             <Button
               variant="outline"
               style={{
